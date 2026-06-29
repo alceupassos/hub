@@ -1,0 +1,85 @@
+services:
+  # ── Ollama — modelos locais ────────────────────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    expose:
+      - "11434"          # interno apenas; não exposto na internet
+    volumes:
+      - ollama_data:/root/.ollama
+    # GPU NVIDIA: descomente abaixo + garanta nvidia-container-toolkit na VPS
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ── Pull dos modelos na primeira subida ──────────────────────────────────
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        ollama pull gemma3:4b
+        ollama pull qwen3:1.7b
+
+  # ── Console Next.js ────────────────────────────────────────────────────────
+  console:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        OLLAMA_BASE_URL: http://ollama:11434
+    restart: unless-stopped
+    expose:
+      - "3000"           # interno apenas; tráfego entra via Caddy
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - NODE_ENV=production
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Caddy — reverse proxy + TLS automático ────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3 QUIC
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      console:
+        condition: service_healthy
+
+volumes:
+  ollama_data:
+  caddy_data:
+  caddy_config:

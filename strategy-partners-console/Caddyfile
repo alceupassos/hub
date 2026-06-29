@@ -1,0 +1,25 @@
+angrahub.angra.io {
+	reverse_proxy console:3000 {
+		# Necessário para SSE (streaming do chat)
+		flush_interval -1
+		transport http {
+			read_buffer_size 4096
+		}
+	}
+
+	# Cabeçalhos de segurança
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	encode zstd gzip
+
+	log {
+		output stderr
+		format json
+	}
+}

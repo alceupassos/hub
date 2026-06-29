@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Strategy Partners | Plano de Negócios Conservador</title>
+    <style>
+      :root {
+        --paper: #f7f8f5;
+        --paper-2: #eef0ea;
+        --ink: #0e1a14;
+        --ink-soft: #39463f;
+        --ink-faint: #5b665f;
+        --forest: #16412f;
+        --forest-2: #1f5a41;
+        --moss: #2e7d52;
+        --gold: #a8852f;
+        --gold-soft: #c9a24a;
+        --line: #d8dcd3;
+        --line-strong: #c2c8bc;
+        --white: #ffffff;
+        --r: 2px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: "Space Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-size: 16px;
+        line-height: 1.58;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-weight: 400;
+        line-height: 1.03;
+        letter-spacing: -0.022em;
+      }
+
+      p {
+        margin: 0;
+        color: var(--ink-soft);
+      }
+
+      .deck {
+        width: min(1160px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 32px 0 80px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        padding: 0 0 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .logo {
+        display: block;
+        width: min(330px, 78vw);
+        height: auto;
+      }
+
+      .doc-meta {
+        color: var(--ink-faint);
+        font-size: 13px;
+        text-align: right;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr 0.58fr;
+        gap: 44px;
+        align-items: end;
+        min-height: 560px;
+        padding: 74px 0 56px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+        color: var(--moss);
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 24px;
+        height: 1px;
+        background: var(--moss);
+      }
+
+      h1 {
+        max-width: 920px;
+        color: var(--forest);
+        font-size: clamp(46px, 7.2vw, 92px);
+      }
+
+      .hero p {
+        max-width: 720px;
+        margin-top: 28px;
+        font-size: clamp(18px, 2.1vw, 24px);
+      }
+
+      .hero-panel {
+        padding: 28px;
+        color: var(--paper);
+        background: var(--forest);
+        border: 1px solid var(--forest-2);
+      }
+
+      .hero-panel strong {
+        display: block;
+        color: var(--gold-soft);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 54px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .hero-panel span {
+        display: block;
+        margin-top: 12px;
+        color: rgba(247, 248, 245, 0.78);
+      }
+
+      .section {
+        padding: 56px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(0, 0.75fr) minmax(320px, 0.55fr);
+        gap: 44px;
+        align-items: end;
+        margin-bottom: 34px;
+      }
+
+      h2 {
+        color: var(--forest);
+        font-size: clamp(32px, 4.4vw, 58px);
+      }
+
+      .section-head p {
+        font-size: 18px;
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+      }
+
+      .grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .card {
+        min-height: 190px;
+        padding: 24px;
+        background: var(--white);
+        border: 1px solid var(--line);
+      }
+
+      .card h3 {
+        color: var(--forest);
+        font-size: 25px;
+      }
+
+      .card p,
+      .card li {
+        margin-top: 12px;
+        color: var(--ink-soft);
+      }
+
+      .badge {
+        display: inline-block;
+        margin-bottom: 14px;
+        padding: 5px 9px;
+        color: var(--moss);
+        border: 1px solid var(--line);
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      ul {
+        margin: 14px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      li {
+        position: relative;
+        padding-left: 18px;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.68em;
+        width: 7px;
+        height: 7px;
+        background: var(--moss);
+      }
+
+      .thesis {
+        padding: 34px;
+        color: var(--paper);
+        background: var(--forest);
+        border: 1px solid var(--forest-2);
+      }
+
+      .thesis p {
+        color: rgba(247, 248, 245, 0.8);
+        font-size: clamp(22px, 3vw, 34px);
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1.22;
+      }
+
+      .table {
+        width: 100%;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: var(--white);
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1.2fr 0.85fr 0.85fr 0.85fr;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .row:last-child {
+        border-bottom: 0;
+      }
+
+      .cell {
+        padding: 16px;
+        border-right: 1px solid var(--line);
+      }
+
+      .cell:last-child {
+        border-right: 0;
+      }
+
+      .head .cell {
+        color: var(--forest);
+        background: var(--paper-2);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .cell strong {
+        display: block;
+        color: var(--forest);
+      }
+
+      .cell small {
+        color: var(--ink-faint);
+      }
+
+      .forecast {
+        display: grid;
+        grid-template-columns: 0.9fr 1.1fr;
+        gap: 28px;
+        align-items: stretch;
+      }
+
+      .metric {
+        padding: 24px;
+        background: var(--white);
+        border: 1px solid var(--line);
+      }
+
+      .metric strong {
+        display: block;
+        color: var(--forest);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 46px;
+        font-weight: 400;
+        line-height: 1;
+      }
+
+      .metric span {
+        display: block;
+        margin-top: 10px;
+        color: var(--ink-soft);
+      }
+
+      .bars {
+        display: grid;
+        gap: 14px;
+        padding: 24px;
+        background: var(--white);
+        border: 1px solid var(--line);
+      }
+
+      .bar {
+        display: grid;
+        grid-template-columns: 90px 1fr 120px;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .track {
+        height: 18px;
+        background: var(--paper-2);
+        border: 1px solid var(--line);
+      }
+
+      .fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--moss), var(--gold));
+      }
+
+      .routine {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        border: 1px solid var(--line);
+        background: var(--white);
+      }
+
+      .routine-item {
+        min-height: 180px;
+        padding: 20px;
+        border-right: 1px solid var(--line);
+      }
+
+      .routine-item:last-child {
+        border-right: 0;
+      }
+
+      .routine-item span {
+        color: var(--moss);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .routine-item h3 {
+        margin-top: 18px;
+        color: var(--forest);
+        font-size: 22px;
+      }
+
+      .routine-item p {
+        margin-top: 10px;
+        font-size: 14px;
+      }
+
+      .footer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 26px;
+        align-items: end;
+        padding: 44px 0 0;
+      }
+
+      .footer p {
+        max-width: 760px;
+      }
+
+      .cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 48px;
+        padding: 0 18px;
+        color: var(--paper);
+        background: var(--moss);
+        text-decoration: none;
+        font-weight: 700;
+      }
+
+      .print-note {
+        margin-top: 26px;
+        color: var(--ink-faint);
+        font-size: 13px;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .section-head,
+        .grid.two,
+        .grid.three,
+        .forecast,
+        .footer {
+          grid-template-columns: 1fr;
+        }
+
+        .routine {
+          grid-template-columns: 1fr;
+        }
+
+        .routine-item {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .routine-item:last-child {
+          border-bottom: 0;
+        }
+
+        .row {
+          grid-template-columns: 1fr;
+        }
+
+        .cell {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .row .cell:last-child {
+          border-bottom: 0;
+        }
+      }
+
+      @media print {
+        .deck {
+          width: 100%;
+          padding: 0;
+        }
+
+        .topbar,
+        .print-note {
+          display: none;
+        }
+
+        .section,
+        .hero {
+          break-inside: avoid;
+          padding: 34px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="deck">
+      <header class="topbar">
+        <img class="logo" src="strategy-partners-logo.svg" alt="Strategy Partners" />
+        <div class="doc-meta">
+          Plano de negócios conservador<br />
+          Estratégia baseada em network existente
+        </div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <div class="eyebrow">C.AI.O. Strategic Partner Model</div>
+          <h1>Plano conservador para vender C.AI.O. pela rede construída em 30 anos.</h1>
+          <p>
+            Um modelo de crescimento sem prospecção agressiva, sem operação comercial pesada e
+            sem depender de volume: poucos clientes, alto nível executivo e conversas originadas
+            por confiança pré-existente.
+          </p>
+        </div>
+        <aside class="hero-panel">
+          <strong>2 a 3</strong>
+          <span>clientes bons já validam a tese sem criar pressão operacional ou comercial.</span>
+        </aside>
+      </section>
+
+      <section class="section">
+        <div class="thesis">
+          <p>
+            A vantagem competitiva inicial não é mídia, tráfego ou funil frio. É reputação
+            acumulada, acesso a decisores e confiança construída em décadas de mercado.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Premissas conservadoras.</h2>
+          <p>
+            O plano assume baixa conversão, ciclo de decisão lento, postergação de orçamento e agenda limitada. A meta não é maximizar crescimento: é validar a tese com pouco risco e poucos clientes.
+          </p>
+        </div>
+        <div class="grid three">
+          <div class="card">
+            <span class="badge">Origem</span>
+            <h3>Somente network</h3>
+            <p>Ex-clientes, ex-colegas, empresários conhecidos, parceiros, fornecedores e indicações diretas.</p>
+          </div>
+          <div class="card">
+            <span class="badge">Volume</span>
+            <h3>Baixo contato</h3>
+            <p>8 a 15 conversas qualificadas por trimestre, sem cold outbound e sem depender de volume.</p>
+          </div>
+          <div class="card">
+            <span class="badge">Oferta</span>
+            <h3>Entrada paga</h3>
+            <p>Primeiro produto sempre é diagnóstico executivo, evitando reunião gratuita infinita.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Cliente ideal para essa fase.</h2>
+          <p>
+            Não é qualquer empresa curiosa sobre IA. O foco é decisor que já confia em vocês e
+            sente pressão real por produtividade, governança ou crescimento.
+          </p>
+        </div>
+        <div class="grid two">
+          <div class="card">
+            <span class="badge">Priorizar</span>
+            <h3>Relações com acesso ao topo</h3>
+            <ul>
+              <li>Dono, CEO, sócio ou diretor com autonomia.</li>
+              <li>Empresa com operação comercial, atendimento ou backoffice relevante.</li>
+              <li>Faturamento mínimo recomendado acima de R$ 5 milhões por ano.</li>
+              <li>Dor clara: custo, lentidão, retrabalho, perda de venda ou pressão competitiva.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <span class="badge">Evitar</span>
+            <h3>Demanda pequena e operacional</h3>
+            <ul>
+              <li>Pedido de chatbot barato ou automação avulsa.</li>
+              <li>Contato sem acesso à liderança.</li>
+              <li>Empresa sem orçamento ou sem dono interno para IA.</li>
+              <li>Projeto que vira suporte, treinamento solto ou atendimento diário.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Oferta comercial enxuta.</h2>
+          <p>
+            O portfólio precisa ser simples para uma conversa de confiança. Diagnóstico abre a
+            porta; retainer sustenta a relação.
+          </p>
+        </div>
+        <div class="table">
+          <div class="row head">
+            <div class="cell">Oferta</div>
+            <div class="cell">Preço conservador</div>
+            <div class="cell">Prazo</div>
+            <div class="cell">Objetivo</div>
+          </div>
+          <div class="row">
+            <div class="cell"><strong>AI Executive Diagnosis</strong><small>Entrada paga</small></div>
+            <div class="cell">R$ 8k a R$ 15k</div>
+            <div class="cell">2 a 3 semanas</div>
+            <div class="cell">Mapa de oportunidades, riscos e plano de 90 dias.</div>
+          </div>
+          <div class="row">
+            <div class="cell"><strong>C.AI.O. Advisory</strong><small>Baixa carga mensal</small></div>
+            <div class="cell">R$ 8k a R$ 14k/mês</div>
+            <div class="cell">3 meses</div>
+            <div class="cell">Direção executiva, priorização e governança inicial.</div>
+          </div>
+          <div class="row">
+            <div class="cell"><strong>C.AI.O. Operating Partner</strong><small>Produto principal</small></div>
+            <div class="cell">R$ 18k a R$ 28k/mês</div>
+            <div class="cell">3 a 6 meses</div>
+            <div class="cell">Roadmap, comitê, desenho de casos e orquestração.</div>
+          </div>
+          <div class="row">
+            <div class="cell"><strong>AI Board Advisory</strong><small>Para contas maiores</small></div>
+            <div class="cell">R$ 35k+/mês</div>
+            <div class="cell">6 meses</div>
+            <div class="cell">Governança corporativa, riscos e estratégia anual.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Modelo de aquisição por relacionamento.</h2>
+          <p>
+            O objetivo não é vender para desconhecidos. É ativar relações existentes com uma
+            proposta nova, clara e de alto valor.
+          </p>
+        </div>
+        <div class="routine">
+          <div class="routine-item">
+            <span>Semana 1</span>
+            <h3>Mapa da rede</h3>
+            <p>Listar 60 nomes realmente próximos, com capacidade de comprar, influenciar ou indicar.</p>
+          </div>
+          <div class="routine-item">
+            <span>Semana 2</span>
+            <h3>Segmentação</h3>
+            <p>Separar em clientes prováveis, influenciadores, parceiros e contas futuras.</p>
+          </div>
+          <div class="routine-item">
+            <span>Semanas 3-4</span>
+            <h3>Conversas leves</h3>
+            <p>Reativar 8 a 12 contatos sem pitch pesado, buscando contexto e dores reais.</p>
+          </div>
+          <div class="routine-item">
+            <span>Mês 2</span>
+            <h3>Diagnósticos</h3>
+            <p>Tentar converter 1 conversa em diagnóstico executivo pago.</p>
+          </div>
+          <div class="routine-item">
+            <span>Mês 3+</span>
+            <h3>Retainers</h3>
+            <p>Converter apenas se houver patrocinador, orçamento e dor clara.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Projeção financeira conservadora.</h2>
+          <p>
+            Este cenário evita otimismo: poucos diagnósticos, conversão lenta e tickets iniciais
+            abaixo do potencial máximo.
+          </p>
+        </div>
+        <div class="forecast">
+          <div class="grid">
+            <div class="metric">
+              <strong>R$ 12k</strong>
+              <span>receita mensal alvo no mês 3, se houver um primeiro advisory.</span>
+            </div>
+            <div class="metric">
+              <strong>R$ 35k</strong>
+              <span>receita mensal alvo entre mês 6 e mês 9, com 1 a 2 clientes ativos.</span>
+            </div>
+            <div class="metric">
+              <strong>R$ 60k</strong>
+              <span>receita mensal possível com 2 a 3 clientes bons no mês 12.</span>
+            </div>
+          </div>
+          <div class="bars">
+            <div class="bar">
+              <strong>Mês 1</strong>
+              <div class="track"><div class="fill" style="width: 8%"></div></div>
+              <span>R$ 0-8k</span>
+            </div>
+            <div class="bar">
+              <strong>Mês 3</strong>
+              <div class="track"><div class="fill" style="width: 14%"></div></div>
+              <span>R$ 8k-15k</span>
+            </div>
+            <div class="bar">
+              <strong>Mês 6</strong>
+              <div class="track"><div class="fill" style="width: 32%"></div></div>
+              <span>R$ 18k-35k</span>
+            </div>
+            <div class="bar">
+              <strong>Mês 9</strong>
+              <div class="track"><div class="fill" style="width: 48%"></div></div>
+              <span>R$ 35k-85k</span>
+            </div>
+            <div class="bar">
+              <strong>Mês 12</strong>
+              <div class="track"><div class="fill" style="width: 64%"></div></div>
+              <span>R$ 45k-70k</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Rotina para trabalhar em nível alto.</h2>
+          <p>
+            Para não virar operação de atendimento, a agenda precisa proteger foco executivo e
+            limitar canais de demanda.
+          </p>
+        </div>
+        <div class="grid three">
+          <div class="card">
+            <span class="badge">Cadência</span>
+            <h3>Reuniões concentradas</h3>
+            <p>Blocos fixos de reuniões executivas em 2 dias da semana. Nada de agenda pulverizada.</p>
+          </div>
+          <div class="card">
+            <span class="badge">Canais</span>
+            <h3>Sem suporte aberto</h3>
+            <p>Demandas entram por pauta, documento compartilhado ou comitê. WhatsApp só para urgência real.</p>
+          </div>
+          <div class="card">
+            <span class="badge">Execução</span>
+            <h3>Orquestrar, não operar tudo</h3>
+            <p>Vocês desenham, priorizam, validam e coordenam. Execução pode ser interna, parceira ou ferramenta.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Mensagem para ativar a rede.</h2>
+          <p>
+            A abordagem deve soar como conversa entre pares, não campanha de venda.
+          </p>
+        </div>
+        <div class="grid two">
+          <div class="card">
+            <span class="badge">Mensagem inicial</span>
+            <h3>Reativação elegante</h3>
+            <p>
+              Estou estruturando a Strategy Partners para atuar como C.AI.O. fracionado em empresas
+              que querem aplicar IA com estratégia, governança e retorno real. Como você conhece bem
+              o mercado, queria te mostrar a tese e ouvir onde você acha que isso faria mais sentido.
+            </p>
+          </div>
+          <div class="card">
+            <span class="badge">Convite</span>
+            <h3>Sem pressão comercial</h3>
+            <p>
+              A ideia não é vender ferramenta. É ajudar a diretoria a decidir onde IA gera dinheiro,
+              onde reduz risco e como começar sem bagunça. Faz sentido conversarmos 30 minutos?
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>Riscos e controles.</h2>
+          <p>
+            O plano conservador depende de disciplina. O maior risco não é falta de lead; é aceitar
+            trabalho pequeno demais.
+          </p>
+        </div>
+        <div class="grid three">
+          <div class="card">
+            <span class="badge">Risco</span>
+            <h3>Virar fornecedor operacional</h3>
+            <p>Controle: contrato define comitê, entregáveis executivos e limites de suporte.</p>
+          </div>
+          <div class="card">
+            <span class="badge">Risco</span>
+            <h3>Reunião gratuita demais</h3>
+            <p>Controle: depois da primeira conversa, próximo passo é diagnóstico pago.</p>
+          </div>
+          <div class="card">
+            <span class="badge">Risco</span>
+            <h3>Cliente sem decisão</h3>
+            <p>Controle: só avançar se houver patrocinador com orçamento e autoridade.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>
+          <h2>Meta conservadora de 12 meses: 2 a 3 clientes bons.</h2>
+          <p>
+            Com 2 a 3 clientes entre R$ 18k e R$ 28k/mês, a Strategy Partners valida uma operação enxuta,
+            baseada em confiança, sem depender de venda agressiva ou alto volume de atendimento.
+          </p>
+          <p class="print-note">Para gerar PDF: abra no navegador e use Ctrl+P / Salvar como PDF.</p>
+        </div>
+        <a class="cta" href="https://www.strategypartners.com.br">Strategy Partners</a>
+      </footer>
+    </main>
+  </body>
+</html>
+

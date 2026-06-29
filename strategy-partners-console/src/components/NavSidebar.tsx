@@ -1,0 +1,241 @@
+'use client'
+
+import Image from 'next/image'
+import Link from 'next/link'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import {
+  MessageSquare, Folder, Grid3X3, BarChart2, Book, Plus, ChevronDown,
+  ChevronRight, Circle,
+} from 'lucide-react'
+import { AGENTS_BY_CATEGORY } from '@/lib/agents'
+import type { Agent } from '@/lib/types'
+import { useLang } from '@/lib/lang'
+import { getT, CATEGORY_T } from '@/lib/i18n'
+
+const CATEGORY_ORDER = ['chat', 'vendas', 'segurança', 'financeiro', 'programação', 'conhecimento']
+
+function AgentRow({ agent, active }: { agent: Agent; active: boolean }) {
+  const [open, setOpen] = useState(false)
+  const href = `/chat?agent=${agent.id}`
+
+  return (
+    <div>
+      <div
+        className={`w-full flex items-center gap-[9px] px-[10px] py-[5px] rounded-[7px] text-[12px] transition-colors cursor-pointer select-none ${
+          active
+            ? 'text-ink-0 font-medium bg-active-bg'
+            : 'text-ink-4 hover:bg-hover-bg'
+        }`}
+        onClick={() => setOpen(v => !v)}
+      >
+        <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 ring-1 ring-border-base">
+          <Image
+            src={agent.avatar}
+            alt={agent.name}
+            fill
+            className="object-cover"
+            sizes="20px"
+          />
+        </div>
+        <span className="flex-1 truncate">{agent.name}</span>
+        {agent.active && (
+          <span
+            className="w-[5px] h-[5px] rounded-full shrink-0"
+            style={{ backgroundColor: agent.dot }}
+          />
+        )}
+        <ChevronRight
+          size={10}
+          strokeWidth={2}
+          className={`shrink-0 text-ink-7 transition-transform duration-150 ${open ? 'rotate-90' : ''}`}
+        />
+      </div>
+
+      {open && (
+        <div
+          className="mx-[10px] mb-[4px] mt-[2px] rounded-[6px] px-[10px] py-[8px] border border-border-div"
+          style={{ background: 'var(--color-hover-bg, rgba(0,0,0,0.04))' }}
+        >
+          {/* Header */}
+          <div className="flex items-center gap-[7px] mb-[6px]">
+            <div className="relative w-[22px] h-[22px] rounded-full overflow-hidden shrink-0 ring-1 ring-border-base">
+              <Image src={agent.avatar} alt={agent.name} fill className="object-cover" sizes="22px" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11.5px] font-semibold text-ink-0 leading-tight truncate">{agent.name}</p>
+              <p className="font-mono text-[9px] text-ink-7 leading-tight truncate">{agent.modelAlias}</p>
+            </div>
+            <span
+              className="ml-auto shrink-0 font-mono text-[8px] px-[5px] py-[1px] rounded-full"
+              style={{
+                background: `${agent.dot}22`,
+                color: agent.dot,
+                border: `1px solid ${agent.dot}44`,
+              }}
+            >
+              {agent.active ? 'online' : 'offline'}
+            </span>
+          </div>
+
+          {/* Role */}
+          <p className="text-[10px] text-ink-6 mb-[6px] italic leading-tight">{agent.role}</p>
+
+          {/* Specs */}
+          {agent.specs && agent.specs.length > 0 && (
+            <ul className="space-y-[4px]">
+              {agent.specs.map((spec, i) => (
+                <li key={i} className="flex items-start gap-[5px] text-[10.5px] text-ink-4 leading-snug">
+                  <Circle size={4} className="mt-[4px] shrink-0" style={{ fill: agent.dot, color: agent.dot }} />
+                  <span>{spec}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* Chat CTA */}
+          <Link
+            href={href}
+            className="mt-[8px] flex items-center justify-center gap-[5px] w-full py-[4px] rounded-[5px] text-[10px] font-medium text-white transition-opacity hover:opacity-90"
+            style={{ background: agent.barColor }}
+            onClick={e => e.stopPropagation()}
+          >
+            <MessageSquare size={10} />
+            Abrir chat
+          </Link>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function NavContent() {
+  const pathname    = usePathname()
+  const searchParams = useSearchParams()
+  const activeAgent = searchParams.get('agent')
+  const { lang, setLang } = useLang()
+  const t = getT(lang)
+  const catT = CATEGORY_T[lang]
+
+  const navItems = [
+    { icon: MessageSquare, label: t.conversations, href: '/', matchPaths: ['/', '/chat'] },
+    { icon: Folder,        label: t.projects,      href: '/projetos',     matchPaths: ['/projetos'] },
+    { icon: Grid3X3,       label: t.agentsNav,     href: '/modelos',      matchPaths: ['/modelos'] },
+    { icon: BarChart2,     label: t.reports,       href: '/relatorios',   matchPaths: ['/relatorios'] },
+    { icon: Book,          label: t.knowledge,     href: '/conhecimento', matchPaths: ['/conhecimento'] },
+  ]
+
+  return (
+    <nav className="flex flex-col w-[244px] shrink-0 h-full border-r border-border-base bg-surface px-[14px] py-[18px]">
+      {/* Logo + language toggle */}
+      <div className="px-[6px] pb-[14px] pt-[2px] flex items-end justify-between">
+        <Image
+          src="/strategy-partners-logo.svg"
+          alt="Strategy Partners"
+          width={142}
+          height={52}
+          priority
+        />
+        <div className="flex gap-[2px] mb-[2px]">
+          {(['en', 'pt'] as const).map(l => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={`px-[6px] py-[2px] rounded text-[9px] font-mono font-semibold uppercase tracking-wider transition-colors ${
+                lang === l
+                  ? 'bg-accent text-white'
+                  : 'text-ink-7 hover:text-ink-4 hover:bg-hover-bg'
+              }`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* New session button */}
+      <Link
+        href="/"
+        className="w-full flex items-center justify-center gap-[10px] px-[10px] py-2 rounded-lg bg-accent text-white text-[12px] font-medium hover:opacity-90 transition-opacity"
+      >
+        <Plus size={14} strokeWidth={2.2} />
+        {t.newSession}
+      </Link>
+
+      <div className="mt-4 flex-1 flex flex-col gap-4 overflow-y-auto min-h-0">
+        {/* Workspace */}
+        <div>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.07em] text-ink-6 px-[10px] mb-1">
+            {t.workspace}
+          </p>
+          {navItems.map(({ icon: Icon, label, href, matchPaths }) => {
+            const active = matchPaths.some(p =>
+              p === '/' ? pathname === p : pathname.startsWith(p)
+            )
+            return (
+              <Link
+                key={label}
+                href={href}
+                className={`w-full flex items-center gap-[11px] px-[10px] py-[7px] rounded-[7px] text-[12.5px] transition-colors ${
+                  active
+                    ? 'text-accent bg-accent-soft font-medium'
+                    : 'text-ink-4 hover:bg-hover-bg'
+                }`}
+              >
+                <Icon size={15} strokeWidth={1.6} />
+                {label}
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* Agents — all by category, with expandable spec panels */}
+        <div>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.07em] text-ink-6 px-[10px] mb-1 flex items-center gap-1">
+            {t.agentsNav}
+            <ChevronDown size={10} strokeWidth={2} className="text-ink-6" />
+          </p>
+
+          {CATEGORY_ORDER.filter(cat => AGENTS_BY_CATEGORY[cat]?.length).map(cat => (
+            <div key={cat} className="mb-1">
+              <p className="text-[9.5px] font-semibold uppercase tracking-[0.08em] text-ink-7 px-[10px] py-[3px] mt-1">
+                {catT[cat] ?? cat}
+              </p>
+
+              {AGENTS_BY_CATEGORY[cat].map(agent => (
+                <AgentRow
+                  key={agent.id}
+                  agent={agent}
+                  active={pathname === '/chat' && activeAgent === agent.id}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="border-t border-border-div pt-3 flex items-center gap-[10px]">
+        <div className="w-[30px] h-[30px] rounded-[7px] bg-accent flex items-center justify-center text-white text-[10.5px] font-semibold shrink-0">
+          AA
+        </div>
+        <div className="min-w-0">
+          <p className="text-[12px] font-medium text-ink-0 truncate">Alexandre Azevedo</p>
+          <p className="font-mono text-[10px] text-ink-6 truncate">CEO · Strategy Partners</p>
+        </div>
+      </div>
+    </nav>
+  )
+}
+
+export function NavSidebar() {
+  return (
+    <Suspense
+      fallback={
+        <nav className="flex flex-col w-[244px] shrink-0 h-full border-r border-border-base bg-surface" />
+      }
+    >
+      <NavContent />
+    </Suspense>
+  )
+}

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb { background: rgba(120,130,150,.28); border-radius: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</helmet>
+<div style="--accent:{{ accent }}; height:100vh; width:100%; display:flex; background:#F5F6F8; font-family:'IBM Plex Sans',sans-serif; color:#0F141A; overflow:hidden;">
+
+  <!-- ============ LEFT PANEL ============ -->
+  <aside style="width:244px; flex-shrink:0; background:#FFFFFF; border-right:1px solid #E4E7EC; display:flex; flex-direction:column; padding:18px 14px;">
+    <div style="padding:2px 6px 18px;"><img src="uploads/strategy-partners-logo.svg" alt="Strategy Partners" style="width:142px; height:auto; display:block;"></div>
+    <button onClick="{{ noop }}" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:8px 10px; background:var(--accent,#0B3A78); color:#fff; border:none; border-radius:8px; font-family:inherit; font-size:12px; font-weight:500; cursor:pointer;" style-hover="opacity:.92"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nova execução</button>
+
+    <div style="margin-top:20px; padding:0 8px 9px; font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:#98A1B0; font-family:'IBM Plex Mono',monospace;">Workspace</div>
+    <nav style="display:flex; flex-direction:column; gap:2px;">
+      <a style="display:flex; align-items:center; gap:11px; padding:7px 10px; border-radius:7px; font-size:12.5px; color:var(--accent,#0B3A78); background:#ECF1FA; font-weight:500; text-decoration:none; cursor:pointer;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Conversas</a>
+      <a style="display:flex; align-items:center; gap:11px; padding:7px 10px; border-radius:7px; font-size:12.5px; color:#465062; text-decoration:none; cursor:pointer;" style-hover="background:#F2F4F7"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Projetos</a>
+      <a style="display:flex; align-items:center; gap:11px; padding:7px 10px; border-radius:7px; font-size:12.5px; color:#465062; text-decoration:none; cursor:pointer;" style-hover="background:#F2F4F7"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>Modelos</a>
+      <a style="display:flex; align-items:center; gap:11px; padding:7px 10px; border-radius:7px; font-size:12.5px; color:#465062; text-decoration:none; cursor:pointer;" style-hover="background:#F2F4F7"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3v18h18M7 14l3-3 3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/></svg>Relatórios</a>
+      <a style="display:flex; align-items:center; gap:11px; padding:7px 10px; border-radius:7px; font-size:12.5px; color:#465062; text-decoration:none; cursor:pointer;" style-hover="background:#F2F4F7"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg>Conhecimento</a>
+    </nav>
+
+    <div style="margin-top:22px; padding:0 8px 9px;">
+      <span style="font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:#98A1B0; font-family:'IBM Plex Mono',monospace;">Recentes</span>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:2px; overflow-y:auto;">
+      <a style="padding:7px 10px; border-radius:7px; font-size:12px; color:#0F141A; font-weight:500; background:#F2F4F7; text-decoration:none; cursor:pointer;">Expansão LATAM — Q3</a>
+      <a style="padding:7px 10px; border-radius:7px; font-size:12px; color:#5A6472; text-decoration:none; cursor:pointer;" style-hover="background:#F4F5F7">M&amp;A · setor logístico</a>
+      <a style="padding:7px 10px; border-radius:7px; font-size:12px; color:#5A6472; text-decoration:none; cursor:pointer;" style-hover="background:#F4F5F7">Orçamento 2026</a>
+      <a style="padding:7px 10px; border-radius:7px; font-size:12px; color:#5A6472; text-decoration:none; cursor:pointer;" style-hover="background:#F4F5F7">Posicionamento competitivo</a>
+      <a style="padding:7px 10px; border-radius:7px; font-size:12px; color:#5A6472; text-decoration:none; cursor:pointer;" style-hover="background:#F4F5F7">Plano de sucessão</a>
+    </div>
+
+    <div style="margin-top:auto; display:flex; align-items:center; gap:10px; padding:10px 8px 2px; border-top:1px solid #EBEDF1;">
+      <div style="width:30px; height:30px; border-radius:7px; background:var(--accent,#0B3A78); color:#fff; display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:600;">AA</div>
+      <div style="line-height:1.25; flex:1;"><div style="font-size:12px; color:#0F141A; font-weight:500;">Alexandre Azevedo</div><div style="font-size:10px; color:#98A1B0; font-family:'IBM Plex Mono',monospace;">CEO · Strategy Partners</div></div>
+    </div>
+  </aside>
+
+  <!-- ============ CENTER ============ -->
+  <main style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <!-- top bar -->
+    <header style="height:54px; border-bottom:1px solid #E4E7EC; display:flex; align-items:center; justify-content:space-between; padding:0 18px; background:#fff; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:9px; font-size:12.5px; color:#5A6472; min-width:0;"><span style="white-space:nowrap;">Projetos</span><span style="color:#C2C8D2;">/</span><span style="color:#0F141A; font-weight:600; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Expansão LATAM — Q3</span><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#1F9D6B; background:#E8F6F0; padding:2px 7px; border-radius:5px; flex-shrink:0;">concluído</span></div>
+      <div style="display:flex; align-items:center; gap:3px; background:#EEF0F3; border-radius:8px; padding:3px; flex-shrink:0;">
+        <button onClick="{{ setComparar }}" style="{{ pillComparar }}">Comparar</button>
+        <button onClick="{{ setSintese }}" style="{{ pillSintese }}">Síntese</button>
+        <button onClick="{{ setTimeline }}" style="{{ pillTimeline }}">Timeline</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+        <button onClick="{{ noop }}" style="display:flex; align-items:center; gap:7px; padding:6px 11px; border:1px solid #DDE1E8; border-radius:8px; background:#fff; font-family:inherit; font-size:12px; color:#465062; cursor:pointer;" style-hover="background:#F6F7F9"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M8 11l4 4 4-4M4 21h16" stroke-linecap="round" stroke-linejoin="round"/></svg>Exportar</button>
+        <button onClick="{{ toggleInspector }}" title="Painel de execução" style="width:32px; height:32px; border:1px solid #DDE1E8; border-radius:8px; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#5A6472;" style-hover="background:#F6F7F9"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
+      </div>
+    </header>
+
+    <!-- scroll body -->
+    <div style="flex:1; overflow-y:auto; padding:18px; background:#F5F6F8;">
+      <div style="max-width:900px; margin:0 auto;">
+        <!-- question -->
+        <div style="background:#fff; border:1px solid #E7EAEF; border-radius:10px; padding:13px 15px; display:flex; align-items:flex-start; gap:11px;">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent,#0B3A78); background:#ECF1FA; padding:3px 7px; border-radius:5px; margin-top:1px; letter-spacing:.03em;">PERGUNTA</span>
+          <span style="font-size:13.5px; color:#1c2330; line-height:1.55;">Devemos acelerar a expansão para o México no Q3, considerando o cenário cambial atual?</span>
+        </div>
+
+        <!-- ===== TAB: COMPARAR ===== -->
+        <sc-if value="{{ isComparar }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:15px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+            <span style="font-size:11.5px; font-weight:600; color:#465062; letter-spacing:.02em;">Respostas por modelo</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#98A1B0;">{{ countLabel }} modelos</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:12px;">
+            <sc-for list="{{ active }}" as="m" hint-placeholder-count="3">
+              <div style="background:#fff; border:1px solid #E7EAEF; border-radius:10px; padding:14px; display:flex; flex-direction:column;">
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <span style="display:flex; align-items:center; gap:8px;"><span style="width:8px; height:8px; border-radius:50%; background:{{ m.dot }};"></span><span style="font-size:12.5px; font-weight:600; color:#0F141A;">{{ m.name }}</span></span>
+                </div>
+                <div style="margin:10px 0 11px; font-size:13px; color:var(--accent,#0B3A78); font-weight:600;">{{ m.stance }}</div>
+                <div style="font-size:12px; line-height:1.6; color:#5A6472; flex:1;">{{ m.text }}</div>
+                <div style="margin-top:12px;">
+                  <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#98A1B0; margin-bottom:5px;"><span>confiança</span><span style="color:var(--accent,#0B3A78);">{{ m.confPct }}</span></div>
+                  <div style="height:5px; background:#EEF0F3; border-radius:3px; overflow:hidden;"><div style="height:100%; border-radius:3px; width:{{ m.confPct }}; background:{{ m.barColor }};"></div></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:13px; background:var(--accent,#0B3A78); border-radius:10px; padding:15px 17px; display:flex; align-items:center; gap:15px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#9DBDEB; letter-spacing:.05em; text-transform:uppercase; flex-shrink:0; line-height:1.5;">Síntese<br>recomendada</div>
+            <div style="width:1px; align-self:stretch; background:rgba(255,255,255,.18);"></div>
+            <div style="font-size:13px; color:#EAF1FB; line-height:1.55;"><strong style="color:#fff;">Entrada faseada com hedge.</strong> Travar 40% do capital no Q3 protegido por hedge cambial de 90 dias; revisar o restante no Q4 após o dado de inflação de outubro.</div>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== TAB: SÍNTESE ===== -->
+        <sc-if value="{{ isSintese }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:15px; background:#fff; border:1px solid #E7EAEF; border-radius:10px; padding:26px 30px;">
+          <div style="display:flex; align-items:center; gap:9px; margin-bottom:15px;">
+            <span style="width:25px; height:25px; border-radius:7px; background:#ECF1FA; display:flex; align-items:center; justify-content:center;"><span style="width:9px; height:9px; border:2px solid var(--accent,#0B3A78); border-radius:2px; transform:rotate(45deg);"></span></span>
+            <span style="font-size:12.5px; font-weight:600; color:#0F141A;">Síntese estratégica</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#98A1B0;">consenso de 3 · 1.24s</span>
+          </div>
+          <div style="font-size:17px; font-weight:600; color:#0F141A; line-height:1.4; letter-spacing:-.01em; margin-bottom:13px;">Entrada faseada, com captura parcial da janela cambial.</div>
+          <p style="font-size:14px; line-height:1.7; color:#3a4658; margin:0 0 13px;">A leitura conjunta dos modelos converge para cautela com oportunidade. O peso valorizou cerca de 6% frente ao dólar no trimestre, melhorando a margem de importação no curto prazo — mas a volatilidade pós-eleitoral ainda não estabilizou, e comprometer todo o capex agora elevaria a exposição a risco político.</p>
+          <div style="display:flex; flex-direction:column; gap:12px; margin:18px 0 6px; padding:17px 19px; background:#F8FAFC; border:1px solid #EAEEF4; border-radius:10px;">
+            <div style="display:flex; gap:13px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--accent,#0B3A78); font-weight:500;">01</span><span style="font-size:13.5px; line-height:1.6; color:#2a3543;">Travar <strong>40% do investimento</strong> no Q3 com hedge cambial de 90 dias.</span></div>
+            <div style="display:flex; gap:13px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--accent,#0B3A78); font-weight:500;">02</span><span style="font-size:13.5px; line-height:1.6; color:#2a3543;">Revisar o capital remanescente no <strong>Q4</strong>, após o dado de inflação de outubro.</span></div>
+            <div style="display:flex; gap:13px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--accent,#0B3A78); font-weight:500;">03</span><span style="font-size:13.5px; line-height:1.6; color:#2a3543;">Priorizar <strong>parcerias locais</strong> sobre estrutura própria nesta fase.</span></div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:17px; padding-top:15px; border-top:1px solid #EEF1F6; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:#98A1B0;">Sintetizado de</span>
+            <span style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#5A6472;"><span style="width:7px;height:7px;border-radius:50%;background:#E8722E;"></span>Claude Opus 4.5</span>
+            <span style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#5A6472;"><span style="width:7px;height:7px;border-radius:50%;background:#10A37F;"></span>GPT-5.1</span>
+            <span style="display:flex; align-items:center; gap:6px; font-size:11.5px; color:#5A6472;"><span style="width:7px;height:7px;border-radius:50%;background:#4285F4;"></span>Gemini 2.5 Pro</span>
+            <span style="margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#1F9D6B;">concordância 2/3</span>
+          </div>
+        </div>
+        </sc-if>
+
+        <!-- ===== TAB: TIMELINE ===== -->
+        <sc-if value="{{ isTimeline }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:15px; background:#fff; border:1px solid #E7EAEF; border-radius:10px; padding:20px 22px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:17px;">
+            <span style="font-size:12.5px; font-weight:600; color:#0F141A;">Execução paralela</span>
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#98A1B0;">janela 0 – 1.5s</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:15px;">
+            <sc-for list="{{ active }}" as="m" hint-placeholder-count="3">
+              <div style="display:flex; align-items:center; gap:13px;">
+                <span style="width:124px; flex-shrink:0; display:flex; align-items:center; gap:8px; font-size:12px; color:#0F141A;"><span style="width:8px;height:8px;border-radius:50%;background:{{ m.dot }};"></span>{{ m.name }}</span>
+                <div style="flex:1; height:21px; background:#F4F5F7; border-radius:5px; position:relative; overflow:hidden;">
+                  <div style="position:absolute; left:0; top:0; height:100%; width:{{ m.durPct }}; background:{{ m.barColor }}; border-radius:5px; display:flex; align-items:center; justify-content:flex-end; padding-right:8px;"><span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#fff;">{{ m.durLabel }}</span></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; justify-content:space-between; margin-top:10px; padding-left:137px; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#B4BCC8;"><span>0s</span><span>0.5s</span><span>1.0s</span><span>1.5s</span></div>
+        </div>
+        </sc-if>
+
+      </div>
+    </div>
+
+    <!-- composer -->
+    <div style="padding:15px 18px; background:#F5F6F8; border-top:1px solid #E4E7EC; flex-shrink:0;">
+      <div style="max-width:900px; margin:0 auto; display:flex; align-items:center; gap:11px; background:#fff; border:1px solid #DDE1E8; border-radius:10px; padding:7px 7px 7px 15px;">
+        <input placeholder="Refinar pergunta ou pedir aprofundamento…" style="flex:1; border:none; outline:none; font-family:inherit; font-size:13.5px; color:#0F141A; background:transparent;">
+        <span style="display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#5A6472; padding:5px 9px; border:1px solid #E4E7EC; border-radius:7px;"><span style="display:flex;"><span style="width:6px;height:6px;border-radius:50%;background:#E8722E;"></span><span style="width:6px;height:6px;border-radius:50%;background:#10A37F;margin-left:-1px;"></span><span style="width:6px;height:6px;border-radius:50%;background:#4285F4;margin-left:-1px;"></span></span>{{ activeCount }} modelos</span>
+        <button onClick="{{ noop }}" style="width:35px; height:35px; border:none; border-radius:8px; background:var(--accent,#0B3A78); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff;" style-hover="opacity:.92"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0M13 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============ RIGHT INSPECTOR (retrátil) ============ -->
+  <sc-if value="{{ inspectorOpen }}" hint-placeholder-val="{{ true }}">
+  <aside style="width:276px; flex-shrink:0; background:#FFFFFF; border-left:1px solid #E4E7EC; display:flex; flex-direction:column; padding:16px 15px; overflow-y:auto;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:13px;">
+      <span style="font-size:11.5px; font-weight:600; color:#0F141A; letter-spacing:.02em;">Execução</span>
+      <button onClick="{{ toggleInspector }}" title="Recolher" style="width:24px; height:24px; border:none; border-radius:6px; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#98A1B0;" style-hover="background:#F2F4F7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:9px;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-size:11.5px; color:#5A6472;">Latência</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#0F141A;">1.24s</span></div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-size:11.5px; color:#5A6472;">Tokens</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#0F141A;">4 812</span></div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-size:11.5px; color:#5A6472;">Custo</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#0F141A;">US$ 0,14</span></div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;"><span style="font-size:11.5px; color:#5A6472;">Modelos</span><span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#0F141A;">{{ countLabel }}</span></div>
+    </div>
+
+    <div style="height:1px; background:#EBEDF1; margin:16px 0;"></div>
+    <div style="font-size:11.5px; font-weight:600; color:#0F141A; margin-bottom:11px;">Concordância</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div><div style="display:flex; justify-content:space-between; font-size:11px; color:#5A6472; margin-bottom:6px;"><span>Faseado / hedge</span><span style="font-family:'IBM Plex Mono',monospace; color:#1F9D6B;">2 de 3</span></div><div style="height:6px; background:#EEF0F3; border-radius:3px; overflow:hidden;"><div style="width:67%; height:100%; background:#1F9D6B; border-radius:3px;"></div></div></div>
+      <div><div style="display:flex; justify-content:space-between; font-size:11px; color:#5A6472; margin-bottom:6px;"><span>Aguardar Q4</span><span style="font-family:'IBM Plex Mono',monospace; color:#98A1B0;">1 de 3</span></div><div style="height:6px; background:#EEF0F3; border-radius:3px; overflow:hidden;"><div style="width:33%; height:100%; background:#C2C8D2; border-radius:3px;"></div></div></div>
+    </div>
+
+    <div style="height:1px; background:#EBEDF1; margin:16px 0;"></div>
+    <div style="font-size:11.5px; font-weight:600; color:#0F141A; margin-bottom:11px;">Modelos ativos</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <sc-for list="{{ allModels }}" as="m" hint-placeholder-count="4">
+        <div onClick="{{ m.toggle }}" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+          <span style="display:flex; align-items:center; gap:9px; font-size:12px; color:{{ m.labelColor }};"><span style="width:7px;height:7px;border-radius:50%;background:{{ m.swatch }};"></span>{{ m.name }}</span>
+          <span style="{{ m.switchStyle }}"><span style="{{ m.knobStyle }}"></span></span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="height:1px; background:#EBEDF1; margin:16px 0;"></div>
+    <div style="font-size:11.5px; font-weight:600; color:#0F141A; margin-bottom:10px;">Contexto</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; align-items:center; gap:9px; padding:8px 11px; background:#F8FAFC; border:1px solid #EAEEF4; border-radius:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span style="font-size:11.5px; color:#3a4658;">Câmbio_LATAM_Q2.xlsx</span></div>
+      <div style="display:flex; align-items:center; gap:9px; padding:8px 11px; background:#F8FAFC; border:1px solid #EAEEF4; border-radius:8px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5A6472" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span style="font-size:11.5px; color:#3a4658;">Plano_Expansão_MX.pdf</span></div>
+    </div>
+  </aside>
+  </sc-if>
+
+  <!-- collapsed rail -->
+  <sc-if value="{{ inspectorClosed }}" hint-placeholder-val="{{ false }}">
+  <aside style="width:46px; flex-shrink:0; background:#FFFFFF; border-left:1px solid #E4E7EC; display:flex; flex-direction:column; align-items:center; padding:14px 0;">
+    <button onClick="{{ toggleInspector }}" title="Abrir execução" style="width:30px; height:30px; border:1px solid #E4E7EC; border-radius:7px; background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:#5A6472;" style-hover="background:#F2F4F7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
+    <div style="margin-top:14px; writing-mode:vertical-rl; transform:rotate(180deg); font-size:11px; font-weight:600; letter-spacing:.06em; color:#98A1B0; text-transform:uppercase; font-family:'IBM Plex Mono',monospace;">Execução · {{ countLabel }}</div>
+  </aside>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#0B3A78&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#0B3A78&quot;,&quot;#0A3470&quot;,&quot;#14418A&quot;,&quot;#1D4F9A&quot;],&quot;section&quot;:&quot;Marca&quot;},&quot;defaultTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;comparar&quot;,&quot;options&quot;:[&quot;comparar&quot;,&quot;sintese&quot;,&quot;timeline&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Visão&quot;},&quot;showInspector&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Visão&quot;}}">
+class Component extends DCLogic {
+  state = { tab: null, inspectorOpen: null, models: null };
+
+  baseModels() {
+    return [
+      { id:'claude', name:'Claude Opus 4.5', dot:'#E8722E', barColor:'#0B3A78', stance:'Faseado, com hedge', text:'Câmbio favorável no curto prazo, mas risco político não precificado. Entrada gradual reduz a exposição.', conf:86, dur:1.24, on:true },
+      { id:'gpt', name:'GPT-5.1', dot:'#10A37F', barColor:'#2E6BD6', stance:'Acelerar parcial', text:'Janela cambial é vantajosa agora. Recomenda capturar 60% do plano já no Q3, com metas claras de receita.', conf:79, dur:0.98, on:true },
+      { id:'gemini', name:'Gemini 2.5 Pro', dot:'#4285F4', barColor:'#7BA0DE', stance:'Aguardar Q4', text:'Volatilidade pós-eleitoral eleva o risco. Sugere adiar o grosso do investimento até a inflação de outubro.', conf:72, dur:1.10, on:true },
+      { id:'grok', name:'Grok 4', dot:'#9AA6B6', barColor:'#C2C8D2', stance:'Acelerar', text:'Fundamentos macro positivos. Defende entrada agressiva para ganhar participação antes dos concorrentes.', conf:64, dur:0.86, on:false },
+    ];
+  }
+
+  models() { return this.state.models || this.baseModels(); }
+  setTab(t) { this.setState({ tab: t }); }
+  toggleModel(id) {
+    this.setState({ models: this.models().map(m => m.id === id ? { ...m, on: !m.on } : m) });
+  }
+  toggleInspector() {
+    const cur = this.state.inspectorOpen === null ? (this.props.showInspector !== false) : this.state.inspectorOpen;
+    this.setState({ inspectorOpen: !cur });
+  }
+
+  renderVals() {
+    const accent = this.props.accent || '#0B3A78';
+    const tab = this.state.tab || this.props.defaultTab || 'comparar';
+    const inspectorOpen = this.state.inspectorOpen === null
+      ? (this.props.showInspector !== false)
+      : this.state.inspectorOpen;
+    const models = this.models();
+    const active = models.filter(m => m.on);
+
+    const pill = (on) => on
+      ? 'font-family:inherit;font-size:12px;color:#0F141A;padding:5px 13px;border-radius:6px;background:#fff;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.07);border:none;cursor:pointer;'
+      : 'font-family:inherit;font-size:12px;color:#5A6472;padding:5px 13px;border-radius:6px;background:transparent;border:none;cursor:pointer;';
+
+    const decorActive = active.map(m => ({
+      ...m,
+      confPct: m.conf + '%',
+      durPct: Math.round(m.dur / 1.5 * 100) + '%',
+      durLabel: m.dur.toFixed(2) + 's',
+    }));
+
+    const allModels = models.map(m => ({
+      ...m,
+      toggle: () => this.toggleModel(m.id),
+      labelColor: m.on ? '#0F141A' : '#98A1B0',
+      swatch: m.on ? m.dot : '#D4D8DF',
+      switchStyle: 'width:30px;height:17px;border-radius:9px;flex-shrink:0;position:relative;transition:background .15s;background:' + (m.on ? accent : '#E0E3E9') + ';',
+      knobStyle: 'position:absolute;top:2px;' + (m.on ? 'right:2px' : 'left:2px') + ';width:13px;height:13px;border-radius:50%;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.15);',
+    }));
+
+    return {
+      accent,
+      inspectorOpen,
+      inspectorClosed: !inspectorOpen,
+      isComparar: tab === 'comparar',
+      isSintese: tab === 'sintese',
+      isTimeline: tab === 'timeline',
+      pillComparar: pill(tab === 'comparar'),
+      pillSintese: pill(tab === 'sintese'),
+      pillTimeline: pill(tab === 'timeline'),
+      setComparar: () => this.setTab('comparar'),
+      setSintese: () => this.setTab('sintese'),
+      setTimeline: () => this.setTab('timeline'),
+      toggleInspector: () => this.toggleInspector(),
+      active: decorActive,
+      allModels,
+      activeCount: String(active.length),
+      countLabel: active.length + ' / 12',
+      noop: () => {},
+    };
+  }
+}
+</script>
+</body>
+</html>
