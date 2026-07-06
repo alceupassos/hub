@@ -1,0 +1,48 @@
+import type { Model } from './types'
+
+export const INITIAL_MODELS: Model[] = [
+  {
+    id: 'claude',
+    name: 'Claude Opus 4.5',
+    dot: '#E8722E',
+    barColor: '#0B3A78',
+    stance: 'Faseado, com hedge',
+    text: 'Câmbio favorável no curto prazo, mas risco político não precificado. Entrada gradual reduz a exposição.',
+    conf: 86,
+    dur: 1.24,
+    on: true,
+  },
+  {
+    id: 'gpt',
+    name: 'GPT-5.1',
+    dot: '#10A37F',
+    barColor: '#2E6BD6',
+    stance: 'Acelerar parcial',
+    text: 'Janela cambial é vantajosa agora. Recomenda capturar 60% do plano já no Q3, com metas claras de receita.',
+    conf: 79,
+    dur: 0.98,
+    on: true,
+  },
+  {
+    id: 'gemini',
+    name: 'Gemini 2.5 Pro',
+    dot: '#4285F4',
+    barColor: '#7BA0DE',
+    stance: 'Aguardar Q4',
+    text: 'Volatilidade pós-eleitoral eleva o risco. Sugere adiar o grosso do investimento até a inflação de outubro.',
+    conf: 72,
+    dur: 1.10,
+    on: true,
+  },
+  {
+    id: 'grok',
+    name: 'Grok 4',
+    dot: '#9AA6B6',
+    barColor: '#C2C8D2',
+    stance: 'Acelerar',
+    text: 'Fundamentos macro positivos. Defende entrada agressiva para ganhar participação antes dos concorrentes.',
+    conf: 64,
+    dur: 0.86,
+    on: false,
+  },
+]
