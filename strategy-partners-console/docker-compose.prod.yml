@@ -12,6 +12,17 @@ services:
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - DEEPSEEK_MODEL_CHAT=${DEEPSEEK_MODEL_CHAT:-deepseek-chat}
       - DEEPSEEK_MODEL_REASONER=${DEEPSEEK_MODEL_REASONER:-deepseek-reasoner}
+      # Banco de dados + RAG (Fase 2). Mesma VPS Postgres do semantix, schema isolado
+      # strategy_partners — nunca o schema do semantix. Sem novo container Postgres.
+      - DATABASE_URL=${DATABASE_URL}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_EMBEDDING_MODEL=${GEMINI_EMBEDDING_MODEL:-text-embedding-004}
+      # Camada Anthropic / Eixo B (Fase 3) — desligada por padrão.
+      - USE_ANTHROPIC_TIERS=${USE_ANTHROPIC_TIERS:-false}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_OPUS_MODEL=${ANTHROPIC_OPUS_MODEL:-claude-opus-4-8}
+      - ANTHROPIC_FABLE_MODEL=${ANTHROPIC_FABLE_MODEL:-claude-fable-5}
+      - ANTHROPIC_SONNET_MODEL=${ANTHROPIC_SONNET_MODEL:-claude-sonnet-5}
     networks:
       - angrahub_default
     healthcheck:
