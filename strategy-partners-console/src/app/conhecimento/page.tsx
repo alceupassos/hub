@@ -4,12 +4,13 @@ import { NavSidebar } from '@/components/NavSidebar'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import { Search, BookOpen, FileText, Brain } from 'lucide-react'
 import { useLang } from '@/lib/lang'
+import { useAgentConfig } from '@/lib/agent-config'
 import { getT } from '@/lib/i18n'
 
 const ARTICLES = [
   {
     title: 'Frameworks de Valuation para M&A no Brasil',
-    agent: 'Orbyx',
+    agent: 'MERKO',
     category: 'M&A',
     summary: 'DCF, EV/EBITDA e precedent transactions — como escolher o método certo por setor e momento de mercado.',
     date: '25 jun 2026',
@@ -48,6 +49,7 @@ const KNOWLEDGE_AGENTS = AGENTS_BY_CATEGORY['conhecimento'] ?? []
 
 export default function ConhecimentoPage() {
   const { lang } = useLang()
+  const { getDisplayName, isEnabled } = useAgentConfig()
   const t = getT(lang)
 
   return (
@@ -98,7 +100,7 @@ export default function ConhecimentoPage() {
               {t.expertAgents}
             </h2>
             <div className="space-y-2">
-              {KNOWLEDGE_AGENTS.map(agent => (
+              {KNOWLEDGE_AGENTS.filter(agent => isEnabled(agent.id)).map(agent => (
                 <Link
                   key={agent.id}
                   href={`/chat?agent=${agent.id}`}
@@ -109,7 +111,7 @@ export default function ConhecimentoPage() {
                     style={{ backgroundColor: agent.dot }}
                   />
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-medium text-ink-0 truncate">{agent.name}</p>
+                    <p className="text-[12.5px] font-medium text-ink-0 truncate">{getDisplayName(agent.id)}</p>
                     <p className="text-[11px] text-ink-5 truncate">{agent.role}</p>
                   </div>
                 </Link>

@@ -3,21 +3,23 @@ import { NavSidebar } from '@/components/NavSidebar'
 import { AGENTS } from '@/lib/agents'
 import { BarChart2, MessageSquare, Zap, TrendingUp } from 'lucide-react'
 import { useLang } from '@/lib/lang'
+import { useAgentConfig } from '@/lib/agent-config'
 import { getT } from '@/lib/i18n'
 
 const TOP_AGENTS = [
   { name: 'Brisa',        sessions: 312, pct: 92 },
-  { name: 'Estrategista', sessions: 248, pct: 73 },
-  { name: 'Analista',     sessions: 201, pct: 59 },
-  { name: 'Orbyx',        sessions: 187, pct: 55 },
+  { name: 'NOVAE',        sessions: 248, pct: 73 },
+  { name: 'TYCEN',        sessions: 201, pct: 59 },
+  { name: 'MERKO',        sessions: 187, pct: 55 },
   { name: 'Jurista',      sessions: 134, pct: 40 },
 ]
 
 export default function RelatoriosPage() {
   const { lang } = useLang()
+  const { isEnabled } = useAgentConfig()
   const t = getT(lang)
 
-  const activeAgents = AGENTS.filter(a => a.active).length
+  const activeAgents = AGENTS.filter(a => isEnabled(a.id)).length
 
   const METRICS = [
     { label: t.totalSessions,  value: '1.284', delta: '+12%',                   icon: MessageSquare, color: '#0B3A78' },
