@@ -1,8 +1,27 @@
 'use client'
-import { ChevronRight, ChevronLeft, FileText } from 'lucide-react'
+import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { ChevronRight, ChevronLeft, FileText, Settings2 } from 'lucide-react'
 import type { Model } from '@/lib/types'
 import { useLang } from '@/lib/lang'
 import { getT } from '@/lib/i18n'
+import { Switch } from './ui/Switch'
+
+// Métricas de execução "vivas" — emulam telemetria em movimento (latência/tokens/custo).
+function useLiveMetrics() {
+  const [m, setM] = useState({ lat: 1.24, tok: 4812, cost: 0.14 })
+  useEffect(() => {
+    const id = setInterval(() => {
+      setM({
+        lat: Math.round((0.82 + Math.random() * 1.7) * 100) / 100,
+        tok: 3600 + Math.floor(Math.random() * 4200),
+        cost: Math.round((0.09 + Math.random() * 0.24) * 100) / 100,
+      })
+    }, 2000)
+    return () => clearInterval(id)
+  }, [])
+  return m
+}
 
 interface Props {
   open: boolean
@@ -17,6 +36,7 @@ const ATTACHMENTS = ['Câmbio_LATAM_Q2.xlsx', 'Plano_Expansão_MX.pdf']
 export function Inspector({ open, models, activeCount, toggleModel, toggleInspector }: Props) {
   const { lang } = useLang()
   const t = getT(lang)
+  const live = useLiveMetrics()
 
   if (!open) {
     return (
@@ -56,14 +76,14 @@ export function Inspector({ open, models, activeCount, toggleModel, toggleInspec
         {/* Metrics */}
         <div className="space-y-[9px]">
           {[
-            { label: t.latency, value: '1.24s' },
-            { label: t.tokens,  value: '4 812' },
-            { label: t.cost,    value: 'US$ 0.14' },
+            { label: t.latency, value: `${live.lat.toFixed(2)}s` },
+            { label: t.tokens,  value: live.tok.toLocaleString('pt-BR') },
+            { label: t.cost,    value: `US$ ${live.cost.toFixed(2)}` },
             { label: t.agentsNav ?? 'Agents', value: `${activeCount}/${models.length}` },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
               <span className="text-[11.5px] text-ink-5">{label}</span>
-              <span className="font-mono text-[12px] text-ink-0">{value}</span>
+              <span className="font-mono text-[12px] text-ink-0 tabular-nums transition-opacity">{value}</span>
             </div>
           ))}
         </div>
@@ -85,14 +105,25 @@ export function Inspector({ open, models, activeCount, toggleModel, toggleInspec
         <div>
           <p className="text-[11.5px] font-semibold text-ink-0 mb-2">{t.activeAgents}</p>
           <div className="space-y-[2px]">
-            {models.map(model => (
-              <ModelToggleRow
-                key={model.id}
-                model={model}
-                onToggle={() => toggleModel(model.id)}
-              />
-            ))}
+            {models.length === 0 ? (
+              <p className="text-[11.5px] text-ink-6 py-2">{t.noActiveAgents}</p>
+            ) : (
+              models.map(model => (
+                <ModelToggleRow
+                  key={model.id}
+                  model={model}
+                  onToggle={() => toggleModel(model.id)}
+                />
+              ))
+            )}
           </div>
+          <Link
+            href="/config"
+            className="mt-[8px] flex items-center gap-[5px] text-[10.5px] text-ink-6 hover:text-accent transition-colors"
+          >
+            <Settings2 size={11} strokeWidth={1.8} />
+            {t.manageRoster}
+          </Link>
         </div>
 
         <div className="h-px bg-border-div" />
@@ -150,17 +181,14 @@ function AgreementBar({
 
 function ModelToggleRow({ model, onToggle }: { model: Model; onToggle: () => void }) {
   return (
-    <button
-      onClick={onToggle}
-      className="w-full flex items-center justify-between px-[10px] py-[6px] rounded-[7px] hover:bg-hover-bg transition-colors cursor-pointer"
-    >
-      <div className="flex items-center gap-[8px]">
+    <div className="w-full flex items-center justify-between px-[10px] py-[6px] rounded-[7px] hover:bg-hover-bg transition-colors">
+      <div className="flex items-center gap-[8px] min-w-0">
         <span
           className="w-[8px] h-[8px] rounded-full shrink-0 transition-colors"
           style={{ backgroundColor: model.on ? model.dot : '#D4D8DF' }}
         />
         <span
-          className={`text-[12px] transition-colors ${
+          className={`text-[12px] truncate transition-colors ${
             model.on ? 'text-ink-0' : 'text-ink-6'
           }`}
         >
@@ -168,16 +196,7 @@ function ModelToggleRow({ model, onToggle }: { model: Model; onToggle: () => voi
         </span>
       </div>
 
-      {/* Pill switch */}
-      <div
-        className="relative w-[30px] h-[17px] rounded-full transition-colors duration-150 shrink-0"
-        style={{ backgroundColor: model.on ? '#0B3A78' : '#E0E3E9' }}
-      >
-        <div
-          className="absolute top-[2px] w-[13px] h-[13px] rounded-full bg-white shadow-sm transition-all duration-150"
-          style={{ left: model.on ? '15px' : '2px' }}
-        />
-      </div>
-    </button>
+      <Switch checked={model.on} onCheckedChange={onToggle} ariaLabel={model.name} />
+    </div>
   )
 }

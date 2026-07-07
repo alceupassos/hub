@@ -16,7 +16,17 @@ import type { Tab, Model, VerifyResult, VerifyState, AgentSelectionResult } from
 import { useLang } from '@/lib/lang'
 import { useAgentConfig } from '@/lib/agent-config'
 import { getT } from '@/lib/i18n'
-import { EntryVideoModal } from '@/components/EntryVideoModal'
+
+// fetch com timeout — garante que uma requisição travada não deixe a análise pendurada para sempre
+async function fetchWithTimeout(input: string, init: RequestInit, ms = 45000): Promise<Response> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), ms)
+  try {
+    return await fetch(input, { ...init, signal: ctrl.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 function agentToModel(a: Agent, getName: (id: string) => string): Model {
   return {
@@ -184,7 +194,7 @@ export default function ConsolePage() {
       ids.map(async (agentId) => {
         const t0 = Date.now()
         try {
-          const res = await fetch('/api/agent-query', {
+          const res = await fetchWithTimeout('/api/agent-query', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ agentId, question: q, lang, personaOverride: getPersonaOverride(agentId) }),
@@ -227,8 +237,14 @@ export default function ConsolePage() {
 
           return { agentId, agentName, response: agentResponse }
         } catch {
+          // Timeout/erro: NUNCA deixar o agente girando. Encerra o card com estado claro.
+          const agentName = activeModels.find(m => m.id === agentId)?.name ?? agentId
+          const elapsed = (Date.now() - t0) / 1000
           setAgentLoading(prev => ({ ...prev, [agentId]: false }))
-          return { agentId, agentName: agentId, response: '' }
+          setAgentTimings(prev => ({ ...prev, [agentId]: elapsed }))
+          setAgentTexts(prev => ({ ...prev, [agentId]: prev[agentId] || (lang === 'en' ? '⚠ No response in time. Try again or refine the question.' : '⚠ Sem resposta a tempo. Tente novamente ou refine a pergunta.') }))
+          setAgentConf(prev => ({ ...prev, [agentId]: prev[agentId] ?? 0 }))
+          return { agentId, agentName, response: '' }
         }
       }),
     )
@@ -236,11 +252,11 @@ export default function ConsolePage() {
     // Maestro synthesis
     setSynthLoading(true)
     try {
-      const synRes = await fetch('/api/maestro-synthesis', {
+      const synRes = await fetchWithTimeout('/api/maestro-synthesis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: q, agentResponses: responses.filter(r => r.response), lang }),
-      })
+      }, 60000)
       const synData = (await synRes.json()) as { synthesis?: string }
       setSynthesis(synData.synthesis ?? '')
       // Record session in Fleet Vitals history
@@ -317,7 +333,6 @@ export default function ConsolePage() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-app-bg">
-      <EntryVideoModal />
 
       {selectionPhase === 'ready' && agentSelection && (
         <AgentSelectionModal

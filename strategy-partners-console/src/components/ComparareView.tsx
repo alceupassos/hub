@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { Loader2, X, Brain, Zap, ChevronDown, BarChart2, CheckCircle2 } from 'lucide-react'
-import type { Model } from '@/lib/types'
+import { Loader2, X, Brain, Zap, ChevronDown, BarChart2, CheckCircle2, ShieldCheck, AlertTriangle, ShieldAlert } from 'lucide-react'
+import type { Model, VerifyState } from '@/lib/types'
 import type { Translations } from '@/lib/i18n'
 import { AGENTS } from '@/lib/agents'
+import { useAgentConfig } from '@/lib/agent-config'
 
 interface Props {
   activeModels: Model[]
@@ -16,6 +17,7 @@ interface Props {
   agentLoading?: Record<string, boolean>
   agentConf?: Record<string, number>
   agentModels?: Record<string, string>
+  agentVerify?: Record<string, VerifyState>
   synthesis?: string
   synthLoading?: boolean
   participatingIds?: string[]
@@ -77,6 +79,68 @@ function renderMd(raw: string): string {
   return s
 }
 
+// ── Verification Badge ─────────────────────────────────────────────────────────
+function VerifyBadge({ verify }: { verify: VerifyState | undefined }) {
+  const [open, setOpen] = useState(false)
+  if (!verify) return null
+
+  if (verify.loading) {
+    return (
+      <span className="flex items-center gap-[3px] font-mono text-[9px] px-[6px] py-[2px] rounded-full border bg-track border-border-div text-ink-7">
+        <Loader2 size={8} className="animate-spin" />
+        verificando
+      </span>
+    )
+  }
+
+  const { verdict, score, issues } = verify
+  const cfg = {
+    verified: {
+      icon: <ShieldCheck size={9} />,
+      label: 'Verificado',
+      cls: 'bg-green-50 border-green-200 text-green-700',
+    },
+    review:  {
+      icon: <AlertTriangle size={9} />,
+      label: 'Revisar',
+      cls: 'bg-amber-50 border-amber-200 text-amber-700',
+    },
+    flagged: {
+      icon: <ShieldAlert size={9} />,
+      label: 'Sinalizado',
+      cls: 'bg-red-50 border-red-200 text-red-600',
+    },
+  }[verdict]
+
+  return (
+    <span className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        className={`flex items-center gap-[3px] font-mono text-[9px] px-[6px] py-[2px] rounded-full border cursor-pointer transition-opacity hover:opacity-80 ${cfg.cls}`}
+      >
+        {cfg.icon}
+        {cfg.label} · {score}%
+      </button>
+      {open && issues.length > 0 && (
+        <div
+          className="absolute top-full left-0 mt-[4px] z-50 bg-surface border border-border-card rounded-[8px] shadow-lg p-[10px] w-[220px]"
+          onClick={e => e.stopPropagation()}
+        >
+          <p className="font-mono text-[9px] text-ink-7 mb-[6px] uppercase tracking-wider">Problemas detectados</p>
+          <ul className="space-y-[4px]">
+            {issues.map((issue, i) => (
+              <li key={i} className="text-[11px] text-ink-3 leading-[1.5] flex gap-[5px]">
+                <span className="text-amber-500 shrink-0 mt-[1px]">•</span>
+                {issue}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </span>
+  )
+}
+
 // ── Score heuristics ──────────────────────────────────────────────────────────
 function topicScore(question: string, category: string): number {
   const q = question.toLowerCase()
@@ -115,6 +179,7 @@ function AgentDetailModal({
   onClose: () => void
 }) {
   const agent = AGENTS.find(a => a.id === model.id)
+  const { getPersonaOverride } = useAgentConfig()
   const [deepResponse, setDeepResponse] = useState<string | null>(null)
   const [deepLoading, setDeepLoading] = useState(false)
   const [deepError, setDeepError] = useState<string | null>(null)
@@ -126,7 +191,13 @@ function AgentDetailModal({
     fetch('/api/agent-deep', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ agentId: model.id, question, previousResponse: response, lang: 'pt' }),
+      body: JSON.stringify({
+        agentId: model.id,
+        question,
+        previousResponse: response,
+        lang: 'pt',
+        personaOverride: getPersonaOverride(model.id),
+      }),
     })
       .then(r => r.json())
       .then((d: { response?: string; error?: string }) => {
@@ -314,13 +385,14 @@ function AgentDetailModal({
 
 // ── Model Card ─────────────────────────────────────────────────────────────────
 function ModelCard({
-  model, confidenceLabel, loading, revealed, delay, onClick,
+  model, confidenceLabel, loading, revealed, delay, verify, onClick,
 }: {
   model: Model
   confidenceLabel: string
   loading: boolean
   revealed: boolean
   delay: number
+  verify?: VerifyState
   onClick?: () => void
 }) {
   const agent = AGENTS.find(a => a.id === model.id)
@@ -369,9 +441,10 @@ function ModelCard({
       } as React.CSSProperties}
       onClick={revealed ? onClick : undefined}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: model.dot }} />
         <span className="text-[12.5px] font-semibold text-ink-0">{model.name}</span>
+        {revealed && verify && <VerifyBadge verify={verify} />}
         {revealed && (
           <span className="ml-auto font-mono text-[9px] text-ink-7 hover:text-accent transition-colors">
             aprofundar →
@@ -454,7 +527,7 @@ function FleetChartsPanel({
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-4 border-t border-accent/15 animate-fadeIn">
       {/* A — Consensus Gauge */}
       <div className="bg-surface rounded-[10px] border border-border-card p-4 flex flex-col items-center gap-2">
-        <p className="font-mono text-[9px] uppercase tracking-[0.09em] text-ink-6 font-semibold">Consenso da Frota</p>
+        <p className="font-mono text-[9px] uppercase tracking-[0.09em] text-ink-6 font-semibold">Consenso do Time</p>
         <svg width="56" height="56" viewBox="0 0 56 56">
           <circle cx={gaugeC} cy={gaugeC} r={gaugeR} fill="none" stroke="var(--color-track)" strokeWidth="5" />
           <circle
@@ -574,7 +647,7 @@ function SynthesisPanel({ synthesis, synthLoading, isAgentsLoading, participatin
     <div className="rounded-[14px] border border-accent/20 overflow-hidden mt-2">
       <div className="bg-accent px-5 py-3 flex items-center justify-between">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.09em] text-accent-over">
-          {t.tabSynthesis} — Conclusão Geral da Frota
+          {t.tabSynthesis} — Conclusão Geral do Time
         </p>
         {participatingIds && participatingIds.length > 0 && (
           <div className="flex items-center gap-[6px]">
@@ -609,7 +682,7 @@ function SynthesisPanel({ synthesis, synthLoading, isAgentsLoading, participatin
                 <span className="dot-3 w-[7px] h-[7px] rounded-full bg-accent inline-block" />
               </div>
               <p className="text-[13px] font-semibold text-accent">
-                {synthLoading ? t.synthLoading : 'Aguardando processamento final da frota…'}
+                {synthLoading ? t.synthLoading : 'Aguardando processamento final do time…'}
               </p>
             </div>
             <div className="space-y-[8px] mt-1">
@@ -653,7 +726,7 @@ function SynthesisPanel({ synthesis, synthLoading, isAgentsLoading, participatin
           </>
         ) : (
           <p className="text-[13px] text-ink-5 leading-[1.7] italic">
-            A síntese estratégica da frota aparecerá aqui após todos os agentes concluírem.
+            A síntese estratégica do time aparecerá aqui após todos os agentes concluírem.
           </p>
         )}
       </div>
@@ -722,7 +795,7 @@ export function FleetVitalsBar({
 // ── Main ───────────────────────────────────────────────────────────────────────
 export function ComparareView({
   activeModels, activeCount, t,
-  liveQuestion, agentTexts, agentLoading, agentConf, agentModels,
+  liveQuestion, agentTexts, agentLoading, agentConf, agentModels, agentVerify,
   synthesis, synthLoading, participatingIds,
 }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -805,6 +878,7 @@ export function ComparareView({
                     loading={loading}
                     revealed={isLive && !loading && Boolean(liveText)}
                     delay={i * 80}
+                    verify={agentVerify?.[model.id]}
                     onClick={() => setExpandedId(model.id)}
                   />
                 )

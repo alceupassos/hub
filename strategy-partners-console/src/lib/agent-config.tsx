@@ -3,7 +3,9 @@ import { createContext, useContext, useState, useEffect, useMemo, type ReactNode
 import { AGENTS } from './agents'
 import type { Agent } from './types'
 
-const STORAGE_KEY = 'sp-agent-config'
+// v2: invalida config antiga persistida (que deixava todos ativos) → aplica o novo default
+// (só os 5 principais ativos). Bump this key whenever the default roster changes.
+const STORAGE_KEY = 'sp-agent-config-v2'
 
 interface StoredConfig {
   enabled: string[]

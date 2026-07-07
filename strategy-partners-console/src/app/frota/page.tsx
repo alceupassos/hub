@@ -38,13 +38,13 @@ export default function FrotaPage() {
         leads: 'The five lead agents', supported: 'supported by', actions: 'actions', mandates: 'mandates',
         subTitle: 'Subagents', subLead: `${totalSub} specialists executing the heavy work under each lead agent`,
         activity: 'Actions by lead agent', activitySub: 'Accumulated across mandates',
-        casesT: 'Example cases', casesSub: 'Illustrative past mandates — how the fleet acts end to end', lead: 'lead', outcome: 'Outcome' }
+        casesT: 'Example cases', casesSub: 'Illustrative past mandates — how the team acts end to end', lead: 'lead', outcome: 'Outcome' }
     : { manifestoLead: '5 especialistas principais. 22 subagentes. Uma decisão.',
         manifesto: 'CAIO orquestra; os quatro partners aprofundam; os subagentes fazem o trabalho pesado. Você recebe uma recomendação integrada — nunca quatro opiniões grampeadas.',
         leads: 'Os cinco agentes principais', supported: 'apoiado por', actions: 'ações', mandates: 'mandatos',
         subTitle: 'Subagentes', subLead: `${totalSub} especialistas executando o trabalho pesado sob cada agente principal`,
         activity: 'Ações por agente principal', activitySub: 'Acumulado ao longo de mandatos',
-        casesT: 'Casos de exemplo', casesSub: 'Mandatos passados ilustrativos — como a frota atua de ponta a ponta', lead: 'líder', outcome: 'Resultado' }
+        casesT: 'Casos de exemplo', casesSub: 'Mandatos passados ilustrativos — como o time atua de ponta a ponta', lead: 'líder', outcome: 'Resultado' }
 
   return (
     <div className="flex h-screen overflow-hidden bg-app-bg">
@@ -52,7 +52,7 @@ export default function FrotaPage() {
       <main className="flex-1 overflow-y-auto">
         <WhatsNewBanner />
         <div className="border-b border-border-base bg-surface px-8 py-5">
-          <h1 className="text-[18px] font-semibold text-ink-0 tracking-[-0.01em]">{en ? 'The Fleet' : 'A Frota'}</h1>
+          <h1 className="text-[18px] font-semibold text-ink-0 tracking-[-0.01em]">{en ? 'Team' : 'Time'}</h1>
           <p className="text-[12.5px] text-ink-5 mt-0.5">{en ? '5 lead agents · 22 subagents' : '5 agentes principais · 22 subagentes'}</p>
         </div>
 
