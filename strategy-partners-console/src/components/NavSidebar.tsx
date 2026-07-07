@@ -3,20 +3,23 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import {
-  MessageSquare, Folder, Grid3X3, BarChart2, Book, Plus, ChevronDown,
-  ChevronRight, Circle,
+  MessageSquare, Folder, Grid3X3, BarChart2, Book, Settings, Plus, ChevronDown,
+  ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare,
 } from 'lucide-react'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
 import { useLang } from '@/lib/lang'
+import { useAgentConfig } from '@/lib/agent-config'
 import { getT, CATEGORY_T } from '@/lib/i18n'
 
 const CATEGORY_ORDER = ['chat', 'vendas', 'segurança', 'financeiro', 'programação', 'conhecimento']
 
 function AgentRow({ agent, active }: { agent: Agent; active: boolean }) {
   const [open, setOpen] = useState(false)
+  const { getDisplayName } = useAgentConfig()
+  const displayName = getDisplayName(agent.id)
   const href = `/chat?agent=${agent.id}`
 
   return (
@@ -32,19 +35,13 @@ function AgentRow({ agent, active }: { agent: Agent; active: boolean }) {
         <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 ring-1 ring-border-base">
           <Image
             src={agent.avatar}
-            alt={agent.name}
+            alt={displayName}
             fill
             className="object-cover"
             sizes="20px"
           />
         </div>
-        <span className="flex-1 truncate">{agent.name}</span>
-        {agent.active && (
-          <span
-            className="w-[5px] h-[5px] rounded-full shrink-0"
-            style={{ backgroundColor: agent.dot }}
-          />
-        )}
+        <span className="flex-1 truncate">{displayName}</span>
         <ChevronRight
           size={10}
           strokeWidth={2}
@@ -60,22 +57,12 @@ function AgentRow({ agent, active }: { agent: Agent; active: boolean }) {
           {/* Header */}
           <div className="flex items-center gap-[7px] mb-[6px]">
             <div className="relative w-[22px] h-[22px] rounded-full overflow-hidden shrink-0 ring-1 ring-border-base">
-              <Image src={agent.avatar} alt={agent.name} fill className="object-cover" sizes="22px" />
+              <Image src={agent.avatar} alt={displayName} fill className="object-cover" sizes="22px" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11.5px] font-semibold text-ink-0 leading-tight truncate">{agent.name}</p>
+              <p className="text-[11.5px] font-semibold text-ink-0 leading-tight truncate">{displayName}</p>
               <p className="font-mono text-[9px] text-ink-7 leading-tight truncate">{agent.modelAlias}</p>
             </div>
-            <span
-              className="ml-auto shrink-0 font-mono text-[8px] px-[5px] py-[1px] rounded-full"
-              style={{
-                background: `${agent.dot}22`,
-                color: agent.dot,
-                border: `1px solid ${agent.dot}44`,
-              }}
-            >
-              {agent.active ? 'online' : 'offline'}
-            </span>
           </div>
 
           {/* Role */}
@@ -114,15 +101,33 @@ function NavContent() {
   const searchParams = useSearchParams()
   const activeAgent = searchParams.get('agent')
   const { lang, setLang } = useLang()
+  const { isEnabled } = useAgentConfig()
   const t = getT(lang)
   const catT = CATEGORY_T[lang]
 
+  // Papel da sessão NextAuth — o item Admin só aparece para role 'admin' (RBAC real também
+  // é aplicado no servidor; esconder no menu é apenas UX).
+  const [role, setRole] = useState<string | null>(null)
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(r => r.json())
+      .then(d => setRole(d?.user?.role ?? null))
+      .catch(() => {})
+  }, [])
+
   const navItems = [
     { icon: MessageSquare, label: t.conversations, href: '/', matchPaths: ['/', '/chat'] },
+    { icon: Sparkles,      label: t.dealflow,      href: '/dealflow',     matchPaths: ['/dealflow'] },
+    { icon: KanbanSquare,  label: t.pipeline,      href: '/pipeline',     matchPaths: ['/pipeline'] },
     { icon: Folder,        label: t.projects,      href: '/projetos',     matchPaths: ['/projetos'] },
     { icon: Grid3X3,       label: t.agentsNav,     href: '/modelos',      matchPaths: ['/modelos'] },
     { icon: BarChart2,     label: t.reports,       href: '/relatorios',   matchPaths: ['/relatorios'] },
     { icon: Book,          label: t.knowledge,     href: '/conhecimento', matchPaths: ['/conhecimento'] },
+    { icon: Sparkles,      label: t.novidades,     href: '/novidades',    matchPaths: ['/novidades'] },
+    { icon: Settings,      label: t.configNav,     href: '/config',       matchPaths: ['/config'] },
+    ...(role === 'admin'
+      ? [{ icon: ShieldCheck, label: 'Admin', href: '/admin', matchPaths: ['/admin'] }]
+      : []),
   ]
 
   return (
@@ -196,13 +201,13 @@ function NavContent() {
             <ChevronDown size={10} strokeWidth={2} className="text-ink-6" />
           </p>
 
-          {CATEGORY_ORDER.filter(cat => AGENTS_BY_CATEGORY[cat]?.length).map(cat => (
+          {CATEGORY_ORDER.filter(cat => AGENTS_BY_CATEGORY[cat]?.some(a => isEnabled(a.id))).map(cat => (
             <div key={cat} className="mb-1">
               <p className="text-[9.5px] font-semibold uppercase tracking-[0.08em] text-ink-7 px-[10px] py-[3px] mt-1">
                 {catT[cat] ?? cat}
               </p>
 
-              {AGENTS_BY_CATEGORY[cat].map(agent => (
+              {AGENTS_BY_CATEGORY[cat].filter(a => isEnabled(a.id)).map(agent => (
                 <AgentRow
                   key={agent.id}
                   agent={agent}
@@ -220,8 +225,8 @@ function NavContent() {
           AA
         </div>
         <div className="min-w-0">
-          <p className="text-[12px] font-medium text-ink-0 truncate">Alexandre Azevedo</p>
-          <p className="font-mono text-[10px] text-ink-6 truncate">CEO · Strategy Partners</p>
+          <p className="text-[12px] font-medium text-ink-0 truncate">Strategy Partners</p>
+          <p className="font-mono text-[10px] text-ink-6 truncate">Acesso autorizado · 24h</p>
         </div>
       </div>
     </nav>

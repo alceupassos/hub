@@ -22,21 +22,83 @@ const vector = customType<{ data: number[]; driverData: string; config: { dim: n
   },
 })
 
+// RBAC roles (Fase 5). admin = tudo; partner = sócio; analyst = analista; client_viewer = cliente somente leitura.
+export const userRole = sp.enum('user_role', ['admin', 'partner', 'analyst', 'client_viewer'])
+
 export const users = sp.table('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   name: text('name').notNull(),
+  role: userRole('role').notNull().default('analyst'),
+  active: integer('active').notNull().default(1), // 0 = desativado (não pode logar)
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-  // role column arrives in Fase 5 (RBAC)
 })
 
 export const projects = sp.table('projects', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
-  type: text('type').notNull(), // 'pre_deal' | 'pmi' — formal enum in Fase 4
+  type: text('type').notNull(), // 'pre_deal' | 'pmi'
   clientName: text('client_name'),
   createdByUserId: uuid('created_by_user_id').references(() => users.id),
+  // Dealflow (Fase 6): um "deal" É um project pre_deal com estágio, score e tese.
+  stage: text('stage').notNull().default('sourcing'), // sourcing|screening|diligence|loi|closing|closed
+  scoreCache: integer('score_cache'), // último score 0-100 (cache do deal_scores mais recente)
+  priority: text('priority'), // baixa|media|alta
+  sourceType: text('source_type'), // manual|ingest|sourcing|email
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// Tese de investimento configurável — critérios contra os quais deals são pontuados.
+export const theses = sp.table('theses', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  description: text('description'),
+  criteria: text('criteria'), // JSON: { sector, minArr, maxChurn, aiNative, ... }
+  createdByUserId: uuid('created_by_user_id').references(() => users.id),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// Métricas extraídas automaticamente de decks/planilhas por IA.
+export const dealMetrics = sp.table('deal_metrics', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  arr: numeric('arr', { precision: 18, scale: 2 }),
+  mrr: numeric('mrr', { precision: 18, scale: 2 }),
+  growthRate: numeric('growth_rate', { precision: 8, scale: 2 }), // % a.a.
+  burn: numeric('burn', { precision: 18, scale: 2 }), // mensal
+  teamSize: integer('team_size'),
+  churn: numeric('churn', { precision: 8, scale: 2 }), // %
+  source: text('source'), // documento/origem
+  extractedAt: timestamp('extracted_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// Score de diligência do deal (0-100) contra uma tese + recomendação go/no-go.
+export const dealScores = sp.table('deal_scores', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  thesisId: uuid('thesis_id').references(() => theses.id),
+  score: integer('score').notNull(), // 0-100
+  breakdown: text('breakdown'), // JSON: [{ criterion, weight, score, note }]
+  recommendation: text('recommendation').notNull().default('watch'), // go | no_go | watch
+  rationale: text('rationale'),
+  modelUsed: text('model_used'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const dealComments = sp.table('deal_comments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => users.id),
+  body: text('body').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const dealActivity = sp.table('deal_activity', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(), // created|stage_change|scored|ingested|comment|metric
+  detail: text('detail'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
@@ -176,7 +238,26 @@ export const pmiRisks = sp.table('pmi_risks', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+// ── Fase 5: log de execução dos agentes ───────────────────────────────────────
+export const executionLogs = sp.table('execution_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id),
+  projectId: uuid('project_id').references(() => projects.id),
+  agentId: text('agent_id').notNull(),
+  route: text('route').notNull(),
+  question: text('question').notNull(),
+  responsePreview: text('response_preview'),
+  modelUsed: text('model_used'),
+  durationMs: integer('duration_ms'),
+  confidence: integer('confidence'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export type ProjectType = 'pre_deal' | 'pmi'
+export type UserRole = 'admin' | 'partner' | 'analyst' | 'client_viewer'
+export type DealStage = 'sourcing' | 'screening' | 'diligence' | 'loi' | 'closing' | 'closed'
+export const DEAL_STAGES: DealStage[] = ['sourcing', 'screening', 'diligence', 'loi', 'closing', 'closed']
+export type DealRecommendation = 'go' | 'no_go' | 'watch'
 
 export type DBUser = typeof users.$inferSelect
 export type DBProject = typeof projects.$inferSelect
@@ -188,3 +269,8 @@ export type DBValuation = typeof valuationEstimates.$inferSelect
 export type DBSynergy = typeof synergies.$inferSelect
 export type DBMilestone = typeof milestones.$inferSelect
 export type DBPmiRisk = typeof pmiRisks.$inferSelect
+export type DBExecutionLog = typeof executionLogs.$inferSelect
+export type DBThesis = typeof theses.$inferSelect
+export type DBDealMetrics = typeof dealMetrics.$inferSelect
+export type DBDealScore = typeof dealScores.$inferSelect
+export type DBDealComment = typeof dealComments.$inferSelect

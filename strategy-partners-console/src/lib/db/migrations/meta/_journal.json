@@ -15,6 +15,20 @@
       "when": 1783382384392,
       "tag": "0001_fase4_projects",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783383002910,
+      "tag": "0002_fase5_rbac_logs",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783384013102,
+      "tag": "0003_fase6_dealflow",
+      "breakpoints": true
     }
   ]
 }
