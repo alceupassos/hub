@@ -476,6 +476,9 @@ export default function ConsolePage() {
         activeCount={activeCount}
         toggleModel={toggleModel}
         toggleInspector={toggleInspector}
+        agentConf={agentConf}
+        participatingIds={participatingIds}
+        isRunning={isRunning}
       />
     </div>
   )

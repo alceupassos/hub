@@ -33,14 +33,22 @@ interface Props {
   activeCount: number
   toggleModel: (id: string) => void
   toggleInspector: () => void
+  agentConf?: Record<string, number>
+  participatingIds?: string[]
+  isRunning?: boolean
 }
 
-const ATTACHMENTS = ['Câmbio_LATAM_Q2.xlsx', 'Plano_Expansão_MX.pdf']
-
-export function Inspector({ open, models, activeCount, toggleModel, toggleInspector }: Props) {
+export function Inspector({ open, models, activeCount, toggleModel, toggleInspector, agentConf = {}, participatingIds = [], isRunning = false }: Props) {
   const { lang } = useLang()
   const t = getT(lang)
   const live = useLiveMetrics()
+
+  // Concordância REAL derivada das confianças dos agentes que participaram (não valores fixos).
+  const confs = participatingIds.map(id => agentConf[id]).filter((c): c is number => typeof c === 'number' && c > 0)
+  const converge = confs.filter(c => c >= 72).length   // alta convicção
+  const hedge = confs.filter(c => c >= 55 && c < 72).length // moderada / com ressalvas
+  const cautious = confs.filter(c => c < 55).length    // cautela
+  const hasAgreement = confs.length > 0
 
   if (!open) {
     return (
@@ -94,13 +102,20 @@ export function Inspector({ open, models, activeCount, toggleModel, toggleInspec
 
         <div className="h-px bg-border-div" />
 
-        {/* Agreement */}
+        {/* Agreement — derivado das confianças reais dos agentes */}
         <div>
           <p className="text-[11.5px] font-semibold text-ink-0 mb-2">{t.agreement}</p>
-          <div className="space-y-[10px]">
-            <AgreementBar label={t.phased} count={2} total={3} color="#1F9D6B" ofLabel={t.of} />
-            <AgreementBar label={t.awaitQ4} count={1} total={3} color="#C2C8D2" ofLabel={t.of} />
-          </div>
+          {hasAgreement ? (
+            <div className="space-y-[10px]">
+              <AgreementBar label={lang === 'en' ? 'High conviction' : 'Alta convicção'} count={converge} total={confs.length} color="#1F9D6B" ofLabel={t.of} />
+              <AgreementBar label={lang === 'en' ? 'With caveats' : 'Com ressalvas'} count={hedge} total={confs.length} color="#C9A24A" ofLabel={t.of} />
+              {cautious > 0 && (
+                <AgreementBar label={lang === 'en' ? 'Cautious' : 'Cautela'} count={cautious} total={confs.length} color="#C2C8D2" ofLabel={t.of} />
+              )}
+            </div>
+          ) : (
+            <p className="text-[11px] text-ink-6">{isRunning ? (lang === 'en' ? 'Computing…' : 'Calculando…') : (lang === 'en' ? 'Run an analysis to see agreement.' : 'Rode uma análise para ver a concordância.')}</p>
+          )}
         </div>
 
         <div className="h-px bg-border-div" />
@@ -130,23 +145,21 @@ export function Inspector({ open, models, activeCount, toggleModel, toggleInspec
           </Link>
         </div>
 
-        <div className="h-px bg-border-div" />
-
-        {/* Context */}
-        <div>
-          <p className="text-[11.5px] font-semibold text-ink-0 mb-2">{t.context}</p>
-          <div className="space-y-[6px]">
-            {ATTACHMENTS.map(name => (
-              <div
-                key={name}
-                className="flex items-center gap-2 bg-subtle-bg border border-border-soft rounded-[7px] px-[8px] py-[5px]"
-              >
+        {hasAgreement && (
+          <>
+            <div className="h-px bg-border-div" />
+            {/* Resumo real da última execução (substitui anexos fake) */}
+            <div>
+              <p className="text-[11.5px] font-semibold text-ink-0 mb-2">{lang === 'en' ? 'Last run' : 'Última execução'}</p>
+              <div className="flex items-center gap-2 bg-subtle-bg border border-border-soft rounded-[7px] px-[8px] py-[6px]">
                 <FileText size={12} strokeWidth={1.6} className="text-ink-6 shrink-0" />
-                <span className="text-[11.5px] text-ink-5 truncate">{name}</span>
+                <span className="text-[11.5px] text-ink-5">
+                  {confs.length} {lang === 'en' ? 'agents' : 'agentes'} · {lang === 'en' ? 'avg confidence' : 'confiança média'} {Math.round(confs.reduce((s, c) => s + c, 0) / confs.length)}%
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </aside>
   )
