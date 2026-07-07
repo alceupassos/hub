@@ -10,6 +10,7 @@ import { TimelineView } from '@/components/TimelineView'
 import { ComposerBar } from '@/components/ComposerBar'
 import { Inspector } from '@/components/Inspector'
 import { AgentSelectionModal } from '@/components/AgentSelectionModal'
+import { SwarmModal } from '@/components/SwarmModal'
 import { AGENTS } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
 import type { Tab, Model, VerifyResult, VerifyState, AgentSelectionResult } from '@/lib/types'
@@ -69,6 +70,7 @@ export default function ConsolePage() {
 
   // ── Maestro Mode state ────────────────────────────────────────────────────
   const [isRunning, setIsRunning] = useState(false)
+  const [showSwarm, setShowSwarm] = useState(false)
   const [liveQuestion, setLiveQuestion] = useState('')
   const [agentTexts, setAgentTexts] = useState<Record<string, string>>({})
   const [agentLoading, setAgentLoading] = useState<Record<string, boolean>>({})
@@ -176,6 +178,7 @@ export default function ConsolePage() {
   async function handleMaestroQuery(q: string, displayQ?: string, overrideIds?: string[]) {
     if (!q.trim() || isRunning || activeModels.length === 0) return
     setIsRunning(true)
+    setShowSwarm(true) // abre o modal de execução ao vivo
     setTab('comparar')
     setLiveQuestion(displayQ ?? q)
     setAgentTexts({})
@@ -249,28 +252,36 @@ export default function ConsolePage() {
       }),
     )
 
-    // Maestro synthesis
+    // Maestro synthesis — timeout generoso (payload grande com N agentes) e fallback claro:
+    // a síntese NUNCA fica pendurada; se falhar/vazia, mostra mensagem em vez do placeholder eterno.
     setSynthLoading(true)
+    const answered = responses.filter(r => r.response)
+    const fallbackSyn = lang === 'en'
+      ? '> The consolidated synthesis could not be generated this time. The individual agent analyses above remain valid — refine the question or run again to retry.'
+      : '> A síntese consolidada não pôde ser gerada desta vez. As análises individuais dos agentes acima permanecem válidas — refine a pergunta ou rode novamente para tentar de novo.'
     try {
-      const synRes = await fetchWithTimeout('/api/maestro-synthesis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q, agentResponses: responses.filter(r => r.response), lang }),
-      }, 60000)
-      const synData = (await synRes.json()) as { synthesis?: string }
-      setSynthesis(synData.synthesis ?? '')
-      // Record session in Fleet Vitals history
+      if (answered.length === 0) {
+        setSynthesis(fallbackSyn)
+      } else {
+        const synRes = await fetchWithTimeout('/api/maestro-synthesis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q, agentResponses: answered, lang }),
+        }, 120000)
+        const synData = (await synRes.json()) as { synthesis?: string }
+        setSynthesis(synData.synthesis?.trim() ? synData.synthesis : fallbackSyn)
+      }
       const allConfs = Object.values(agentConf)
       if (allConfs.length > 0) {
         const avg = allConfs.reduce((s, v) => s + v, 0) / allConfs.length
-        setSessionHistory(prev => [
-          ...prev,
-          { avgConf: avg, agentCount: ids.length, ts: Date.now() },
-        ])
+        setSessionHistory(prev => [...prev, { avgConf: avg, agentCount: ids.length, ts: Date.now() }])
       }
-    } catch {}
-    setSynthLoading(false)
-    setIsRunning(false)
+    } catch {
+      setSynthesis(fallbackSyn)
+    } finally {
+      setSynthLoading(false)
+      setIsRunning(false)
+    }
   }
 
   function handleExport() {
@@ -343,6 +354,30 @@ export default function ConsolePage() {
           onConfirm={handleSelectionConfirm}
           onCancel={() => { setSelectionPhase('idle'); setDiscoveryPhase('idle') }}
         />
+      )}
+
+      <SwarmModal
+        open={showSwarm}
+        onClose={() => setShowSwarm(false)}
+        models={models}
+        participatingIds={participatingIds}
+        agentLoading={agentLoading}
+        agentTimings={agentTimings}
+        agentTexts={agentTexts}
+        synthLoading={synthLoading}
+        synthesis={synthesis}
+        question={liveQuestion}
+      />
+
+      {/* Reabrir o modal de execução enquanto roda */}
+      {isRunning && !showSwarm && (
+        <button
+          onClick={() => setShowSwarm(true)}
+          className="fixed bottom-5 right-5 z-50 flex items-center gap-2 bg-accent text-white text-[12px] font-medium px-4 py-2.5 rounded-full shadow-lg hover:opacity-90"
+        >
+          <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          {lang === 'en' ? 'Live execution' : 'Execução ao vivo'}
+        </button>
       )}
 
       <NavSidebar />

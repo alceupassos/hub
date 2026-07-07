@@ -7,15 +7,19 @@ import { useLang } from '@/lib/lang'
 import { getT } from '@/lib/i18n'
 import { Switch } from './ui/Switch'
 
-// Métricas de execução "vivas" — emulam telemetria em movimento (latência/tokens/custo).
+// Métricas de execução "vivas". Tokens e custo são MONOTÔNICOS (só sobem, como um contador
+// acumulado); a latência oscila (é por-resposta). O custo deriva dos tokens (coerente).
 function useLiveMetrics() {
   const [m, setM] = useState({ lat: 1.24, tok: 4812, cost: 0.14 })
   useEffect(() => {
     const id = setInterval(() => {
-      setM({
-        lat: Math.round((0.82 + Math.random() * 1.7) * 100) / 100,
-        tok: 3600 + Math.floor(Math.random() * 4200),
-        cost: Math.round((0.09 + Math.random() * 0.24) * 100) / 100,
+      setM(prev => {
+        const tok = prev.tok + Math.floor(60 + Math.random() * 340) // sempre cresce
+        return {
+          lat: Math.round((0.82 + Math.random() * 1.7) * 100) / 100, // oscila
+          tok,
+          cost: Math.round((tok / 1000) * 0.03 * 100) / 100, // deriva dos tokens → sempre cresce
+        }
       })
     }, 2000)
     return () => clearInterval(id)

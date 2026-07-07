@@ -8,10 +8,10 @@ interface LangCtx {
   setLang: (l: Lang) => void
 }
 
-const LangContext = createContext<LangCtx>({ lang: 'en', setLang: () => {} })
+const LangContext = createContext<LangCtx>({ lang: 'pt', setLang: () => {} })
 
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('en')
+  const [lang, setLangState] = useState<Lang>('pt') // default PT-BR
 
   useEffect(() => {
     const stored = localStorage.getItem('sp-lang') as Lang | null

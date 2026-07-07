@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { Loader2, X, Brain, Zap, ChevronDown, BarChart2, CheckCircle2, ShieldCheck, AlertTriangle, ShieldAlert } from 'lucide-react'
 import type { Model, VerifyState } from '@/lib/types'
@@ -805,12 +805,23 @@ export function ComparareView({
   const loadingCount = agentLoading ? Object.values(agentLoading).filter(Boolean).length : 0
   const totalAgents = activeModels.length
 
-  // Progress: agents done = (total - loading), each agent = 85%/total share; synthesis = last 15%
+  // Progresso: agentes = 85%, síntese = 15%. A execução SEMPRE fecha 100% quando todos os
+  // agentes terminam e a síntese não está mais carregando (sucesso, vazia ou timeout) —
+  // nunca trava em 85%.
   const agentsDone = totalAgents > 0 ? totalAgents - loadingCount : 0
+  const agentsAllDone = totalAgents > 0 && loadingCount === 0
+  const isComplete = Boolean(isLive && agentsAllDone && !synthLoading)
   const agentsShare = totalAgents > 0 ? (agentsDone / totalAgents) * 85 : 0
-  const synthShare  = synthesis ? 15 : synthLoading ? 7 : 0
-  const progressPct = isLive ? Math.round(agentsShare + synthShare) : 0
-  const isComplete  = progressPct >= 100 || (synthesis && !synthLoading)
+  const synthShare  = synthesis ? 15 : synthLoading ? 8 : 0
+  const progressPct = isLive ? (isComplete ? 100 : Math.round(agentsShare + synthShare)) : 0
+
+  // Auto-scroll: acompanha a execução rolando sozinho conforme respostas/síntese chegam.
+  const bottomRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!isLive) return
+    const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    bottomRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'end' })
+  }, [isLive, loadingCount, synthLoading, synthesis, progressPct])
 
   const expandedModel = expandedId ? activeModels.find(m => m.id === expandedId) : null
 
@@ -823,7 +834,7 @@ export function ComparareView({
             <Loader2 size={14} className="animate-spin text-accent shrink-0" />
             <div className="min-w-0">
               <p className="text-[12px] font-semibold text-accent leading-tight">
-                Frota mobilizada — {loadingCount} {loadingCount === 1 ? 'agente' : 'agentes'} em análise paralela
+                Time mobilizado — {loadingCount} {loadingCount === 1 ? 'agente' : 'agentes'} em análise paralela
               </p>
               <p className="text-[11px] text-ink-6 truncate leading-tight mt-[1px]">{displayQuestion}</p>
             </div>
@@ -925,11 +936,12 @@ export function ComparareView({
             </div>
             {isComplete && (
               <p className="font-mono text-[9.5px] text-success text-center animate-fadeIn">
-                ✓ Análise da frota finalizada — {totalAgents} agentes participaram
+                ✓ Análise do time finalizada — {totalAgents} agentes participaram
               </p>
             )}
           </div>
         )}
+        <div ref={bottomRef} />
       </div>
 
       {expandedModel && (
