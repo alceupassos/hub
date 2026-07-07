@@ -15,10 +15,12 @@ interface Props {
 }
 
 export function SinteseView({ activeModels, agentConf, question, synthesis, synthLoading, t }: Props) {
-  const activeCount = activeModels.length
-  const confs = Object.values(agentConf)
+  // Só agentes que de fato responderam (confiança > 0; fora de escopo = 0).
+  const confs = Object.values(agentConf).filter(c => c > 0)
+  const activeCount = confs.length || activeModels.length
   const avgConf = confs.length > 0 ? Math.round(confs.reduce((s, v) => s + v, 0) / confs.length) : 0
-  const agreementCount = Math.min(activeCount, Math.ceil(activeCount * 0.67))
+  // Concordância REAL: quantos com alta convicção (≥72%), coerente com o Inspector.
+  const agreementCount = confs.filter(c => c >= 72).length
 
   return (
     <div className="bg-surface border border-border-card rounded-[10px] p-[26px_30px] space-y-5">

@@ -519,8 +519,8 @@ function FleetChartsPanel({
 }) {
   type AgentEntry = { agent: (typeof AGENTS)[number]; conf: number }
   const agents: AgentEntry[] = participatingIds
-    .map(id => ({ agent: AGENTS.find(a => a.id === id), conf: agentConf[id] ?? 70 }))
-    .filter((x): x is AgentEntry => x.agent != null)
+    .map(id => ({ agent: AGENTS.find(a => a.id === id), conf: agentConf[id] ?? 0 }))
+    .filter((x): x is AgentEntry => x.agent != null && x.conf > 0) // exclui fora de escopo
 
   const avgConf = agents.length > 0
     ? Math.round(agents.reduce((s, a) => s + a.conf, 0) / agents.length)
