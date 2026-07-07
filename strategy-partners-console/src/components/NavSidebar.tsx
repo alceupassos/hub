@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import {
   MessageSquare, Folder, Grid3X3, BarChart2, Book, Settings, Plus, ChevronDown,
-  ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare,
+  ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare, Users,
 } from 'lucide-react'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
@@ -117,6 +117,7 @@ function NavContent() {
 
   const navItems = [
     { icon: MessageSquare, label: t.conversations, href: '/', matchPaths: ['/', '/chat'] },
+    { icon: Users,         label: t.fleet,         href: '/frota',        matchPaths: ['/frota'] },
     { icon: Sparkles,      label: t.dealflow,      href: '/dealflow',     matchPaths: ['/dealflow'] },
     { icon: KanbanSquare,  label: t.pipeline,      href: '/pipeline',     matchPaths: ['/pipeline'] },
     { icon: Folder,        label: t.projects,      href: '/projetos',     matchPaths: ['/projetos'] },
