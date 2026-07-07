@@ -47,3 +47,18 @@ export async function addRedFlag(input: {
   }).returning()
   return row
 }
+
+// Inserções em lote usadas pela diligence autônoma (agentes populam a partir dos docs).
+export async function addRedFlags(projectId: string, items: { category: string; description: string; severity: string; detectedByAgentId?: string | null }[]) {
+  if (items.length === 0) return
+  await db.insert(redFlags).values(items.map(i => ({
+    projectId, category: i.category, description: i.description, severity: i.severity, detectedByAgentId: i.detectedByAgentId ?? null,
+  })))
+}
+
+export async function addDdItems(projectId: string, items: { category: string; item: string; status?: string }[]) {
+  if (items.length === 0) return
+  await db.insert(ddChecklistItems).values(items.map(i => ({
+    projectId, category: i.category, item: i.item, status: i.status ?? 'pendente',
+  })))
+}
