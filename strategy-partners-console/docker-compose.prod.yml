@@ -5,10 +5,14 @@ services:
       dockerfile: Dockerfile
     container_name: strategy-console
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:3212:3000"
+    # network_mode host: o container compartilha a rede do host, então DATABASE_URL=localhost:5432
+    # alcança o Postgres do host (que escuta só em 127.0.0.1). App escuta direto em PORT=3212,
+    # onde o nginx já aponta. Sem port-mapping nem rede bridge.
+    network_mode: host
     environment:
       - NODE_ENV=production
+      - PORT=3212
+      - HOSTNAME=127.0.0.1
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
       - DEEPSEEK_MODEL_CHAT=${DEEPSEEK_MODEL_CHAT:-deepseek-chat}
       - DEEPSEEK_MODEL_REASONER=${DEEPSEEK_MODEL_REASONER:-deepseek-reasoner}
@@ -27,18 +31,12 @@ services:
       - LEGACY_DAILY_CODE_AUTH=${LEGACY_DAILY_CODE_AUTH:-true}
       - AUTH_SECRET=${AUTH_SECRET}
       - ADMIN_BOOTSTRAP_TOKEN=${ADMIN_BOOTSTRAP_TOKEN}
-    networks:
-      - angrahub_default
     healthcheck:
       test:
         - "CMD-SHELL"
         - >
-          node -e "fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+          node -e "fetch('http://127.0.0.1:3212').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
       interval: 20s
       timeout: 8s
       retries: 5
       start_period: 20s
-
-networks:
-  angrahub_default:
-    external: true
