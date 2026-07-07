@@ -1,4 +1,5 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { NavSidebar } from '@/components/NavSidebar'
 import { AGENTS } from '@/lib/agents'
 import { BarChart2, MessageSquare, Zap, TrendingUp } from 'lucide-react'
@@ -6,26 +7,50 @@ import { useLang } from '@/lib/lang'
 import { useAgentConfig } from '@/lib/agent-config'
 import { getT } from '@/lib/i18n'
 
-const TOP_AGENTS = [
-  { name: 'Brisa',        sessions: 312, pct: 92 },
-  { name: 'NOVAE',        sessions: 248, pct: 73 },
-  { name: 'TYCEN',        sessions: 201, pct: 59 },
-  { name: 'MERKO',        sessions: 187, pct: 55 },
-  { name: 'Jurista',      sessions: 134, pct: 40 },
+interface Stats {
+  totalSessions: number
+  avgLatencyMs: number | null
+  reasoningPct: number
+  topAgents: { agentId: string; sessions: number }[]
+}
+
+const DEMO_TOP = [
+  { name: 'Consul', sessions: 312 },
+  { name: 'NOVAE', sessions: 248 },
+  { name: 'TYCEN', sessions: 201 },
+  { name: 'MERKO', sessions: 187 },
+  { name: 'Counsel', sessions: 134 },
 ]
+
+const nameOf = (id: string) => AGENTS.find(a => a.id === id)?.name ?? id
 
 export default function RelatoriosPage() {
   const { lang } = useLang()
   const { isEnabled } = useAgentConfig()
   const t = getT(lang)
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [live, setLive] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/reports').then(r => r.json()).then(d => {
+      if (d.stats) { setStats(d.stats); setLive(true) }
+    }).catch(() => {})
+  }, [])
 
   const activeAgents = AGENTS.filter(a => isEnabled(a.id)).length
 
+  // Top agents: real (execution_logs) ou demo
+  const topRaw = stats?.topAgents?.length
+    ? stats.topAgents.map(a => ({ name: nameOf(a.agentId), sessions: a.sessions }))
+    : DEMO_TOP
+  const maxSessions = Math.max(...topRaw.map(a => a.sessions), 1)
+  const TOP_AGENTS = topRaw.map(a => ({ ...a, pct: Math.round((a.sessions / maxSessions) * 100) }))
+
   const METRICS = [
-    { label: t.totalSessions,  value: '1.284', delta: '+12%',                   icon: MessageSquare, color: '#0B3A78' },
-    { label: t.agentsActive,   value: String(activeAgents), delta: `${t.of} ${AGENTS.length}`, icon: Zap,          color: '#10B981' },
-    { label: t.avgLatency,     value: '1.42s',  delta: '-8%',                   icon: TrendingUp,    color: '#F97316' },
-    { label: t.reasoningUsed,  value: '23%',    delta: t.ofSessions,            icon: BarChart2,     color: '#8B5CF6' },
+    { label: t.totalSessions,  value: stats ? stats.totalSessions.toLocaleString('pt-BR') : '1.284', delta: live ? '' : '+12%', icon: MessageSquare, color: '#0B3A78' },
+    { label: t.agentsActive,   value: String(activeAgents), delta: `${t.of} ${AGENTS.length}`, icon: Zap, color: '#10B981' },
+    { label: t.avgLatency,     value: stats?.avgLatencyMs != null ? `${(stats.avgLatencyMs / 1000).toFixed(2)}s` : '1.42s', delta: live ? '' : '-8%', icon: TrendingUp, color: '#F97316' },
+    { label: t.reasoningUsed,  value: stats ? `${stats.reasoningPct}%` : '23%', delta: t.ofSessions, icon: BarChart2, color: '#8B5CF6' },
   ]
 
   return (
@@ -35,7 +60,7 @@ export default function RelatoriosPage() {
       <main className="flex-1 overflow-y-auto">
         <div className="border-b border-border-base bg-surface px-8 py-5">
           <h1 className="text-[17px] font-semibold text-ink-0">{t.pageReports}</h1>
-          <p className="text-[12px] text-ink-5 mt-0.5">{t.reportSubtitle}</p>
+          <p className="text-[12px] text-ink-5 mt-0.5">{live ? (lang === 'en' ? 'Live data from execution logs' : 'Dados reais dos logs de execução') : `${t.reportSubtitle} · ${lang === 'en' ? 'demo' : 'demonstração'}`}</p>
         </div>
 
         <div className="px-8 py-6 space-y-6">
