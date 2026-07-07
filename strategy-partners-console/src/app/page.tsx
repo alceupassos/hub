@@ -201,7 +201,7 @@ export default function ConsolePage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ agentId, question: q, lang, personaOverride: getPersonaOverride(agentId) }),
-          })
+          }, 120000) // 120s: o modelo "reasoner" (M&A/finanças/orquestração) gera respostas longas e lentas
           const data = (await res.json()) as { response?: string; confidence?: number; model?: string }
           const elapsed = (Date.now() - t0) / 1000
           const agentName = activeModels.find(m => m.id === agentId)?.name ?? agentId
