@@ -44,3 +44,10 @@ next-env.d.ts
 # packages). This console's src/lib is HAND-WRITTEN SOURCE, not build output — re-include it.
 !/src/lib/
 !/src/lib/**
+
+# Same for the monorepo `logs/` rule — these are App Router route directories (the /admin/logs
+# page and its API), not log output. Re-include them.
+!/src/app/admin/logs/
+!/src/app/admin/logs/**
+!/src/app/api/admin/logs/
+!/src/app/api/admin/logs/**

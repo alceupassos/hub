@@ -5,6 +5,7 @@ import { IDENTITY_GUARD, detectPromptInjection } from '@/lib/server/security'
 import { logSecurityEvent } from '@/lib/server/security-events'
 import { anthropicTiersEnabled, resolveAnthropicModel } from '@/lib/modelTiers'
 import { callAnthropic } from '@/lib/server/providers/anthropic'
+import { logExecution } from '@/lib/server/execution-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
         messages: [{ role: 'user', content: userPrompt }],
         maxTokens: 1400,
       })
+      void logExecution({ agentId, route: 'api/agent-deep', question, responsePreview: text, modelUsed: resolveAnthropicModel(agent) })
       return Response.json({ agentId, response: text })
     } catch (err) {
       console.error('[agent-deep] anthropic error:', err)
@@ -97,5 +99,6 @@ export async function POST(req: NextRequest) {
   }
   const response = data.choices?.[0]?.message?.content ?? ''
 
+  void logExecution({ agentId, route: 'api/agent-deep', question, responsePreview: response, modelUsed: model })
   return Response.json({ agentId, response })
 }

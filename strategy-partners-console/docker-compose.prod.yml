@@ -23,6 +23,10 @@ services:
       - ANTHROPIC_OPUS_MODEL=${ANTHROPIC_OPUS_MODEL:-claude-opus-4-8}
       - ANTHROPIC_FABLE_MODEL=${ANTHROPIC_FABLE_MODEL:-claude-fable-5}
       - ANTHROPIC_SONNET_MODEL=${ANTHROPIC_SONNET_MODEL:-claude-sonnet-5}
+      # Auth / RBAC (Fase 5) — corte suave: NextAuth + código diário convivem via flag.
+      - LEGACY_DAILY_CODE_AUTH=${LEGACY_DAILY_CODE_AUTH:-true}
+      - AUTH_SECRET=${AUTH_SECRET}
+      - ADMIN_BOOTSTRAP_TOKEN=${ADMIN_BOOTSTRAP_TOKEN}
     networks:
       - angrahub_default
     healthcheck:

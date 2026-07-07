@@ -5,6 +5,7 @@ import { IDENTITY_GUARD, detectPromptInjection } from '@/lib/server/security'
 import { logSecurityEvent } from '@/lib/server/security-events'
 import { anthropicTiersEnabled, resolveAnthropicModel } from '@/lib/modelTiers'
 import { callAnthropic } from '@/lib/server/providers/anthropic'
+import { logExecution } from '@/lib/server/execution-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
         maxTokens: useReasoner ? 900 : 600,
       })
       const confidence = Math.floor(Math.random() * 25) + 68
+      void logExecution({ agentId, route: 'api/agent-query', question, responsePreview: text, modelUsed: usedModel, confidence })
       return Response.json({ agentId, response: text, confidence, model: usedModel })
     } catch (err) {
       console.error('[agent-query] anthropic error:', err)
@@ -124,5 +126,6 @@ export async function POST(req: NextRequest) {
   const response = data.choices?.[0]?.message?.content ?? ''
   const confidence = Math.floor(Math.random() * 25) + 68
 
+  void logExecution({ agentId, route: 'api/agent-query', question, responsePreview: response, modelUsed: model, confidence })
   return Response.json({ agentId, response, confidence, model: useReasoner ? 'reasoner' : 'chat' })
 }

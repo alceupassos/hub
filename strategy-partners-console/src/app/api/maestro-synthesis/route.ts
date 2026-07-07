@@ -4,6 +4,7 @@ import { IDENTITY_GUARD, detectPromptInjection } from '@/lib/server/security'
 import { logSecurityEvent } from '@/lib/server/security-events'
 import { ANTHROPIC_MODELS, anthropicTiersEnabled, resolveAnthropicModel } from '@/lib/modelTiers'
 import { callAnthropic } from '@/lib/server/providers/anthropic'
+import { logExecution } from '@/lib/server/execution-log'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -114,6 +115,7 @@ Seja completo, específico e de nível executivo em todas as seções.`
         messages: [{ role: 'user', content: userPrompt }],
         maxTokens: 2800,
       })
+      void logExecution({ agentId: 'caio', route: 'api/maestro-synthesis', question, responsePreview: text, modelUsed: maestro ? resolveAnthropicModel(maestro) : ANTHROPIC_MODELS.opus })
       return Response.json({ synthesis: text })
     } catch (err) {
       console.error('[maestro-synthesis] anthropic error:', err)
@@ -153,5 +155,6 @@ Seja completo, específico e de nível executivo em todas as seções.`
   }
   const synthesis = data.choices?.[0]?.message?.content ?? ''
 
+  void logExecution({ agentId: 'caio', route: 'api/maestro-synthesis', question, responsePreview: synthesis, modelUsed: model })
   return Response.json({ synthesis })
 }

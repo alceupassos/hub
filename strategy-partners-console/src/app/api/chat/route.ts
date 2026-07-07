@@ -3,6 +3,7 @@ import { AGENTS } from '@/lib/agents'
 import { buildPersonaContent } from '@/lib/server/persona'
 import { detectInjectionInMessages, identityGuardFor } from '@/lib/server/security'
 import { logSecurityEvent } from '@/lib/server/security-events'
+import { logExecution } from '@/lib/server/execution-log'
 import type { Agent } from '@/lib/types'
 
 export const runtime = 'nodejs'
@@ -140,6 +141,10 @@ export async function POST(req: NextRequest) {
   const apiBase  = useVision ? 'https://api.x.ai/v1' : 'https://api.deepseek.com/v1'
   const authKey  = useVision ? grokKey! : apiKey
   const finalModel = useVision ? visionModel : model
+
+  // Log de execução (streaming: registrado no início; sem preview de resposta).
+  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user')
+  void logExecution({ agentId: agent.id, route: 'api/chat', question: lastUserMsg?.content ?? '', modelUsed: finalModel })
 
   let upstream: Response
   try {
