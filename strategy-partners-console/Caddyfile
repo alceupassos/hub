@@ -1,4 +1,8 @@
-angrahub.angra.io {
+# Marca: PLAYGROUND STRATEGY PARTNER. Domínio de produção: hub.strategypartners.com.br
+# (angrahub.angra.io mantido como alias). Caddy emite/renova o certificado TLS automaticamente
+# (Let's Encrypt/ZeroSSL) assim que o DNS de hub.strategypartners.com.br apontar para o IP da VPS
+# e as portas 80/443 estiverem abertas — não é preciso certbot manual.
+hub.strategypartners.com.br, angrahub.angra.io {
 	reverse_proxy console:3000 {
 		# Necessário para SSE (streaming do chat)
 		flush_interval -1

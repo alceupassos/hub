@@ -3,7 +3,8 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+# npm ci quando há lockfile (determinístico); fallback p/ install em checkout git sem lockfile.
+RUN npm ci || npm install
 
 # ── builder ───────────────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder

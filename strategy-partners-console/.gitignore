@@ -51,3 +51,7 @@ next-env.d.ts
 !/src/app/admin/logs/**
 !/src/app/api/admin/logs/
 !/src/app/api/admin/logs/**
+
+# The monorepo `*.doc*` rule (Word docs) falsely matches .dockerignore — it's a real deploy file
+# (prevents baking .env into the image), must be tracked.
+!/.dockerignore
