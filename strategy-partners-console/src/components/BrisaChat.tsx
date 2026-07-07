@@ -6,6 +6,7 @@ import { ArrowRight, User, Brain, MessageSquare, Mic, MicOff, Paperclip, X, File
 import { AGENTS } from '@/lib/agents'
 import { getVoiceConfig, speakQueued, extractSentences } from '@/lib/agentVoices'
 import { useLang } from '@/lib/lang'
+import { useAgentConfig } from '@/lib/agent-config'
 import { ChatMarkdown } from './ChatMarkdown'
 import type { Agent } from '@/lib/types'
 
@@ -109,6 +110,8 @@ function getSpeechRecognition(): AnyConstructor | null {
 export function BrisaChat({ agentId }: Props) {
   const agent: Agent | undefined = AGENTS.find(a => a.id === agentId)
   const { lang } = useLang()
+  const { getDisplayName, getPersonaOverride } = useAgentConfig()
+  const displayName = agent ? getDisplayName(agent.id) : agentId
   const ttsLang = lang === 'en' ? 'en-US' : 'pt-BR'
 
   const [messages,  setMessages]  = useState<Message[]>([])
@@ -330,7 +333,13 @@ export function BrisaChat({ agentId }: Props) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agentId: agent!.id, messages: apiMessages, lang, imageAttachment }),
+        body: JSON.stringify({
+          agentId: agent!.id,
+          messages: apiMessages,
+          lang,
+          imageAttachment,
+          personaOverride: getPersonaOverride(agent!.id),
+        }),
       })
 
       if (!res.ok) {
@@ -383,9 +392,9 @@ export function BrisaChat({ agentId }: Props) {
               currentMode = parsed.modelSwitch as ModelMode
               setModelMode(parsed.modelSwitch as ModelMode)
               if (parsed.modelSwitch === 'reasoner') {
-                setModeToast(`Reasoning mode (${parsed.model ?? 'deepseek-reasoner'})`)
+                setModeToast('Modo raciocínio profundo (angra.core.max)')
               } else if (parsed.modelSwitch === 'vision') {
-                setModeToast(`Vision mode (${parsed.model ?? 'grok-vision'})`)
+                setModeToast('Modo visão (angra.vision)')
               }
             }
 
@@ -436,18 +445,18 @@ export function BrisaChat({ agentId }: Props) {
 
   const isReasoning = modelMode === 'reasoner' && streaming
   const emptyGreeting = lang === 'en'
-    ? `Hello! I'm ${agent.name}. How can I help you?`
-    : `Olá! Sou ${agent.name}. Como posso ajudar?`
+    ? `Hello! I'm ${displayName}. How can I help you?`
+    : `Olá! Sou ${displayName}. Como posso ajudar?`
 
   return (
     <div className="flex flex-col h-full relative">
       {/* ── Header ── */}
       <div className="shrink-0 border-b border-border-base bg-surface px-6 py-4 flex items-center gap-3">
         <div className="relative w-9 h-9 rounded-full overflow-hidden shrink-0 ring-2 ring-border-base">
-          <Image src={agent.avatar} alt={agent.name} fill className="object-cover" sizes="36px" />
+          <Image src={agent.avatar} alt={displayName} fill className="object-cover" sizes="36px" />
         </div>
         <div>
-          <p className="text-[14px] font-semibold text-ink-0">{agent.name}</p>
+          <p className="text-[14px] font-semibold text-ink-0">{displayName}</p>
           <p className="text-[11.5px] text-ink-5">{agent.role}</p>
         </div>
 
@@ -505,7 +514,7 @@ export function BrisaChat({ agentId }: Props) {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
             <div className="relative w-14 h-14 rounded-full overflow-hidden ring-2 ring-border-base">
-              <Image src={agent.avatar} alt={agent.name} fill className="object-cover" sizes="56px" />
+              <Image src={agent.avatar} alt={displayName} fill className="object-cover" sizes="56px" />
             </div>
             <p className="text-[13px] text-ink-5 max-w-[300px] leading-relaxed">
               {emptyGreeting}
@@ -525,7 +534,7 @@ export function BrisaChat({ agentId }: Props) {
             <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
               {msg.role === 'assistant' ? (
                 <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0 ring-1 ring-border-base mt-0.5">
-                  <Image src={agent.avatar} alt={agent.name} fill className="object-cover" sizes="28px" />
+                  <Image src={agent.avatar} alt={displayName} fill className="object-cover" sizes="28px" />
                 </div>
               ) : (
                 <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center shrink-0 mt-0.5">
@@ -657,7 +666,7 @@ export function BrisaChat({ agentId }: Props) {
                   ? (lang === 'en' ? 'Ask about the image…' : 'Pergunte sobre a imagem…')
                   : attachedFile
                   ? (lang === 'en' ? 'Ask about the file…' : 'Pergunte sobre o arquivo…')
-                  : (lang === 'en' ? `Message ${agent.name}…` : `Mensagem para ${agent.name}…`)
+                  : (lang === 'en' ? `Message ${displayName}…` : `Mensagem para ${displayName}…`)
               }
               disabled={streaming}
               className="flex-1 text-[13.5px] text-ink-0 placeholder:text-ink-6 bg-transparent outline-none disabled:opacity-50"

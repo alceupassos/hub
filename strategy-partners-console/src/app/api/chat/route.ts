@@ -4,6 +4,7 @@ import { buildPersonaContent } from '@/lib/server/persona'
 import { detectInjectionInMessages, identityGuardFor } from '@/lib/server/security'
 import { logSecurityEvent } from '@/lib/server/security-events'
 import { logExecution } from '@/lib/server/execution-log'
+import { maskModel } from '@/lib/modelMask'
 import type { Agent } from '@/lib/types'
 
 export const runtime = 'nodejs'
@@ -183,7 +184,7 @@ export async function POST(req: NextRequest) {
       // First event: notify client which model/mode is active
       const modePayload = JSON.stringify({
         modelSwitch: useVision ? 'vision' : useReasoner ? 'reasoner' : 'chat',
-        model: finalModel,
+        model: maskModel(finalModel), // nunca expor o nome real do modelo ao cliente
       })
       controller.enqueue(encoder.encode(`data: ${modePayload}\n\n`))
 

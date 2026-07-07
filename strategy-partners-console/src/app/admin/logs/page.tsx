@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { NavSidebar } from '@/components/NavSidebar'
 import { AdminTabs } from '@/components/AdminTabs'
+import { maskModel } from '@/lib/modelMask'
 
 interface LogRow { id: string; agentId: string; route: string; question: string; responsePreview: string | null; modelUsed: string | null; durationMs: number | null; confidence: number | null; createdAt: string }
 
@@ -53,7 +54,7 @@ export default function AdminLogsPage() {
                         <td className="px-4 py-2.5 text-ink-0">{l.agentId}</td>
                         <td className="px-4 py-2.5 text-ink-5 font-mono text-[11px]">{l.route}</td>
                         <td className="px-4 py-2.5 text-ink-5 max-w-md truncate">{l.question}</td>
-                        <td className="px-4 py-2.5 text-ink-6 font-mono text-[11px]">{l.modelUsed ?? '—'}</td>
+                        <td className="px-4 py-2.5 text-ink-6 font-mono text-[11px]">{l.modelUsed ? maskModel(l.modelUsed) : '—'}</td>
                         <td className="px-4 py-2.5 text-ink-6 text-right">{l.durationMs ?? '—'}</td>
                       </tr>
                     ))}

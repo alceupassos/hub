@@ -7,6 +7,7 @@ import { anthropicTiersEnabled, resolveAnthropicModel } from '@/lib/modelTiers'
 import { callAnthropic } from '@/lib/server/providers/anthropic'
 import { logExecution } from '@/lib/server/execution-log'
 import { buildGrounding } from '@/lib/server/grounding'
+import { maskModel } from '@/lib/modelMask'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -91,7 +92,7 @@ export async function POST(req: NextRequest) {
       // Fora de escopo (resposta vazia) → sem índice de confiança (0).
       const confidence = text.trim() ? Math.floor(Math.random() * 25) + 68 : 0
       void logExecution({ agentId, route: 'api/agent-query', question, responsePreview: text, modelUsed: usedModel, confidence })
-      return Response.json({ agentId, response: text, confidence, model: usedModel })
+      return Response.json({ agentId, response: text, confidence, model: maskModel(usedModel) })
     } catch (err) {
       console.error('[agent-query] anthropic error:', err)
       return Response.json({ error: 'Serviço de IA indisponível (camada Anthropic). Tente novamente em instantes.' }, { status: 502 })
@@ -131,5 +132,5 @@ export async function POST(req: NextRequest) {
   const confidence = response.trim() ? Math.floor(Math.random() * 25) + 68 : 0
 
   void logExecution({ agentId, route: 'api/agent-query', question, responsePreview: response, modelUsed: model, confidence })
-  return Response.json({ agentId, response, confidence, model: useReasoner ? 'reasoner' : 'chat' })
+  return Response.json({ agentId, response, confidence, model: useReasoner ? 'angra.core.max' : 'angra.core.flash' })
 }
