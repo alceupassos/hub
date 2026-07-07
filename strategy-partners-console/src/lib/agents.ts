@@ -15,7 +15,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Relay, agente de atendimento ultra-rápido da Strategy Partners.',
     dot: '#38BDF8',
     barColor: '#0EA5E9',
-    active: true,
+    active: false,
     avatar: '/agentes/agente1.webp',
     specs: [
       'Roteamento de tickets em tempo real com triagem por prioridade',
@@ -37,7 +37,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Consul, assistente conversacional da Strategy Partners.',
     dot: '#7DD3FC',
     barColor: '#38BDF8',
-    active: true,
+    active: false,
     avatar: '/agentes/agente2.webp',
     specs: [
       'Diálogo aberto com janela de contexto contínua entre sessões',
@@ -59,7 +59,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Brief, especialista em triagem e sumarização da Strategy Partners.',
     dot: '#BAE6FD',
     barColor: '#7DD3FC',
-    active: true,
+    active: false,
     avatar: '/agentes/agente3.webp',
     specs: [
       'Extração de pontos-chave em documentos de até 200 páginas',
@@ -83,7 +83,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Apex, SDR especializado da Strategy Partners.',
     dot: '#F97316',
     barColor: '#EA580C',
-    active: true,
+    active: false,
     avatar: '/agentes/agente4.webp',
     specs: [
       'Scoring de ICP com dados firmográficos e comportamentais',
@@ -105,7 +105,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Titan, especialista em fechamento de vendas da Strategy Partners.',
     dot: '#FB923C',
     barColor: '#F97316',
-    active: true,
+    active: false,
     avatar: '/agentes/agente5.webp',
     specs: [
       'Mapa de objeções em tempo real com banco de contra-argumentos',
@@ -151,7 +151,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Aegis, especialista em threat intelligence da Strategy Partners.',
     dot: '#EF4444',
     barColor: '#DC2626',
-    active: true,
+    active: false,
     avatar: '/agentes/agente7.webp',
     specs: [
       'Reconhecimento de padrões de ameaça em streams de log em tempo real',
@@ -173,7 +173,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Lex, especialista em compliance e LGPD da Strategy Partners.',
     dot: '#F87171',
     barColor: '#EF4444',
-    active: true,
+    active: false,
     avatar: '/agentes/agente8.webp',
     specs: [
       'Análise de lacunas LGPD artigo por artigo contra processos vigentes',
@@ -240,7 +240,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Ledger, especialista em conciliação contábil da Strategy Partners.',
     dot: '#4ADE80',
     barColor: '#22C55E',
-    active: true,
+    active: false,
     avatar: '/agentes/agente11.webp',
     specs: [
       'Conciliação tripla automatizada — banco, ERP e razão contábil',
@@ -286,7 +286,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Forge, especialista em geração de código da Strategy Partners.',
     dot: '#A855F7',
     barColor: '#9333EA',
-    active: true,
+    active: false,
     avatar: '/agentes/agente13.webp',
     specs: [
       'Geração multi-linguagem — JS, Python, Go, Rust, SQL, TypeScript',
@@ -308,7 +308,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Codex, especialista em code review da Strategy Partners.',
     dot: '#C084FC',
     barColor: '#A855F7',
-    active: true,
+    active: false,
     avatar: '/agentes/agente14.webp',
     specs: [
       'Varredura de padrões OWASP Top 10 com sugestões de correção',
@@ -330,7 +330,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Blueprint, especialista em design de sistemas da Strategy Partners.',
     dot: '#E879F9',
     barColor: '#D946EF',
-    active: true,
+    active: false,
     avatar: '/agentes/agente15.webp',
     specs: [
       'Modelagem Domain-Driven Design com bounded contexts explícitos',
@@ -376,7 +376,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Counsel, especialista em análise de contratos da Strategy Partners.',
     dot: '#0B3A78',
     barColor: '#1E40AF',
-    active: true,
+    active: false,
     avatar: '/agentes/agente17.webp',
     specs: [
       'Score de risco cláusula a cláusula em 18 tipos de contrato',
@@ -398,7 +398,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Beacon, especialista em research da Strategy Partners.',
     dot: '#1D4ED8',
     barColor: '#1E3A8A',
-    active: true,
+    active: false,
     avatar: '/agentes/agente18.webp',
     specs: [
       'Síntese multi-fonte com pontuação de confiança por claim',
@@ -549,7 +549,7 @@ export const AGENTS: Agent[] = [
     systemPrompt: 'Você é Router, roteador de intenção da Strategy Partners.',
     dot: '#EFF6FF',
     barColor: '#DBEAFE',
-    active: true,
+    active: false,
     avatar: '/agentes/agente25.webp',
     specs: [
       'Classificação de intenção em 200+ categorias temáticas',

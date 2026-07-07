@@ -2,12 +2,43 @@
 // histórico". Puramente demonstrativo; quando o banco estiver ligado, isto é substituído por
 // execution_logs + deals reais. Os 5 principais são o destaque; subagentes servem cada um.
 
-export const PRINCIPAL_META: Record<string, { label: string; color: string; tier: string; discipline: string; disciplineEn: string }> = {
-  caio:  { label: 'CAIO',  color: '#C9A24A', tier: 'Opus 4.8',  discipline: 'Orquestração & síntese', disciplineEn: 'Orchestration & synthesis' },
-  merko: { label: 'MERKO', color: '#1E3A5F', tier: 'Fable 5',   discipline: 'M&A & transações',       disciplineEn: 'M&A & transactions' },
-  asten: { label: 'ASTEN', color: '#1F9D6B', tier: 'Fable 5',   discipline: 'Finanças corporativas',  disciplineEn: 'Corporate finance' },
-  novae: { label: 'NOVAE', color: '#2563EB', tier: 'Fable 5',   discipline: 'Crescimento & novos negócios', disciplineEn: 'Growth & new business' },
-  tycen: { label: 'TYCEN', color: '#7C3AED', tier: 'Fable 5',   discipline: 'Transformação & execução', disciplineEn: 'Transformation & execution' },
+export interface PrincipalMeta {
+  label: string; color: string; tier: string
+  discipline: string; disciplineEn: string
+  desc: string; descEn: string
+}
+
+export const PRINCIPAL_META: Record<string, PrincipalMeta> = {
+  caio: {
+    label: 'CAIO', color: '#B8862B', tier: 'Opus 4.8',
+    discipline: 'Orquestração & síntese', disciplineEn: 'Orchestration & synthesis',
+    desc: 'O orquestrador. Enquadra a decisão, roteia para o especialista certo e integra tudo numa recomendação única — nunca entrega quatro opiniões grampeadas.',
+    descEn: 'The orchestrator. Frames the decision, routes to the right specialist and integrates everything into a single recommendation — never four stapled opinions.',
+  },
+  merko: {
+    label: 'MERKO', color: '#1E3A5F', tier: 'Fable 5',
+    discipline: 'M&A & transações', disciplineEn: 'M&A & transactions',
+    desc: 'Partner de transações. Valuation (DCF, múltiplos, precedentes), due diligence, estruturação e negociação de deals — buy e sell-side.',
+    descEn: 'Transactions partner. Valuation (DCF, multiples, precedents), due diligence, deal structuring and negotiation — buy and sell-side.',
+  },
+  asten: {
+    label: 'ASTEN', color: '#1F7A54', tier: 'Fable 5',
+    discipline: 'Finanças corporativas', disciplineEn: 'Corporate finance',
+    desc: 'Partner de finanças. Estrutura de capital, WACC, modelagem multi-cenário e readiness de mercado de capitais — cada número com a equação por trás.',
+    descEn: 'Finance partner. Capital structure, WACC, multi-scenario modeling and capital-markets readiness — every number with the equation behind it.',
+  },
+  novae: {
+    label: 'NOVAE', color: '#1D4ED8', tier: 'Fable 5',
+    discipline: 'Crescimento & novos negócios', disciplineEn: 'Growth & new business',
+    desc: 'Partner de crescimento. Validação de novos negócios, MVP, market sizing bottom-up e roadmap de captação — obcecado pela hipótese mais barata de matar primeiro.',
+    descEn: 'Growth partner. New-business validation, MVP, bottom-up market sizing and fundraising roadmap — obsessed with the cheapest hypothesis to kill first.',
+  },
+  tycen: {
+    label: 'TYCEN', color: '#6D28D9', tier: 'Fable 5',
+    discipline: 'Transformação & execução', disciplineEn: 'Transformation & execution',
+    desc: 'Partner de execução. Turnaround, PMO e plano de 100 dias com dono, prazo e marco verificável — porque estratégia não falha na formulação, falha na execução.',
+    descEn: 'Execution partner. Turnaround, PMO and 100-day plans with owner, deadline and verifiable milestone — strategy fails in execution, not in formulation.',
+  },
 }
 
 export interface ShowcaseAction {

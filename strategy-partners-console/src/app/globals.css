@@ -206,3 +206,13 @@ body {
 .dot-1 { animation: dotBounce 1.2s ease-in-out infinite 0ms; }
 .dot-2 { animation: dotBounce 1.2s ease-in-out infinite 160ms; }
 .dot-3 { animation: dotBounce 1.2s ease-in-out infinite 320ms; }
+
+/* ── A Frota — entrada escalonada + halo (guarda de reduced-motion) ── */
+@keyframes frotaRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes frotaHalo { 0%,100% { opacity: 0.18; r: 52px; } 50% { opacity: 0.34; r: 58px; } }
+.frota-rise { opacity: 1; }
+.frota-halo { opacity: 0.22; }
+@media (prefers-reduced-motion: no-preference) {
+  .frota-rise { opacity: 0; animation: frotaRise 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
+  .frota-halo { animation: frotaHalo 4s ease-in-out infinite; }
+}

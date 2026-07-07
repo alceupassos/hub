@@ -1,13 +1,23 @@
+'use client'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { Model } from '@/lib/types'
 import type { Translations } from '@/lib/i18n'
+import { isPrincipal } from '@/lib/agentTiers'
 
 interface Props {
   activeModels: Model[]
+  agentConf: Record<string, number>
+  question: string
+  synthesis: string
+  synthLoading: boolean
   t: Translations
 }
 
-export function SinteseView({ activeModels, t }: Props) {
+export function SinteseView({ activeModels, agentConf, question, synthesis, synthLoading, t }: Props) {
   const activeCount = activeModels.length
+  const confs = Object.values(agentConf)
+  const avgConf = confs.length > 0 ? Math.round(confs.reduce((s, v) => s + v, 0) / confs.length) : 0
   const agreementCount = Math.min(activeCount, Math.ceil(activeCount * 0.67))
 
   return (
@@ -26,53 +36,77 @@ export function SinteseView({ activeModels, t }: Props) {
         </div>
         <p className="text-[12.5px] font-semibold text-ink-0 flex-1">{t.strategicSynth}</p>
         <span className="font-mono text-[10px] text-ink-6">
-          {t.consensusOf(activeCount)} · 1.24s
+          {t.consensusOf(activeCount)}{avgConf > 0 ? ` · ${avgConf}% conf.` : ''}
         </span>
       </div>
 
-      {/* Title */}
-      <h2 className="text-[17px] font-semibold text-ink-0 leading-[1.4] tracking-[-0.01em]">
-        {t.synthTitle}
-      </h2>
-
-      {/* Body */}
-      <p className="text-[14px] text-ink-3 leading-[1.7]">
-        {t.synthBody}
-      </p>
-
-      {/* Actions */}
-      <div className="bg-subtle-bg border border-border-soft rounded-[10px] p-[17px_19px] space-y-3">
-        {([t.synthAction1, t.synthAction2, t.synthAction3]).map((text, i) => (
-          <div key={i} className="flex items-start gap-3">
-            <span className="font-mono text-[12.5px] text-accent shrink-0 w-5 text-right mt-[1px]">
-              {i + 1}.
-            </span>
-            <p
-              className="text-[13.5px] text-ink-2 leading-[1.6]"
-              dangerouslySetInnerHTML={{ __html: text }}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="border-t border-border-foot pt-3 flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[11.5px] text-ink-5">{t.synthesizedFrom}</span>
-          {activeModels.map(model => (
-            <span key={model.id} className="flex items-center gap-[5px]">
-              <span
-                className="w-[6px] h-[6px] rounded-full shrink-0"
-                style={{ backgroundColor: model.dot }}
-              />
-              <span className="text-[11.5px] text-ink-5">{model.name}</span>
-            </span>
-          ))}
+      {/* Question */}
+      {question && (
+        <div className="bg-subtle-bg border border-border-soft rounded-[8px] px-[14px] py-[10px]">
+          <p className="text-[11.5px] text-ink-5 mb-[3px]">{t.tabCompare}</p>
+          <p className="text-[13.5px] text-ink-1 leading-[1.5] font-medium">{question}</p>
         </div>
-        <span className="font-mono text-[10.5px] text-success">
-          {t.agreementFrac(agreementCount, activeCount)}
-        </span>
-      </div>
+      )}
+
+      {/* Synthesis body */}
+      {synthLoading ? (
+        <div className="space-y-2 animate-pulse">
+          <div className="h-3 bg-active-bg rounded w-3/4" />
+          <div className="h-3 bg-active-bg rounded w-full" />
+          <div className="h-3 bg-active-bg rounded w-5/6" />
+          <div className="h-3 bg-active-bg rounded w-2/3" />
+        </div>
+      ) : synthesis ? (
+        <div className="prose prose-sm max-w-none text-ink-2
+          [&_h2]:text-[14px] [&_h2]:font-semibold [&_h2]:text-ink-0 [&_h2]:mt-5 [&_h2]:mb-2
+          [&_h3]:text-[13px] [&_h3]:font-semibold [&_h3]:text-ink-1 [&_h3]:mt-4 [&_h3]:mb-1
+          [&_p]:text-[13.5px] [&_p]:leading-[1.7] [&_p]:text-ink-2
+          [&_ul]:pl-4 [&_li]:text-[13.5px] [&_li]:leading-[1.7] [&_li]:text-ink-2
+          [&_ol]:pl-4
+          [&_strong]:text-ink-0 [&_strong]:font-semibold
+          [&_table]:text-[12px] [&_table]:w-full [&_th]:text-left [&_th]:font-semibold [&_th]:text-ink-0 [&_th]:py-1 [&_th]:pr-3
+          [&_td]:text-ink-3 [&_td]:py-1 [&_td]:pr-3 [&_tr]:border-b [&_tr]:border-border-soft">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{synthesis}</ReactMarkdown>
+        </div>
+      ) : (
+        <p className="text-[13.5px] text-ink-6 leading-[1.7] italic">
+          {t.synthBody}
+        </p>
+      )}
+
+      {/* Footer — principais em destaque, subagentes subordinados */}
+      {(() => {
+        const principais = activeModels.filter(m => isPrincipal(m.id))
+        const subagentes = activeModels.filter(m => !isPrincipal(m.id))
+        const chip = (model: Model, lead: boolean) => (
+          <span key={model.id} className="flex items-center gap-[5px]">
+            <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ backgroundColor: model.dot }} />
+            <span className={`text-[11.5px] ${lead ? 'text-ink-1 font-medium' : 'text-ink-5'}`}>{model.name}</span>
+            {agentConf[model.id] != null && (
+              <span className="font-mono text-[10px] text-ink-7">{agentConf[model.id]}%</span>
+            )}
+          </span>
+        )
+        return (
+          <div className="border-t border-border-foot pt-3 space-y-2.5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-[11.5px] text-ink-5">{t.synthesizedFrom}</span>
+                {principais.length > 0 ? principais.map(m => chip(m, true)) : <span className="text-[11.5px] text-ink-6">—</span>}
+              </div>
+              <span className="font-mono text-[10.5px] text-success">{t.agreementFrac(agreementCount, activeCount)}</span>
+            </div>
+            {subagentes.length > 0 && (
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.08em] text-ink-6">
+                  {t.subagentsLabel}
+                </span>
+                {subagentes.map(m => chip(m, false))}
+              </div>
+            )}
+          </div>
+        )
+      })()}
     </div>
   )
 }
