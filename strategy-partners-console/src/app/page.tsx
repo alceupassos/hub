@@ -28,7 +28,7 @@ function agentToModel(a: Agent, getName: (id: string) => string): Model {
     text: a.role,
     conf: 0,
     dur: 0,
-    on: true,
+    on: a.active, // inicia ativo só quem tem active:true (os 5 principais)
   }
 }
 
