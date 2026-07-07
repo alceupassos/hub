@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-const PUBLIC_PREFIXES = ['/login', '/land', '/api/auth', '/api/access']
+// /api/admin/bootstrap é público (protegido pelo próprio ADMIN_BOOTSTRAP_TOKEN + só funciona sem
+// usuários) — precisa ser acessível para criar o 1º admin antes de qualquer sessão existir.
+const PUBLIC_PREFIXES = ['/login', '/land', '/api/auth', '/api/access', '/api/admin/bootstrap']
 
 function getTodayBR(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
