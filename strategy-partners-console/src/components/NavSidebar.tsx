@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import {
   MessageSquare, Folder, Grid3X3, BarChart2, Book, Settings, Plus, ChevronDown,
-  ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare, Users,
+  ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare, Users, LogOut,
 } from 'lucide-react'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
@@ -114,6 +114,23 @@ function NavContent() {
       .then(d => setRole(d?.user?.role ?? null))
       .catch(() => {})
   }, [])
+
+  // Logout dos DOIS sistemas de auth (corte suave): NextAuth (signout) + código diário (sp_access).
+  async function logout() {
+    try {
+      const csrf = await fetch('/api/auth/csrf').then(r => r.json()).then(d => d?.csrfToken).catch(() => null)
+      if (csrf) {
+        await fetch('/api/auth/signout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ csrfToken: csrf, callbackUrl: '/login', json: 'true' }),
+        }).catch(() => {})
+      }
+      await fetch('/api/access/logout', { method: 'POST' }).catch(() => {})
+    } finally {
+      window.location.href = '/login'
+    }
+  }
 
   const navItems = [
     { icon: MessageSquare, label: t.conversations, href: '/', matchPaths: ['/', '/chat'] },
@@ -223,12 +240,20 @@ function NavContent() {
       {/* Footer */}
       <div className="border-t border-border-div pt-3 flex items-center gap-[10px]">
         <div className="w-[30px] h-[30px] rounded-[7px] bg-accent flex items-center justify-center text-white text-[10.5px] font-semibold shrink-0">
-          AA
+          {(role ?? 'SP').slice(0, 2).toUpperCase()}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-[12px] font-medium text-ink-0 truncate">Strategy Partners</p>
-          <p className="font-mono text-[10px] text-ink-6 truncate">Acesso autorizado · 24h</p>
+          <p className="font-mono text-[10px] text-ink-6 truncate">{role ? `Sessão · ${role}` : 'Acesso autorizado'}</p>
         </div>
+        <button
+          onClick={logout}
+          aria-label={lang === 'en' ? 'Sign out' : 'Sair'}
+          title={lang === 'en' ? 'Sign out' : 'Sair'}
+          className="w-[28px] h-[28px] flex items-center justify-center rounded-md text-ink-6 hover:text-red-600 hover:bg-hover-bg transition-colors shrink-0"
+        >
+          <LogOut size={15} strokeWidth={1.7} />
+        </button>
       </div>
     </nav>
   )
