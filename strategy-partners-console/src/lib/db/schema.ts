@@ -1,4 +1,4 @@
-import { customType, index, integer, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { customType, index, integer, numeric, pgSchema, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
 // Own, isolated Postgres schema. This console shares the VPS Postgres instance with the
 // `semantix` project but NEVER its schema — every table here lives under `strategy_partners`.
@@ -83,7 +83,108 @@ export const securityEvents = sp.table('security_events', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+// ── Fase 4: entidade "projeto" de primeira classe ─────────────────────────────
+// Diferença-chave vs. semantix (single-tenant): TODA tabela de workflow ganha projectId,
+// tornando o padrão multi-projeto real. projects.type é 'pre_deal' | 'pmi' (ProjectType).
+
+// ── Pré-deal / due diligence ──────────────────────────────────────────────────
+export const ddChecklistItems = sp.table('dd_checklist_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(),
+  item: text('item').notNull(),
+  status: text('status').notNull().default('pendente'), // pendente | em_analise | concluido | red_flag
+  documentId: uuid('document_id').references(() => documents.id),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const redFlags = sp.table('red_flags', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(),
+  description: text('description').notNull(),
+  severity: text('severity').notNull(), // baixa | media | alta | critica
+  sourceDocumentId: uuid('source_document_id').references(() => documents.id),
+  detectedByAgentId: text('detected_by_agent_id'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const valuationEstimates = sp.table('valuation_estimates', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  method: text('method').notNull(), // dcf | ev_ebitda | precedente
+  low: numeric('low', { precision: 18, scale: 2 }),
+  base: numeric('base', { precision: 18, scale: 2 }),
+  high: numeric('high', { precision: 18, scale: 2 }),
+  assumptions: text('assumptions'), // JSON-encoded
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+// ── Pós-deal / PMI — generalização das tabelas do semantix, agora com projectId ──
+export const talentRisks = sp.table('talent_risks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  role: text('role'),
+  riskLevel: text('risk_level').notNull().default('media'), // baixa | media | alta | critica
+  retentionAction: text('retention_action'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const legacyAccounts = sp.table('legacy_accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  clientName: text('client_name').notNull(),
+  status: text('status').notNull().default('em_analise'), // em_analise | retido | em_risco | perdido
+  annualValue: numeric('annual_value', { precision: 18, scale: 2 }),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const synergies = sp.table('synergies', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  type: text('type').notNull(), // custo | receita
+  description: text('description').notNull(),
+  targetValue: numeric('target_value', { precision: 18, scale: 2 }),
+  owner: text('owner'), // dono nomeado — obrigatório por método (ver base-conhecimento)
+  deadline: timestamp('deadline', { withTimezone: true }),
+  status: text('status').notNull().default('planejada'), // planejada | em_captura | capturada | em_risco
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const milestones = sp.table('milestones', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  owner: text('owner'),
+  dueDate: timestamp('due_date', { withTimezone: true }),
+  status: text('status').notNull().default('pendente'), // pendente | em_andamento | concluido | atrasado
+  isDay100: integer('is_day100').notNull().default(0), // marco do "Plano 100 Dias" (0/1)
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const pmiRisks = sp.table('pmi_risks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+  category: text('category').notNull(),
+  description: text('description').notNull(),
+  severity: text('severity').notNull(), // baixa | media | alta | critica
+  mitigation: text('mitigation'),
+  owner: text('owner'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export type ProjectType = 'pre_deal' | 'pmi'
+
 export type DBUser = typeof users.$inferSelect
 export type DBProject = typeof projects.$inferSelect
 export type DBDocument = typeof documents.$inferSelect
 export type DBChunk = typeof chunks.$inferSelect
+export type DBDdItem = typeof ddChecklistItems.$inferSelect
+export type DBRedFlag = typeof redFlags.$inferSelect
+export type DBValuation = typeof valuationEstimates.$inferSelect
+export type DBSynergy = typeof synergies.$inferSelect
+export type DBMilestone = typeof milestones.$inferSelect
+export type DBPmiRisk = typeof pmiRisks.$inferSelect
