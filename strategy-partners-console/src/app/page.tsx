@@ -201,14 +201,19 @@ export default function ConsolePage() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ agentId, question: q, lang, personaOverride: getPersonaOverride(agentId) }),
-          }, 120000) // 120s: o modelo "reasoner" (M&A/finanças/orquestração) gera respostas longas e lentas
+          }, 240000) // 240s: tempo nunca deve ser o motivo de um agente não responder (reasoner é lento)
           const data = (await res.json()) as { response?: string; confidence?: number; model?: string }
           const elapsed = (Date.now() - t0) / 1000
           const agentName = activeModels.find(m => m.id === agentId)?.name ?? agentId
           const agentResponse = data.response ?? ''
+          // Resposta vazia com sucesso = o tema não é da competência deste especialista →
+          // "fora de escopo" (não é falha de tempo). O marcador ℹ é lido pelo modal.
+          const outOfScope = lang === 'en'
+            ? 'ℹ Outside this specialist’s scope for this case.'
+            : 'ℹ Fora do escopo deste especialista para este caso.'
           setAgentLoading(prev => ({ ...prev, [agentId]: false }))
           setAgentTimings(prev => ({ ...prev, [agentId]: elapsed }))
-          setAgentTexts(prev => ({ ...prev, [agentId]: agentResponse }))
+          setAgentTexts(prev => ({ ...prev, [agentId]: agentResponse.trim() ? agentResponse : outOfScope }))
           setAgentConf(prev => ({ ...prev, [agentId]: data.confidence ?? 75 }))
           if (data.model) setAgentModels(prev => ({ ...prev, [agentId]: data.model! }))
 
@@ -245,7 +250,7 @@ export default function ConsolePage() {
           const elapsed = (Date.now() - t0) / 1000
           setAgentLoading(prev => ({ ...prev, [agentId]: false }))
           setAgentTimings(prev => ({ ...prev, [agentId]: elapsed }))
-          setAgentTexts(prev => ({ ...prev, [agentId]: prev[agentId] || (lang === 'en' ? '⚠ No response in time. Try again or refine the question.' : '⚠ Sem resposta a tempo. Tente novamente ou refine a pergunta.') }))
+          setAgentTexts(prev => ({ ...prev, [agentId]: prev[agentId] || (lang === 'en' ? '⏳ Timed out — try again.' : '⏳ Tempo excedido — tente novamente.') }))
           setAgentConf(prev => ({ ...prev, [agentId]: prev[agentId] ?? 0 }))
           return { agentId, agentName, response: '' }
         }

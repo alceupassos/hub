@@ -17,7 +17,7 @@ interface Props {
   question: string
 }
 
-type Status = 'pending' | 'running' | 'done' | 'warn'
+type Status = 'pending' | 'running' | 'done' | 'timeout' | 'scope'
 
 // Modal de execução ao vivo: mostra em tempo real o que cada agente está fazendo e garante
 // que o usuário veja o encerramento (concluído / sem resposta) — nunca uma tela "travada".
@@ -40,8 +40,10 @@ export function SwarmModal({ open, onClose, models, participatingIds, agentLoadi
     if (agentLoading[id]) return 'running'
     const txt = agentTexts[id]
     if (txt == null) return 'pending'
-    if (txt.trim().startsWith('⚠')) return 'warn'
-    return txt.trim() ? 'done' : 'warn'
+    const t = txt.trim()
+    if (t.startsWith('⏳')) return 'timeout'
+    if (t.startsWith('ℹ')) return 'scope'
+    return t ? 'done' : 'scope'
   }
 
   const done = ids.filter(id => !agentLoading[id] && agentTexts[id] != null).length
@@ -52,13 +54,14 @@ export function SwarmModal({ open, onClose, models, participatingIds, agentLoadi
   const pct = complete ? 100 : Math.round((done / total) * 85 + (synthLoading ? 8 : synthDone ? 15 : 0))
 
   const L = en
-    ? { title: 'Live execution', running: 'analyzing…', doneL: 'done', warn: 'no response', pending: 'queued', synth: 'Synthesis (CAIO)', synthRun: 'consolidating…', synthOk: 'ready', complete: 'Execution complete', inflight: 'Running', close: 'Close' }
-    : { title: 'Execução ao vivo', running: 'analisando…', doneL: 'concluído', warn: 'sem resposta', pending: 'na fila', synth: 'Síntese (CAIO)', synthRun: 'consolidando…', synthOk: 'pronta', complete: 'Execução concluída', inflight: 'Em execução', close: 'Fechar' }
+    ? { title: 'Live execution', running: 'analyzing…', doneL: 'done', timeoutL: 'timed out', scopeL: 'out of scope', pending: 'queued', synth: 'Synthesis (CAIO)', synthRun: 'consolidating…', synthOk: 'ready', complete: 'Execution complete', inflight: 'Running', close: 'Close' }
+    : { title: 'Execução ao vivo', running: 'analisando…', doneL: 'concluído', timeoutL: 'tempo excedido', scopeL: 'fora de escopo', pending: 'na fila', synth: 'Síntese (CAIO)', synthRun: 'consolidando…', synthOk: 'pronta', complete: 'Execução concluída', inflight: 'Em execução', close: 'Fechar' }
 
   const badge = (s: Status, id: string) => {
     if (s === 'running') return <span className="flex items-center gap-1 text-[11px] text-accent"><Loader2 size={12} className="animate-spin" />{L.running}</span>
     if (s === 'done') return <span className="flex items-center gap-1 text-[11px] text-green-700"><Check size={12} />{L.doneL}{agentTimings[id] ? ` · ${agentTimings[id].toFixed(1)}s` : ''}</span>
-    if (s === 'warn') return <span className="flex items-center gap-1 text-[11px] text-orange-600"><AlertTriangle size={12} />{L.warn}</span>
+    if (s === 'timeout') return <span className="flex items-center gap-1 text-[11px] text-orange-600"><AlertTriangle size={12} />{L.timeoutL}</span>
+    if (s === 'scope') return <span className="text-[11px] text-ink-6">{L.scopeL}</span>
     return <span className="text-[11px] text-ink-6">{L.pending}</span>
   }
 
