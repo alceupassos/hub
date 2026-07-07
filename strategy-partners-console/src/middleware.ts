@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-const PUBLIC_PREFIXES = ['/login', '/land', '/api/auth']
+const PUBLIC_PREFIXES = ['/login', '/land', '/api/auth', '/api/access']
 
 function getTodayBR(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })

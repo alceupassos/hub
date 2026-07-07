@@ -57,7 +57,7 @@ function LoginForm() {
     if (!code.trim()) return
     setLoading(true)
     try {
-      const res = await fetch('/api/auth/verify', {
+      const res = await fetch('/api/access/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
