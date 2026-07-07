@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
         model: resolveAnthropicModel(agent),
         system: systemContent,
         messages: [{ role: 'user', content: userPrompt }],
-        maxTokens: 1400,
+        maxTokens: 4000,
       })
       void logExecution({ agentId, route: 'api/agent-deep', question, responsePreview: text, modelUsed: resolveAnthropicModel(agent) })
       return Response.json({ agentId, response: text })
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model,
         stream: false,
-        max_tokens: 1400,
+        max_tokens: 4000,
         messages: [
           { role: 'system', content: systemContent },
           { role: 'user', content: userPrompt },

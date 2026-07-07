@@ -135,7 +135,7 @@ Seja completo, específico e de nível executivo em todas as seções.`
       body: JSON.stringify({
         model,
         stream: false,
-        max_tokens: 2800,
+        max_tokens: 6000,
         messages: [
           { role: 'system', content: systemContent },
           { role: 'user', content: userPrompt },

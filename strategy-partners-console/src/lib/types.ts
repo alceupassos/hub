@@ -33,6 +33,7 @@ export interface VerifyResult {
   verdict: 'verified' | 'review' | 'flagged'
   score: number
   issues: string[]
+  unavailable?: boolean // true quando a verificação falhou/indisponível → não exibir badge falso
 }
 
 export interface VerifyState extends VerifyResult {

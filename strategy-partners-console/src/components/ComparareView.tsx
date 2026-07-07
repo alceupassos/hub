@@ -83,6 +83,8 @@ function renderMd(raw: string): string {
 function VerifyBadge({ verify }: { verify: VerifyState | undefined }) {
   const [open, setOpen] = useState(false)
   if (!verify) return null
+  // Verificação indisponível (falhou/sem resposta) → não exibir badge falso.
+  if (verify.unavailable && !verify.loading) return null
 
   if (verify.loading) {
     return (
@@ -398,6 +400,11 @@ function ModelCard({
   const agent = AGENTS.find(a => a.id === model.id)
   const rel  = topicScore(model.text ?? '', agent?.category ?? 'conhecimento')
   const imp  = impactScore(agent?.category ?? 'conhecimento')
+  const txt = (model.text ?? '').trim()
+  // "Fora de escopo" (ℹ) ou "tempo excedido" (⏳): não faz sentido índice de confiança/risco.
+  const outOfScope = txt.startsWith('ℹ')
+  const timedOut = txt.startsWith('⏳')
+  const noMetrics = outOfScope || timedOut || model.conf === 0
 
   if (loading) {
     return (
@@ -444,8 +451,15 @@ function ModelCard({
       <div className="flex items-center gap-2 flex-wrap">
         <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: model.dot }} />
         <span className="text-[12.5px] font-semibold text-ink-0">{model.name}</span>
-        {revealed && verify && <VerifyBadge verify={verify} />}
-        {revealed && (
+        {/* Fora de escopo / tempo excedido: chip neutro, sem badge de risco */}
+        {revealed && outOfScope && (
+          <span className="text-[9.5px] font-medium px-[7px] py-[2px] rounded-full bg-track text-ink-6">fora de escopo</span>
+        )}
+        {revealed && timedOut && (
+          <span className="text-[9.5px] font-medium px-[7px] py-[2px] rounded-full bg-orange-100 text-orange-700">tempo excedido</span>
+        )}
+        {revealed && !noMetrics && verify && <VerifyBadge verify={verify} />}
+        {revealed && !noMetrics && (
           <span className="ml-auto font-mono text-[9px] text-ink-7 hover:text-accent transition-colors">
             aprofundar →
           </span>
@@ -457,21 +471,24 @@ function ModelCard({
         dangerouslySetInnerHTML={{ __html: model.text ? renderMd(model.text) : '' }}
       />
 
-      <div>
-        <div className="w-full h-[5px] bg-track rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-700"
-            style={{ width: `${model.conf}%`, backgroundColor: model.barColor }}
-          />
+      {/* Barra de confiança — só quando há análise real (não em fora de escopo / timeout) */}
+      {!noMetrics && (
+        <div>
+          <div className="w-full h-[5px] bg-track rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${model.conf}%`, backgroundColor: model.barColor }}
+            />
+          </div>
+          <div className="flex justify-between mt-[5px]">
+            <span className="font-mono text-[10px] text-ink-6">{confidenceLabel}</span>
+            <span className="font-mono text-[10px] text-ink-6">{model.conf}%</span>
+          </div>
         </div>
-        <div className="flex justify-between mt-[5px]">
-          <span className="font-mono text-[10px] text-ink-6">{confidenceLabel}</span>
-          <span className="font-mono text-[10px] text-ink-6">{model.conf}%</span>
-        </div>
-      </div>
+      )}
 
       {/* Mini sparklines when revealed */}
-      {revealed && model.conf > 0 && (
+      {revealed && !noMetrics && model.conf > 0 && (
         <div className="flex items-end gap-[3px] h-[14px]">
           {[model.conf, rel, imp].map((v, i) => (
             <div

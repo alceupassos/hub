@@ -86,9 +86,10 @@ export async function POST(req: NextRequest) {
         model: resolveAnthropicModel(agent),
         system: systemContent,
         messages: [{ role: 'user', content: userPrompt }],
-        maxTokens: useReasoner ? 900 : 600,
+        maxTokens: useReasoner ? 4000 : 3000, // análise completa sem cortar no meio
       })
-      const confidence = Math.floor(Math.random() * 25) + 68
+      // Fora de escopo (resposta vazia) → sem índice de confiança (0).
+      const confidence = text.trim() ? Math.floor(Math.random() * 25) + 68 : 0
       void logExecution({ agentId, route: 'api/agent-query', question, responsePreview: text, modelUsed: usedModel, confidence })
       return Response.json({ agentId, response: text, confidence, model: usedModel })
     } catch (err) {
@@ -105,7 +106,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model,
         stream: false,
-        max_tokens: useReasoner ? 900 : 600,
+        max_tokens: useReasoner ? 4000 : 3000,
         messages: [
           { role: 'system', content: systemContent },
           { role: 'user', content: userPrompt },
@@ -126,7 +127,8 @@ export async function POST(req: NextRequest) {
     choices?: { message?: { content?: string } }[]
   }
   const response = data.choices?.[0]?.message?.content ?? ''
-  const confidence = Math.floor(Math.random() * 25) + 68
+  // Fora de escopo (resposta vazia) → sem índice de confiança (0).
+  const confidence = response.trim() ? Math.floor(Math.random() * 25) + 68 : 0
 
   void logExecution({ agentId, route: 'api/agent-query', question, responsePreview: response, modelUsed: model, confidence })
   return Response.json({ agentId, response, confidence, model: useReasoner ? 'reasoner' : 'chat' })

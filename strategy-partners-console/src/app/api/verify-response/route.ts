@@ -32,6 +32,23 @@ export interface VerifyResult {
   verdict: 'verified' | 'review' | 'flagged'
   score: number
   issues: string[]
+  unavailable?: boolean
+}
+
+// Fallback: verificação indisponível → marca unavailable para o badge NÃO aparecer (em vez de
+// um "Revisar 60%" falso). Melhor sem badge do que um risco inventado.
+const UNAVAILABLE: VerifyResult = { verdict: 'review', score: 60, issues: [], unavailable: true }
+
+// Extrai o primeiro objeto JSON de qualquer lugar do texto (robusto a prosa/fences/truncamento leve).
+function extractJson(raw: string): VerifyResult | null {
+  const start = raw.indexOf('{')
+  const end = raw.lastIndexOf('}')
+  if (start === -1 || end <= start) return null
+  try {
+    return JSON.parse(raw.slice(start, end + 1)) as VerifyResult
+  } catch {
+    return null
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -43,9 +60,8 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.DEEPSEEK_API_KEY
-  if (!apiKey) {
-    return Response.json({ verdict: 'review', score: 60, issues: ['Verificação indisponível'] } satisfies VerifyResult)
-  }
+  if (!apiKey) return Response.json(UNAVAILABLE)
+  if (!response?.trim()) return Response.json(UNAVAILABLE) // fora de escopo → nada a verificar
 
   const chatModel = process.env.DEEPSEEK_MODEL_CHAT ?? 'deepseek-v4-flash'
 
@@ -53,16 +69,22 @@ export async function POST(req: NextRequest) {
     ? `Agent: ${agentName}\n\nQuestion asked: ${question}\n\nAgent response:\n${response}`
     : `Agente: ${agentName}\n\nPergunta feita: ${question}\n\nResposta do agente:\n${response}`
 
+  // Timeout próprio: o verify não pode pendurar nem competir demais com as respostas principais.
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), 30000)
+
   let upstream: Response
   try {
     upstream = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+      signal: ctrl.signal,
       body: JSON.stringify({
         model: chatModel,
         stream: false,
-        max_tokens: 300,
+        max_tokens: 4000, // milhares: o JSON de verificação nunca trunca
         temperature: 0.1,
+        response_format: { type: 'json_object' }, // pede JSON direto
         messages: [
           { role: 'system', content: VERIFIER_SYSTEM },
           { role: 'user', content: userPrompt },
@@ -70,28 +92,21 @@ export async function POST(req: NextRequest) {
       }),
     })
   } catch {
-    return Response.json({ verdict: 'review', score: 60, issues: [] } satisfies VerifyResult)
+    return Response.json(UNAVAILABLE)
+  } finally {
+    clearTimeout(timer)
   }
 
-  if (!upstream.ok) {
-    return Response.json({ verdict: 'review', score: 60, issues: [] } satisfies VerifyResult)
-  }
+  if (!upstream.ok) return Response.json(UNAVAILABLE)
 
-  const data = (await upstream.json()) as {
-    choices?: { message?: { content?: string } }[]
-  }
+  const data = (await upstream.json()) as { choices?: { message?: { content?: string } }[] }
   const raw = (data.choices?.[0]?.message?.content ?? '').trim()
+  const parsed = extractJson(raw)
+  if (!parsed) return Response.json(UNAVAILABLE)
 
-  try {
-    // Strip markdown code fences if present
-    const clean = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
-    const parsed = JSON.parse(clean) as VerifyResult
-    return Response.json({
-      verdict: parsed.verdict ?? 'review',
-      score: typeof parsed.score === 'number' ? parsed.score : 60,
-      issues: Array.isArray(parsed.issues) ? parsed.issues.slice(0, 3) : [],
-    } satisfies VerifyResult)
-  } catch {
-    return Response.json({ verdict: 'review', score: 60, issues: [] } satisfies VerifyResult)
-  }
+  return Response.json({
+    verdict: parsed.verdict ?? 'review',
+    score: typeof parsed.score === 'number' ? Math.max(0, Math.min(100, Math.round(parsed.score))) : 60,
+    issues: Array.isArray(parsed.issues) ? parsed.issues.slice(0, 3) : [],
+  } satisfies VerifyResult)
 }

@@ -238,7 +238,7 @@ export default function ConsolePage() {
               .catch(() => {
                 setAgentVerify(prev => ({
                   ...prev,
-                  [agentId]: { verdict: 'review', score: 60, issues: [], loading: false },
+                  [agentId]: { verdict: 'review', score: 60, issues: [], loading: false, unavailable: true },
                 }))
               })
           }
