@@ -3,8 +3,9 @@ import { EMBEDDING_DIM } from '../db/schema'
 
 // Gemini embeddings (decision 4 in docs/planning/decisoes.md): embeddings come exclusively
 // from Gemini — a provider already in use — never a third-party embedding service.
-// text-embedding-004 returns 768-dim vectors, matching EMBEDDING_DIM / vector(768).
-const MODEL = process.env.GEMINI_EMBEDDING_MODEL ?? 'text-embedding-004'
+// gemini-embedding-001 defaults to 3072 dims but accepts outputDimensionality to match
+// EMBEDDING_DIM / vector(768). Auth via x-goog-api-key header (new-format "AQ." keys reject ?key=).
+const MODEL = process.env.GEMINI_EMBEDDING_MODEL ?? 'gemini-embedding-001'
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta'
 
 type TaskType = 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY'
@@ -21,14 +22,15 @@ export async function embedTexts(
   taskType: TaskType = 'RETRIEVAL_DOCUMENT',
 ): Promise<number[][]> {
   if (texts.length === 0) return []
-  const res = await fetch(`${ENDPOINT}/models/${MODEL}:batchEmbedContents?key=${apiKey()}`, {
+  const res = await fetch(`${ENDPOINT}/models/${MODEL}:batchEmbedContents`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey() },
     body: JSON.stringify({
       requests: texts.map(text => ({
         model: `models/${MODEL}`,
         content: { parts: [{ text }] },
         taskType,
+        outputDimensionality: EMBEDDING_DIM,
       })),
     }),
   })
