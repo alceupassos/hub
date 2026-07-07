@@ -13,6 +13,20 @@ export async function getOrCreateProjectKB(projectId: string): Promise<string> {
   return created.id
 }
 
+// KB da firma (conhecimento institucional, não ligado a projeto): projectId = null, nome 'Firm'.
+export async function getOrCreateFirmKB(): Promise<string> {
+  const [existing] = await db.select({ id: knowledgeBases.id }).from(knowledgeBases).where(sql`${knowledgeBases.projectId} is null and ${knowledgeBases.name} = 'Firm'`).limit(1)
+  if (existing) return existing.id
+  const [created] = await db.insert(knowledgeBases).values({ projectId: null, name: 'Firm' }).returning({ id: knowledgeBases.id })
+  return created.id
+}
+
+// Busca o id do KB da firma sem criar (para o grounding — evita insert em toda pergunta).
+export async function getFirmKBId(): Promise<string | null> {
+  const [existing] = await db.select({ id: knowledgeBases.id }).from(knowledgeBases).where(sql`${knowledgeBases.projectId} is null and ${knowledgeBases.name} = 'Firm'`).limit(1)
+  return existing?.id ?? null
+}
+
 export interface ProjectChunk {
   content: string
   documentId: string

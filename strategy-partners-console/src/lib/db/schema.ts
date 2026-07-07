@@ -253,6 +253,75 @@ export const executionLogs = sp.table('execution_logs', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+// ── Camada de Conhecimento (K1) — base proprietária que injeta números/precedentes reais nas respostas ──
+// Estruturado (tabelas) para o numérico/comparável; narrativo fica no RAG (knowledge_bases com projectId null).
+export const assumptionsLibrary = sp.table('assumptions_library', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').notNull(),          // ex.: rf_br, crp_br, beta_saas, size_premium, tax_rate
+  label: text('label').notNull(),
+  value: numeric('value', { precision: 12, scale: 4 }).notNull(),
+  unit: text('unit'),                  // %, x, bps
+  sector: text('sector'),              // opcional (betas por setor)
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const dealPrecedents = sp.table('deal_precedents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sector: text('sector').notNull(),
+  thesis: text('thesis'),
+  ev: numeric('ev', { precision: 18, scale: 2 }),
+  evEbitda: numeric('ev_ebitda', { precision: 8, scale: 2 }),
+  evRevenue: numeric('ev_revenue', { precision: 8, scale: 2 }),
+  structure: text('structure'),        // JSON: {cash, stock, earnout, escrow}
+  synergyPromised: numeric('synergy_promised', { precision: 18, scale: 2 }),
+  synergyCaptured: numeric('synergy_captured', { precision: 18, scale: 2 }),
+  outcome: text('outcome'),            // sucesso | falha | parcial
+  lessons: text('lessons'),
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const marketMultiples = sp.table('market_multiples', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sector: text('sector').notNull(),
+  metric: text('metric').notNull(),    // ev_ebitda | ev_revenue | p_e
+  low: numeric('low', { precision: 8, scale: 2 }),
+  median: numeric('median', { precision: 8, scale: 2 }),
+  high: numeric('high', { precision: 8, scale: 2 }),
+  period: text('period'),
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const sectorBenchmarks = sp.table('sector_benchmarks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sector: text('sector').notNull(),
+  stage: text('stage'),                // seed | series_a | growth | mature
+  metric: text('metric').notNull(),    // churn | nrr | rule_of_40 | cac_payback | gross_margin
+  p25: numeric('p25', { precision: 10, scale: 2 }),
+  p50: numeric('p50', { precision: 10, scale: 2 }),
+  p75: numeric('p75', { precision: 10, scale: 2 }),
+  unit: text('unit'),
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const goldenAnswers = sp.table('golden_answers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  question: text('question').notNull(),
+  answer: text('answer').notNull(),
+  category: text('category'),
+  keywords: text('keywords'),          // termos para match simples
+  curatedBy: text('curated_by'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export type ProjectType = 'pre_deal' | 'pmi'
 export type UserRole = 'admin' | 'partner' | 'analyst' | 'client_viewer'
 export type DealStage = 'sourcing' | 'screening' | 'diligence' | 'loi' | 'closing' | 'closed'
@@ -270,6 +339,11 @@ export type DBSynergy = typeof synergies.$inferSelect
 export type DBMilestone = typeof milestones.$inferSelect
 export type DBPmiRisk = typeof pmiRisks.$inferSelect
 export type DBExecutionLog = typeof executionLogs.$inferSelect
+export type DBAssumption = typeof assumptionsLibrary.$inferSelect
+export type DBDealPrecedent = typeof dealPrecedents.$inferSelect
+export type DBMarketMultiple = typeof marketMultiples.$inferSelect
+export type DBSectorBenchmark = typeof sectorBenchmarks.$inferSelect
+export type DBGoldenAnswer = typeof goldenAnswers.$inferSelect
 export type DBThesis = typeof theses.$inferSelect
 export type DBDealMetrics = typeof dealMetrics.$inferSelect
 export type DBDealScore = typeof dealScores.$inferSelect

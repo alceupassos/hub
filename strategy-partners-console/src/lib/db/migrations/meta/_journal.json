@@ -29,6 +29,13 @@
       "when": 1783384013102,
       "tag": "0003_fase6_dealflow",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783436307324,
+      "tag": "0004_knowledge_layer",
+      "breakpoints": true
     }
   ]
 }
