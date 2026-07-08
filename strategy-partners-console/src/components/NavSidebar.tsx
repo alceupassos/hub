@@ -143,9 +143,9 @@ function NavContent() {
     { icon: Calculator,    label: t.modeling,      href: '/modelagem',    matchPaths: ['/modelagem'] },
     { icon: Scale,         label: t.roiCompare,    href: '/comparativo',  matchPaths: ['/comparativo'] },
     { icon: Handshake,     label: t.negotiation,   href: '/negociacao',   matchPaths: ['/negociacao'] },
-    { icon: Landmark,      label: t.advDebt,       href: '/advisory?tab=divida',       matchPaths: ['/advisory'] },
-    { icon: LineChart,     label: t.advReview,     href: '/advisory?tab=revisao',      matchPaths: [] },
-    { icon: CalendarRange, label: t.advPlan,       href: '/advisory?tab=planejamento', matchPaths: [] },
+    { icon: Landmark,      label: t.advDebt,       href: '/advisory?tab=divida',       matchPaths: ['/advisory'], matchTab: 'divida' },
+    { icon: LineChart,     label: t.advReview,     href: '/advisory?tab=revisao',      matchPaths: ['/advisory'], matchTab: 'revisao' },
+    { icon: CalendarRange, label: t.advPlan,       href: '/advisory?tab=planejamento', matchPaths: ['/advisory'], matchTab: 'planejamento' },
     { icon: Grid3X3,       label: t.agentsNav,     href: '/modelos',      matchPaths: ['/modelos'] },
     { icon: BarChart2,     label: t.reports,       href: '/relatorios',   matchPaths: ['/relatorios'] },
     { icon: Book,          label: t.knowledge,     href: '/conhecimento', matchPaths: ['/conhecimento'] },
@@ -202,10 +202,14 @@ function NavContent() {
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.07em] text-ink-6 px-[10px] mb-1">
             {t.workspace}
           </p>
-          {navItems.map(({ icon: Icon, label, href, matchPaths }) => {
-            const active = matchPaths.some(p =>
+          {navItems.map(({ icon: Icon, label, href, matchPaths, matchTab }) => {
+            const pathActive = matchPaths.some(p =>
               p === '/' ? pathname === p : pathname.startsWith(p)
             )
+            // Itens que compartilham a rota /advisory se distinguem pelo ?tab= atual.
+            const active = matchTab
+              ? pathname.startsWith('/advisory') && (searchParams.get('tab') ?? 'divida') === matchTab
+              : pathActive
             return (
               <Link
                 key={label}

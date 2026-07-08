@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { NavSidebar } from '@/components/NavSidebar'
 import { Landmark, Scale, LineChart, Info, type LucideIcon } from 'lucide-react'
@@ -383,8 +383,15 @@ function PlanPanel() {
 
 function AdvisoryWorkbench() {
   const searchParams = useSearchParams()
-  const initial = searchParams.get('tab')
-  const [tab, setTab] = useState<Tab>(isTab(initial) ? initial : 'divida')
+  const urlTab = searchParams.get('tab')
+  const [tab, setTab] = useState<Tab>(isTab(urlTab) ? urlTab : 'divida')
+
+  // Os 3 itens do menu apontam para a MESMA rota /advisory mudando só o ?tab=. O Next
+  // navega client-side sem remontar o componente, então sincronizamos a aba quando o
+  // parâmetro de URL muda (senão "Revisão"/"Planejamento" não trocariam pelo menu).
+  useEffect(() => {
+    if (isTab(urlTab)) setTab(urlTab)
+  }, [urlTab])
 
   return (
     <div className="flex h-screen overflow-hidden bg-app-bg">

@@ -19,6 +19,24 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.06',
+    date: '2026-07-09',
+    title: {
+      pt: 'Correção de navegação nas áreas de advisory',
+      en: 'Navigation fix in the advisory areas',
+    },
+    summary: {
+      pt: 'Os itens Revisão Estratégica e Planejamento de Longo Prazo passam a abrir corretamente pelo menu.',
+      en: 'The Strategic Review and Long-Range Planning menu items now open correctly.',
+    },
+    highlights: [
+      {
+        pt: 'Alternar entre Reestruturação de Dívida, Revisão Estratégica e Planejamento pelo menu lateral agora troca a área ativa de imediato, e o item correspondente fica destacado.',
+        en: 'Switching between Debt Restructuring, Strategic Review and Planning from the sidebar now changes the active area immediately, with the matching item highlighted.',
+      },
+    ],
+  },
+  {
     version: '1.05',
     date: '2026-07-09',
     title: {
