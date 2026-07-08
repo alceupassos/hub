@@ -6,6 +6,7 @@ import { ANTHROPIC_MODELS, anthropicTiersEnabled, resolveAnthropicModel } from '
 import { callAnthropic } from '@/lib/server/providers/anthropic'
 import { logExecution } from '@/lib/server/execution-log'
 import { buildGrounding } from '@/lib/server/grounding'
+import { requireRole } from '@/lib/auth/rbac'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -17,6 +18,9 @@ You are the orchestration agent of the Strategy Partners fleet. Your role is to 
 `
 
 export async function POST(req: NextRequest) {
+  const { ok } = await requireRole(['admin', 'partner', 'analyst', 'client_viewer'])
+  if (!ok) return Response.json({ error: 'Acesso negado.' }, { status: 403 })
+
   const { question, agentResponses, lang = 'pt' } = (await req.json()) as {
     question: string
     agentResponses: { agentId: string; agentName: string; response: string }[]

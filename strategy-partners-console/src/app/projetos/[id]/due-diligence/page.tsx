@@ -6,6 +6,7 @@ import { NavSidebar } from '@/components/NavSidebar'
 import { DealChat } from '@/components/DealChat'
 import { ArrowLeft, AlertTriangle, ClipboardCheck, Sparkles, Upload, X } from 'lucide-react'
 import { useLang } from '@/lib/lang'
+import { FileDropzone } from '@/components/FileDropzone'
 
 interface DdItem { id: string; category: string; item: string; status: string; notes: string | null }
 interface RedFlag { id: string; category: string; description: string; severity: string; detectedByAgentId: string | null }
@@ -183,16 +184,17 @@ export default function DueDiligencePage() {
 }
 
 function UploadDocModal({ dealId, lang, onClose, onDone }: { dealId: string; lang: 'pt' | 'en'; onClose: () => void; onDone: () => void }) {
+  const [showPaste, setShowPaste] = useState(false)
   const [fileName, setFileName] = useState('')
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const L = lang === 'en'
-    ? { title: 'Add document to dataroom', hint: 'Paste the extracted text (contract, financials, memo). It is chunked and embedded for retrieval and diligence.', name: 'Document name', body: 'Document text', go: 'Ingest', cancel: 'Cancel' }
-    : { title: 'Adicionar documento ao dataroom', hint: 'Cole o texto extraído (contrato, financeiro, memo). Ele é fatiado e indexado para busca e diligence.', name: 'Nome do documento', body: 'Texto do documento', go: 'Ingerir', cancel: 'Cancelar' }
+    ? { title: 'Add documents to dataroom', hint: 'Upload the real files (PDF, DOCX, CSV, TXT). They are extracted, stored and indexed for retrieval and diligence.', name: 'Document name', body: 'Document text', go: 'Ingest', cancel: 'Cancel', or: 'or paste text instead', close: 'Done' }
+    : { title: 'Adicionar documentos ao dataroom', hint: 'Suba os arquivos reais (PDF, DOCX, CSV, TXT). São extraídos, guardados e indexados para busca e diligence.', name: 'Nome do documento', body: 'Texto do documento', go: 'Ingerir', cancel: 'Cancelar', or: 'ou colar texto', close: 'Concluir' }
 
-  async function submit() {
+  async function submitPaste() {
     if (!fileName.trim() || !text.trim()) { setError(L.body); return }
     setBusy(true); setError(null)
     try {
@@ -210,15 +212,25 @@ function UploadDocModal({ dealId, lang, onClose, onDone }: { dealId: string; lan
           <button onClick={onClose} className="text-ink-6 hover:text-ink-0"><X size={16} /></button>
         </div>
         <p className="text-[12px] text-ink-5 mb-4">{L.hint}</p>
-        <input value={fileName} onChange={e => setFileName(e.target.value)} placeholder={L.name}
-          className="w-full border border-border-card rounded-lg px-3 py-2 text-[13px] text-ink-0 bg-app-bg mb-3 outline-none focus:border-accent" />
-        <textarea value={text} onChange={e => setText(e.target.value)} rows={9} placeholder={L.body}
-          className="w-full border border-border-card rounded-lg px-3 py-2 text-[12.5px] text-ink-0 bg-app-bg mb-3 outline-none focus:border-accent resize-none" />
-        {error && <p className="text-[12px] text-red-600 mb-3">{error}</p>}
-        <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="text-[12px] px-4 py-2 rounded-lg text-ink-5 hover:bg-app-bg">{L.cancel}</button>
-          <button onClick={submit} disabled={busy} className="text-[12px] px-4 py-2 rounded-lg bg-accent text-white font-medium hover:opacity-90 disabled:opacity-50">{busy ? '…' : L.go}</button>
-        </div>
+
+        {!showPaste ? (
+          <>
+            <FileDropzone endpoint={`/api/deals/${dealId}/documents`} onDone={() => onDone()} />
+            <button onClick={() => setShowPaste(true)} className="mt-3 text-[11.5px] text-ink-5 hover:text-accent underline">{L.or}</button>
+          </>
+        ) : (
+          <>
+            <input value={fileName} onChange={e => setFileName(e.target.value)} placeholder={L.name}
+              className="w-full border border-border-card rounded-lg px-3 py-2 text-[13px] text-ink-0 bg-app-bg mb-3 outline-none focus:border-accent" />
+            <textarea value={text} onChange={e => setText(e.target.value)} rows={8} placeholder={L.body}
+              className="w-full border border-border-card rounded-lg px-3 py-2 text-[12.5px] text-ink-0 bg-app-bg mb-3 outline-none focus:border-accent resize-none" />
+            {error && <p className="text-[12px] text-red-600 mb-3">{error}</p>}
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowPaste(false)} className="text-[12px] px-4 py-2 rounded-lg text-ink-5 hover:bg-app-bg">{L.cancel}</button>
+              <button onClick={submitPaste} disabled={busy} className="text-[12px] px-4 py-2 rounded-lg bg-accent text-white font-medium hover:opacity-90 disabled:opacity-50">{busy ? '…' : L.go}</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

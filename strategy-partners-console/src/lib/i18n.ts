@@ -14,6 +14,8 @@ const T = {
     agentsNav:     'Agents',
     reports:       'Reports',
     knowledge:     'Knowledge',
+    modeling:      'Modeling',
+    roiCompare:    'ROI Comparator',
     workspace:     'Workspace',
     // ── Agent categories ────────────────────────────────────────────────────
     catChat:        'Chat',
@@ -146,6 +148,8 @@ const T = {
     agentsNav:     'Agentes',
     reports:       'Relatórios',
     knowledge:     'Conhecimento',
+    modeling:      'Modelagem',
+    roiCompare:    'Comparativo ROI',
     workspace:     'Workspace',
     // ── Agent categories ────────────────────────────────────────────────────
     catChat:        'Chat',

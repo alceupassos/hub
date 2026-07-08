@@ -7,11 +7,15 @@ import { anthropicTiersEnabled, resolveAnthropicModel } from '@/lib/modelTiers'
 import { callAnthropic } from '@/lib/server/providers/anthropic'
 import { logExecution } from '@/lib/server/execution-log'
 import { buildGrounding } from '@/lib/server/grounding'
+import { requireRole } from '@/lib/auth/rbac'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  const { ok } = await requireRole(['admin', 'partner', 'analyst', 'client_viewer'])
+  if (!ok) return Response.json({ error: 'Acesso negado.' }, { status: 403 })
+
   const { agentId, question, previousResponse, lang = 'pt', personaOverride } = (await req.json()) as {
     agentId: string
     question: string

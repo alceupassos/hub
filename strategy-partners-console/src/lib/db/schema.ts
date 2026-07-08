@@ -322,6 +322,65 @@ export const goldenAnswers = sp.table('golden_answers', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+// ── Camada Quantitativa (K2, Fase C) — premissas calibradas que alimentam o motor determinístico ──
+// Estrutura/tribunal por trás do LBO/DCF/tributário; injetadas no grounding p/ o motor consumir.
+export const lboAssumptions = sp.table('lbo_assumptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  sector: text('sector').notNull(),
+  entryMultipleLow: numeric('entry_multiple_low', { precision: 8, scale: 2 }),
+  entryMultipleHigh: numeric('entry_multiple_high', { precision: 8, scale: 2 }),
+  exitMultipleLow: numeric('exit_multiple_low', { precision: 8, scale: 2 }),
+  exitMultipleHigh: numeric('exit_multiple_high', { precision: 8, scale: 2 }),
+  totalLeverageTurns: numeric('total_leverage_turns', { precision: 6, scale: 2 }), // Dívida total / EBITDA
+  seniorTurns: numeric('senior_turns', { precision: 6, scale: 2 }),
+  seniorRate: numeric('senior_rate', { precision: 6, scale: 4 }),   // decimal
+  mezzTurns: numeric('mezz_turns', { precision: 6, scale: 2 }),
+  mezzRate: numeric('mezz_rate', { precision: 6, scale: 4 }),
+  typicalHoldYears: integer('typical_hold_years'),
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const taxParameters = sp.table('tax_parameters', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  key: text('key').notNull(),      // agio_amort_years, irpj_csll, pis_cofins, itbi, ...
+  label: text('label').notNull(),
+  value: numeric('value', { precision: 12, scale: 4 }).notNull(),
+  unit: text('unit'),              // %, anos
+  jurisdiction: text('jurisdiction').default('BR'),
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const financingTerms = sp.table('financing_terms', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  instrument: text('instrument').notNull(), // debenture_incentivada, cri_cra, fidc, 4131, bndes, senior_bank
+  label: text('label').notNull(),
+  allInRateLow: numeric('all_in_rate_low', { precision: 6, scale: 4 }),
+  allInRateHigh: numeric('all_in_rate_high', { precision: 6, scale: 4 }),
+  tenorYears: integer('tenor_years'),
+  notes: text('notes'),
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const returnsBenchmarks = sp.table('returns_benchmarks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  assetClass: text('asset_class').notNull(), // pe_buyout, growth, venture, search_fund
+  metric: text('metric').notNull(),          // gross_irr, net_irr, moic, dpi
+  p25: numeric('p25', { precision: 8, scale: 2 }),
+  p50: numeric('p50', { precision: 8, scale: 2 }),
+  p75: numeric('p75', { precision: 8, scale: 2 }),
+  unit: text('unit'),
+  region: text('region').default('BR/LatAm'),
+  source: text('source'),
+  asOfDate: timestamp('as_of_date', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 export type ProjectType = 'pre_deal' | 'pmi'
 export type UserRole = 'admin' | 'partner' | 'analyst' | 'client_viewer'
 export type DealStage = 'sourcing' | 'screening' | 'diligence' | 'loi' | 'closing' | 'closed'
@@ -344,6 +403,10 @@ export type DBDealPrecedent = typeof dealPrecedents.$inferSelect
 export type DBMarketMultiple = typeof marketMultiples.$inferSelect
 export type DBSectorBenchmark = typeof sectorBenchmarks.$inferSelect
 export type DBGoldenAnswer = typeof goldenAnswers.$inferSelect
+export type DBLboAssumption = typeof lboAssumptions.$inferSelect
+export type DBTaxParameter = typeof taxParameters.$inferSelect
+export type DBFinancingTerm = typeof financingTerms.$inferSelect
+export type DBReturnsBenchmark = typeof returnsBenchmarks.$inferSelect
 export type DBThesis = typeof theses.$inferSelect
 export type DBDealMetrics = typeof dealMetrics.$inferSelect
 export type DBDealScore = typeof dealScores.$inferSelect

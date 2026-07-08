@@ -10,11 +10,12 @@ function getTodayBR(): string {
   return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })
 }
 
-// Soft cutover (decisão 7): a sessão NextAuth e o código diário legado convivem atrás da flag
-// LEGACY_DAILY_CODE_AUTH (ligada por padrão) até todos os usuários reais estarem migrados.
-// Nunca fazer corte direto sem a migração completa.
+// Fase A · segurança: o código diário legado foi APOSENTADO. NextAuth é o único caminho.
+// A flag continua existindo só como escape hatch de migração controlada, mas agora está
+// DESLIGADA por padrão (precisa ser explicitamente 'true'). Mesmo ligada, `validateCode`
+// em `src/lib/server/codes.ts` sempre nega — não há mais tabela de códigos.
 function legacyEnabled(): boolean {
-  return process.env.LEGACY_DAILY_CODE_AUTH !== 'false'
+  return process.env.LEGACY_DAILY_CODE_AUTH === 'true'
 }
 
 export async function middleware(request: NextRequest) {

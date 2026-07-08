@@ -5,6 +5,8 @@ import { detectInjectionInMessages, identityGuardFor } from '@/lib/server/securi
 import { logSecurityEvent } from '@/lib/server/security-events'
 import { logExecution } from '@/lib/server/execution-log'
 import { maskModel } from '@/lib/modelMask'
+import { requireRole } from '@/lib/auth/rbac'
+import { buildGrounding } from '@/lib/server/grounding'
 import type { Agent } from '@/lib/types'
 
 export const runtime = 'nodejs'
@@ -53,6 +55,14 @@ interface ImageAttachment {
 }
 
 export async function POST(req: NextRequest) {
+  const { ok } = await requireRole(['admin', 'partner', 'analyst', 'client_viewer'])
+  if (!ok) {
+    return new Response(JSON.stringify({ error: 'Acesso negado.' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
   const { agentId, messages, lang = 'pt', imageAttachment, personaOverride } = (await req.json()) as {
     agentId: string
     messages: ChatMessage[]
@@ -108,7 +118,11 @@ export async function POST(req: NextRequest) {
   const langInstruction = lang === 'en'
     ? '\n\n## Language Instruction\nRespond to the user entirely in English. Maintain your full persona, expertise, and personality while communicating in English. Never switch to Portuguese unless the user explicitly asks.'
     : ''
-  const systemContent = IDENTITY_GUARD + personaContent + injectionNote + langInstruction
+  // Base proprietária (K1/K2) — antes ausente no chat principal. Ancoragem em números/precedentes
+  // reais da firma; '' quando não há banco (degrada graciosamente).
+  const lastUserForGrounding = [...messages].reverse().find(m => m.role === 'user')
+  const grounding = injectionDetected ? '' : await buildGrounding(lastUserForGrounding?.content ?? '', lang)
+  const systemContent = IDENTITY_GUARD + grounding + personaContent + injectionNote + langInstruction
 
   // ── Grok Vision path (image attachments) ────────────────────────────────────
   const grokKey = process.env.GROK_API_KEY

@@ -1,7 +1,7 @@
 import 'server-only'
 import { desc, eq, or, sql } from 'drizzle-orm'
 import { db } from '../index'
-import { assumptionsLibrary, dealPrecedents, goldenAnswers, marketMultiples, sectorBenchmarks } from '../schema'
+import { assumptionsLibrary, dealPrecedents, goldenAnswers, marketMultiples, sectorBenchmarks, lboAssumptions, taxParameters, financingTerms, returnsBenchmarks } from '../schema'
 
 // Leitura da base proprietária (K1). Todas retornam [] em caso de erro/sem dados — o grounding
 // degrada graciosamente. Escopo global da firma (não por projeto).
@@ -40,6 +40,24 @@ export async function matchGoldenAnswers(question: string, limit = 2) {
   } catch {
     return []
   }
+}
+
+// ── Camada Quantitativa (K2) — premissas que alimentam o motor determinístico ──
+export async function getLboAssumptions(sector: string) {
+  return db.select().from(lboAssumptions).where(eq(lboAssumptions.sector, sector)).orderBy(desc(lboAssumptions.asOfDate)).catch(() => [])
+}
+
+export async function getTaxParameters() {
+  return db.select().from(taxParameters).orderBy(taxParameters.key).catch(() => [])
+}
+
+export async function getFinancingTerms() {
+  return db.select().from(financingTerms).orderBy(financingTerms.instrument).catch(() => [])
+}
+
+export async function getReturnsBenchmarks(assetClass?: string) {
+  const rows = await db.select().from(returnsBenchmarks).orderBy(returnsBenchmarks.assetClass).catch(() => [])
+  return assetClass ? rows.filter(r => r.assetClass === assetClass) : rows
 }
 
 // ── Inserts (usados pelo seed e futuras rotas de gestão) ──

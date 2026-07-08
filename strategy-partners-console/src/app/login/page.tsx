@@ -10,9 +10,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/'
 
-  // mode 'code' = código diário legado (corte suave, decisão 7); 'password' = NextAuth Credentials.
-  const [mode, setMode] = useState<'code' | 'password'>('code')
-  const [code, setCode] = useState('')
+  // Autenticação: NextAuth (email + senha, RBAC). O código diário legado foi aposentado (Fase A).
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -21,7 +19,7 @@ function LoginForm() {
   const [shake, setShake] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { inputRef.current?.focus() }, [mode])
+  useEffect(() => { inputRef.current?.focus() }, [])
 
   function fail(msg: string) {
     setError(msg)
@@ -34,42 +32,16 @@ function LoginForm() {
     if (loading) return
     setError('')
 
-    if (mode === 'password') {
-      if (!email.trim() || !password) return
-      setLoading(true)
-      try {
-        const res = await signIn('credentials', { email, password, redirect: false })
-        if (res?.ok) {
-          setSuccess(true)
-          setTimeout(() => router.push(next), 700)
-        } else {
-          fail('Email ou senha incorretos')
-          setPassword('')
-        }
-      } catch {
-        setError('Erro de conexão')
-      } finally {
-        setLoading(false)
-      }
-      return
-    }
-
-    if (!code.trim()) return
+    if (!email.trim() || !password) return
     setLoading(true)
     try {
-      const res = await fetch('/api/access/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
-      })
-      const data = await res.json()
-      if (data.ok) {
+      const res = await signIn('credentials', { email, password, redirect: false })
+      if (res?.ok) {
         setSuccess(true)
         setTimeout(() => router.push(next), 700)
       } else {
-        fail(data.message ?? 'Código incorreto')
-        setCode('')
-        inputRef.current?.focus()
+        fail('Email ou senha incorretos')
+        setPassword('')
       }
     } catch {
       setError('Erro de conexão')
@@ -260,79 +232,46 @@ function LoginForm() {
 
           <h1 className="login-headline">Acesso restrito.</h1>
           <p className="login-sub">
-            {mode === 'code'
-              ? 'Digite o código de acesso do dia para entrar na plataforma.'
-              : 'Entre com seu email e senha corporativos.'}
+            Entre com seu email e senha corporativos.
           </p>
 
           <form onSubmit={handleSubmit}>
-            {mode === 'code' ? (
-              <>
-                <label className="login-label" htmlFor="code-input">Código de acesso</label>
-                <input
-                  ref={inputRef}
-                  id="code-input"
-                  type="text"
-                  value={code}
-                  onChange={e => setCode(e.target.value.toUpperCase().slice(0, 6))}
-                  placeholder="······"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  maxLength={6}
-                  disabled={loading || success}
-                  className={`login-input${shake ? ' shake' : ''}`}
-                />
-              </>
-            ) : (
-              <>
-                <label className="login-label" htmlFor="email-input">Email</label>
-                <input
-                  ref={inputRef}
-                  id="email-input"
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="voce@strategypartners.com.br"
-                  autoComplete="email"
-                  disabled={loading || success}
-                  className={`login-input${shake ? ' shake' : ''}`}
-                  style={{ textTransform: 'none', textAlign: 'left', letterSpacing: 'normal', fontSize: 15 }}
-                />
-                <label className="login-label" htmlFor="password-input" style={{ marginTop: 14 }}>Senha</label>
-                <input
-                  id="password-input"
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  disabled={loading || success}
-                  className="login-input"
-                  style={{ textTransform: 'none', textAlign: 'left', letterSpacing: '0.1em', fontSize: 15 }}
-                />
-              </>
-            )}
+            <label className="login-label" htmlFor="email-input">Email</label>
+            <input
+              ref={inputRef}
+              id="email-input"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="voce@strategypartners.com.br"
+              autoComplete="email"
+              disabled={loading || success}
+              className={`login-input${shake ? ' shake' : ''}`}
+              style={{ textTransform: 'none', textAlign: 'left', letterSpacing: 'normal', fontSize: 15 }}
+            />
+            <label className="login-label" htmlFor="password-input" style={{ marginTop: 14 }}>Senha</label>
+            <input
+              id="password-input"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              disabled={loading || success}
+              className="login-input"
+              style={{ textTransform: 'none', textAlign: 'left', letterSpacing: '0.1em', fontSize: 15 }}
+            />
 
             <div className="login-error">{error}</div>
 
             <button
               type="submit"
-              disabled={(mode === 'code' ? code.length === 0 : !email || !password) || loading || success}
+              disabled={!email || !password || loading || success}
               className={`login-btn${success ? ' success' : ''}`}
             >
               {success ? 'Acesso autorizado' : loading ? 'Verificando...' : 'Entrar'}
             </button>
           </form>
-
-          <button
-            type="button"
-            onClick={() => { setMode(m => (m === 'code' ? 'password' : 'code')); setError('') }}
-            style={{ marginTop: 18, width: '100%', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(238,242,248,0.45)', fontSize: 11.5, fontFamily: 'inherit', letterSpacing: '0.03em' }}
-          >
-            {mode === 'code' ? 'Entrar com email e senha' : 'Usar código de acesso do dia'}
-          </button>
 
           <p className="login-footer">
             Strategy Partners · Plataforma executiva de IA

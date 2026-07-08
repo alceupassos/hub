@@ -55,3 +55,6 @@ next-env.d.ts
 # The monorepo `*.doc*` rule (Word docs) falsely matches .dockerignore — it's a real deploy file
 # (prevents baking .env into the image), must be tracked.
 !/.dockerignore
+
+# Blobs de upload do dataroom (Fase F)
+.uploads/

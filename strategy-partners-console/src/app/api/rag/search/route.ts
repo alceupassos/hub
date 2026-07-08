@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { isDbConfigured } from '@/lib/db'
 import { hybridSearch } from '@/lib/rag/search'
+import { requireRole } from '@/lib/auth/rbac'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -8,6 +9,10 @@ export const dynamic = 'force-dynamic'
 // Hybrid RAG search over the dataroom.
 //   POST { query: string, knowledgeBaseId?: string, limit?: number }
 export async function POST(req: NextRequest) {
+  // Authz (Fase A): busca no dataroom exige sessão da firma (qualquer papel, incl. leitor).
+  const { ok } = await requireRole(['admin', 'partner', 'analyst', 'client_viewer'])
+  if (!ok) return Response.json({ error: 'Acesso negado.' }, { status: 403 })
+
   if (!isDbConfigured()) {
     return Response.json({ error: 'Dataroom indisponível: DATABASE_URL não configurada.' }, { status: 503 })
   }

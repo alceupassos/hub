@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+import { requireRole } from '@/lib/auth/rbac'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -52,6 +53,9 @@ function extractJson(raw: string): VerifyResult | null {
 }
 
 export async function POST(req: NextRequest) {
+  const { ok } = await requireRole(['admin', 'partner', 'analyst', 'client_viewer'])
+  if (!ok) return Response.json(UNAVAILABLE)
+
   const { agentName, question, response, lang = 'pt' } = (await req.json()) as {
     agentName: string
     question: string

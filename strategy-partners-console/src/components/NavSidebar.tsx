@@ -7,12 +7,14 @@ import { Suspense, useEffect, useState } from 'react'
 import {
   MessageSquare, Folder, Grid3X3, BarChart2, Book, Settings, Plus, ChevronDown,
   ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare, Users, LogOut,
+  Calculator, Scale, Activity,
 } from 'lucide-react'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
 import { useLang } from '@/lib/lang'
 import { useAgentConfig } from '@/lib/agent-config'
 import { getT, CATEGORY_T } from '@/lib/i18n'
+import { APP_VERSION } from '@/lib/version'
 
 const CATEGORY_ORDER = ['chat', 'vendas', 'segurança', 'financeiro', 'programação', 'conhecimento']
 
@@ -138,13 +140,18 @@ function NavContent() {
     { icon: Sparkles,      label: t.dealflow,      href: '/dealflow',     matchPaths: ['/dealflow'] },
     { icon: KanbanSquare,  label: t.pipeline,      href: '/pipeline',     matchPaths: ['/pipeline'] },
     { icon: Folder,        label: t.projects,      href: '/projetos',     matchPaths: ['/projetos'] },
+    { icon: Calculator,    label: t.modeling,      href: '/modelagem',    matchPaths: ['/modelagem'] },
+    { icon: Scale,         label: t.roiCompare,    href: '/comparativo',  matchPaths: ['/comparativo'] },
     { icon: Grid3X3,       label: t.agentsNav,     href: '/modelos',      matchPaths: ['/modelos'] },
     { icon: BarChart2,     label: t.reports,       href: '/relatorios',   matchPaths: ['/relatorios'] },
     { icon: Book,          label: t.knowledge,     href: '/conhecimento', matchPaths: ['/conhecimento'] },
     { icon: Sparkles,      label: t.novidades,     href: '/novidades',    matchPaths: ['/novidades'] },
     { icon: Settings,      label: t.configNav,     href: '/config',       matchPaths: ['/config'] },
     ...(role === 'admin'
-      ? [{ icon: ShieldCheck, label: 'Admin', href: '/admin', matchPaths: ['/admin'] }]
+      ? [
+          { icon: ShieldCheck, label: 'Admin', href: '/admin', matchPaths: ['/admin'] },
+          { icon: Activity, label: lang === 'en' ? 'Diagnostics' : 'Diagnóstico', href: '/admin/diagnostico', matchPaths: ['/admin/diagnostico'] },
+        ]
       : []),
   ]
 
@@ -244,7 +251,9 @@ function NavContent() {
         </div>
         <div className="min-w-0 flex-1">
           <p className="text-[12px] font-medium text-ink-0 truncate">Strategy Partners</p>
-          <p className="font-mono text-[10px] text-ink-6 truncate">{role ? `Sessão · ${role}` : 'Acesso autorizado'}</p>
+          <p className="font-mono text-[10px] text-ink-6 truncate">
+            {role ? `Sessão · ${role}` : 'Acesso autorizado'} · <Link href="/novidades" className="hover:text-accent">v{APP_VERSION}</Link>
+          </p>
         </div>
         <button
           onClick={logout}

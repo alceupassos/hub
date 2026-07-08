@@ -2,10 +2,11 @@
 import Link from 'next/link'
 import { NavSidebar } from '@/components/NavSidebar'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
-import { Search, BookOpen, FileText, Brain } from 'lucide-react'
+import { Search, BookOpen, FileText, Brain, UploadCloud } from 'lucide-react'
 import { useLang } from '@/lib/lang'
 import { useAgentConfig } from '@/lib/agent-config'
 import { getT } from '@/lib/i18n'
+import { FileDropzone } from '@/components/FileDropzone'
 
 const ARTICLES = [
   {
@@ -71,6 +72,18 @@ export default function ConhecimentoPage() {
         <div className="px-8 py-6 grid grid-cols-3 gap-6">
           {/* Articles */}
           <div className="col-span-2 space-y-4">
+            {/* Ingestão real de documentos na base de conhecimento da firma (Fase F) */}
+            <div className="bg-surface border border-border-card rounded-[10px] p-5">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-6 flex items-center gap-2 mb-3">
+                <UploadCloud size={12} strokeWidth={1.8} />
+                {lang === 'en' ? 'Ingest documents into the knowledge base' : 'Ingerir documentos na base de conhecimento'}
+              </h2>
+              <FileDropzone
+                endpoint="/api/rag/upload"
+                label={lang === 'en' ? 'Drag research, memos, playbooks or contracts here' : 'Arraste research, memos, playbooks ou contratos aqui'}
+              />
+            </div>
+
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-6 flex items-center gap-2">
               <FileText size={12} strokeWidth={1.8} />
               {t.recentArticles}
