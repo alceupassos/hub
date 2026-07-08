@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import type { Model } from '@/lib/types'
 import type { Translations } from '@/lib/i18n'
 import { isPrincipal } from '@/lib/agentTiers'
+import { DeliverableButtons } from '@/components/DeliverableButtons'
 
 interface Props {
   activeModels: Model[]
@@ -71,6 +72,17 @@ export function SinteseView({ activeModels, agentConf, question, synthesis, synt
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{synthesis}</ReactMarkdown>
         </div>
       ) : (
+        false
+      )}
+
+      {/* Entregáveis — só quando há síntese pronta */}
+      {!synthLoading && synthesis && (
+        <div className="border-t border-border-foot pt-4">
+          <DeliverableButtons data={{ dealName: question ? question.slice(0, 60) : 'Mandato', synthesis }} />
+        </div>
+      )}
+
+      {!synthLoading && !synthesis && (
         <p className="text-[13.5px] text-ink-6 leading-[1.7] italic">
           {t.synthBody}
         </p>

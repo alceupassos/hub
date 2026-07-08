@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from 'react'
 import {
   MessageSquare, Folder, Grid3X3, BarChart2, Book, Settings, Plus, ChevronDown,
   ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare, Users, LogOut,
-  Calculator, Scale, Activity,
+  Calculator, Scale, Activity, Handshake,
 } from 'lucide-react'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
@@ -142,6 +142,7 @@ function NavContent() {
     { icon: Folder,        label: t.projects,      href: '/projetos',     matchPaths: ['/projetos'] },
     { icon: Calculator,    label: t.modeling,      href: '/modelagem',    matchPaths: ['/modelagem'] },
     { icon: Scale,         label: t.roiCompare,    href: '/comparativo',  matchPaths: ['/comparativo'] },
+    { icon: Handshake,     label: t.negotiation,   href: '/negociacao',   matchPaths: ['/negociacao'] },
     { icon: Grid3X3,       label: t.agentsNav,     href: '/modelos',      matchPaths: ['/modelos'] },
     { icon: BarChart2,     label: t.reports,       href: '/relatorios',   matchPaths: ['/relatorios'] },
     { icon: Book,          label: t.knowledge,     href: '/conhecimento', matchPaths: ['/conhecimento'] },

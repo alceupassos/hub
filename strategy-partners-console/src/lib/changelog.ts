@@ -19,6 +19,54 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.04',
+    date: '2026-07-08',
+    title: {
+      pt: 'Entregáveis institucionais e análise probabilística',
+      en: 'Institutional deliverables and probabilistic analysis',
+    },
+    summary: {
+      pt: 'A análise da frota passa a ser exportável como documentos de comitê, e o workbench ganhou uma camada de cenários e simulação.',
+      en: 'Fleet analysis is now exportable as committee documents, and the workbench gained a scenario and simulation layer.',
+    },
+    highlights: [
+      {
+        pt: 'Geração em um clique do memorando de comitê (Word), deck executivo (PowerPoint) e modelo (Excel), a partir da síntese, com identidade Strategy Partners.',
+        en: 'One-click generation of the committee memorandum (Word), executive deck (PowerPoint) and model (Excel) from the synthesis, branded Strategy Partners.',
+      },
+      {
+        pt: 'Nova aba de Cenários e Monte Carlo: comparação pessimista/base/otimista e distribuição de TIR (P10/P50/P90) com probabilidade de superar o hurdle, reprodutível por semente.',
+        en: 'New Scenarios and Monte Carlo tab: bear/base/bull comparison and IRR distribution (P10/P50/P90) with probability of clearing the hurdle, reproducible by seed.',
+      },
+      {
+        pt: 'Simulador de negociação: cálculo de ZOPA (zona de possível acordo) e divisão de excedente entre comprador e vendedor a partir dos preços-limite.',
+        en: 'Negotiation simulator: ZOPA (zone of possible agreement) calculation and buyer/seller surplus split from reservation prices.',
+      },
+    ],
+  },
+  {
+    version: '1.03',
+    date: '2026-07-08',
+    title: {
+      pt: 'Visualizações analíticas no workbench de modelagem',
+      en: 'Analytical visualizations in the modeling workbench',
+    },
+    summary: {
+      pt: 'O workbench passou a apresentar os resultados do motor em gráficos de padrão institucional, incluindo uma nova aba de análise de sensibilidade.',
+      en: 'The workbench now presents engine results in institutional-grade charts, including a new sensitivity-analysis tab.',
+    },
+    highlights: [
+      {
+        pt: 'Football field de valuation e waterfall de atribuição de retorno (crescimento de EBITDA, expansão de múltiplo e desalavancagem) renderizados de forma consistente.',
+        en: 'Valuation football field and return-attribution waterfall (EBITDA growth, multiple expansion, deleveraging) rendered consistently.',
+      },
+      {
+        pt: 'Nova aba de Sensibilidade: mapa de calor do Enterprise Value por WACC × crescimento e gráfico tornado ordenando os drivers por impacto.',
+        en: 'New Sensitivity tab: Enterprise Value heatmap by WACC × growth and a tornado chart ranking drivers by impact.',
+      },
+    ],
+  },
+  {
     version: '1.02',
     date: '2026-07-08',
     title: {

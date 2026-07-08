@@ -16,6 +16,7 @@ const T = {
     knowledge:     'Knowledge',
     modeling:      'Modeling',
     roiCompare:    'ROI Comparator',
+    negotiation:   'Negotiation',
     workspace:     'Workspace',
     // ── Agent categories ────────────────────────────────────────────────────
     catChat:        'Chat',
@@ -150,6 +151,7 @@ const T = {
     knowledge:     'Conhecimento',
     modeling:      'Modelagem',
     roiCompare:    'Comparativo ROI',
+    negotiation:   'Negociação',
     workspace:     'Workspace',
     // ── Agent categories ────────────────────────────────────────────────────
     catChat:        'Chat',
