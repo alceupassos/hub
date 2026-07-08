@@ -1,7 +1,12 @@
 'use client'
 import { LangProvider } from '@/lib/lang'
+import { AgentConfigProvider } from '@/lib/agent-config'
 import type { ReactNode } from 'react'
 
 export function Providers({ children }: { children: ReactNode }) {
-  return <LangProvider>{children}</LangProvider>
+  return (
+    <AgentConfigProvider>
+      <LangProvider>{children}</LangProvider>
+    </AgentConfigProvider>
+  )
 }

@@ -1,5 +1,5 @@
 'use client'
-import { Download, PanelRight } from 'lucide-react'
+import { Download, MessageCircleQuestion, PanelRight } from 'lucide-react'
 import type { Tab } from '@/lib/types'
 import { useLang } from '@/lib/lang'
 import { getT } from '@/lib/i18n'
@@ -9,9 +9,12 @@ interface Props {
   setTab: (t: Tab) => void
   inspectorOpen: boolean
   toggleInspector: () => void
+  onExport: () => void
+  discoveryMode: boolean
+  onToggleDiscovery: () => void
 }
 
-export function ConsoleHeader({ tab, setTab, inspectorOpen, toggleInspector }: Props) {
+export function ConsoleHeader({ tab, setTab, inspectorOpen, toggleInspector, onExport, discoveryMode, onToggleDiscovery }: Props) {
   const { lang } = useLang()
   const t = getT(lang)
 
@@ -55,7 +58,22 @@ export function ConsoleHeader({ tab, setTab, inspectorOpen, toggleInspector }: P
 
       {/* Actions */}
       <div className="flex items-center gap-2 shrink-0">
-        <button className="flex items-center gap-[6px] px-3 py-[6px] rounded-lg border border-border-input text-[12px] text-ink-4 hover:bg-hover-bg transition-colors">
+        <button
+          onClick={onToggleDiscovery}
+          title="Ativar perguntas de descoberta antes da análise"
+          className={`flex items-center gap-[6px] px-3 py-[6px] rounded-lg border text-[12px] transition-colors ${
+            discoveryMode
+              ? 'border-accent bg-accent-soft text-accent font-medium'
+              : 'border-border-input text-ink-4 hover:bg-hover-bg'
+          }`}
+        >
+          <MessageCircleQuestion size={13} strokeWidth={1.6} />
+          Discovery
+        </button>
+        <button
+          onClick={onExport}
+          className="flex items-center gap-[6px] px-3 py-[6px] rounded-lg border border-border-input text-[12px] text-ink-4 hover:bg-hover-bg transition-colors"
+        >
           <Download size={13} strokeWidth={1.6} />
           {t.export}
         </button>

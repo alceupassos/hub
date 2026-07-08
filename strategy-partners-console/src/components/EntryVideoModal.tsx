@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 
-const COOKIE_KEY = 'sp_entry_v2'
+const COOKIE_KEY = 'sp_entry_v3'
 
 function getShownToday(): boolean {
   if (typeof document === 'undefined') return false
@@ -64,8 +64,10 @@ export function EntryVideoModal() {
           ref={videoRef}
           src="/videocoin.mp4"
           autoPlay
+          muted
           playsInline
           onEnded={() => setOpen(false)}
+          onError={() => setOpen(false)}
           className="block"
           style={{ maxWidth: '90vw', maxHeight: '82vh', display: 'block' }}
         />

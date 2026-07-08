@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strategy Partners — Contrate a frota de agentes especialistas de IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500;6..72,600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #040d1f;
+    color: #eef2f8;
+    font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── Design tokens (mesma paleta do /plan) ── */
+  :root {
+    --deep:      #040d1f;
+    --deep2:     #0a2350;
+    --navy:      #0a2f63;
+    --navy2:     #123a78;
+    --brand:     #1d4f9a;
+    --gold:      #c9a24a;
+    --gold2:     #e8c46a;
+    --paper:     #f5f7fa;
+    --paper2:    #eaeff6;
+    --ink:       #0f1b2e;
+    --ink-muted: #46556b;
+    --line:      rgba(238,242,248,.12);
+    --line-med:  rgba(238,242,248,.18);
+    --on-deep:   rgba(238,242,248,.92);
+    --on-soft:   rgba(238,242,248,.55);
+    --on-faint:  rgba(238,242,248,.32);
+    --neg:       #b5462f;
+    --success:   #1f9d6b;
+  }
+
+  /* ── Layout ── */
+  .deck { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 28px; }
+  .g2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 20px; }
+  .g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+  .g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+  .g6 { display: grid; grid-template-columns: repeat(6,1fr); gap: 14px; }
+
+  @media (max-width: 860px) {
+    .g2, .g3, .g4, .g6 { grid-template-columns: 1fr !important; }
+    .hero-grid { grid-template-columns: 1fr !important; }
+    .agent-pair { grid-template-columns: 1fr !important; }
+  }
+
+  /* ── Nav ── */
+  nav.top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 36px;
+    background: linear-gradient(to bottom, rgba(4,13,31,.96) 0%, rgba(4,13,31,0) 100%);
+  }
+  nav.top .logo { height: 36px; filter: brightness(0) invert(1); opacity: .9; }
+  nav.top .navlinks { display: flex; align-items: center; gap: 26px; }
+  nav.top .navlinks a.navlink {
+    font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--on-soft);
+    text-decoration: none; transition: color .15s;
+  }
+  nav.top .navlinks a.navlink:hover { color: var(--on-deep); }
+  nav.top .cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px;
+    background: var(--gold);
+    color: var(--deep);
+    font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    border-radius: 2px; text-decoration: none;
+    transition: opacity .15s;
+  }
+  nav.top .cta:hover { opacity: .88; }
+
+  /* ── Hero ── */
+  section.hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    background:
+      radial-gradient(ellipse at 20% 30%, rgba(29,79,154,.35) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 70%, rgba(10,47,99,.4) 0%, transparent 50%),
+      linear-gradient(160deg, #040d1f 0%, #0a2350 70%, #07193a 100%);
+    position: relative; overflow: hidden;
+  }
+  section.hero::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; opacity: .6;
+  }
+
+  .hero-inner {
+    position: relative; z-index: 1;
+    padding: 150px 0 90px;
+    width: 100%; max-width: 1180px; margin: 0 auto; padding-left: 28px; padding-right: 28px;
+  }
+  .hero-eyebrow {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 28px;
+    font-size: 11px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--gold);
+  }
+  .hero-eyebrow span { display: block; width: 36px; height: 1px; background: var(--gold); }
+
+  .hero-h1 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(42px, 5.8vw, 80px);
+    line-height: 1.02;
+    letter-spacing: -.03em;
+    color: var(--on-deep);
+    max-width: 880px;
+    margin-bottom: 30px;
+  }
+  .hero-h1 em { font-style: italic; color: var(--gold2); }
+
+  .hero-sub {
+    max-width: 660px;
+    font-size: clamp(16px, 1.8vw, 20px);
+    color: var(--on-soft);
+    line-height: 1.6;
+    margin-bottom: 42px;
+  }
+
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 66px; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 16px 30px;
+    background: var(--gold);
+    color: var(--deep);
+    font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    border-radius: 2px; text-decoration: none;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 16px 28px;
+    border: 1px solid var(--line-med);
+    color: var(--on-soft);
+    font-size: 13px; font-weight: 600; letter-spacing: .06em;
+    border-radius: 2px; text-decoration: none;
+    transition: border-color .15s, color .15s;
+  }
+  .btn-ghost:hover { border-color: rgba(238,242,248,.4); color: var(--on-deep); }
+
+  .hero-kpis {
+    display: flex; flex-wrap: wrap; gap: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 32px;
+  }
+  .kpi-item {
+    padding: 12px 36px 12px 0;
+    margin-right: 36px;
+    border-right: 1px solid var(--line);
+  }
+  .kpi-item:last-child { border-right: none; margin-right: 0; }
+  .kpi-num {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: clamp(26px, 3.2vw, 40px);
+    font-weight: 500;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .kpi-label { margin-top: 6px; font-size: 13px; color: var(--on-faint); max-width: 190px; }
+
+  /* ── Section labels / headings ── */
+  .sec-label {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 22px;
+  }
+  .sec-label span { display: block; width: 26px; height: 1px; background: var(--gold); }
+
+  .sec-h2 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(30px, 3.8vw, 50px);
+    line-height: 1.05;
+    letter-spacing: -.025em;
+    color: var(--on-deep);
+    margin-bottom: 16px;
+  }
+  .sec-sub {
+    font-size: clamp(16px, 1.6vw, 18px);
+    color: var(--on-soft);
+    max-width: 720px;
+    margin-bottom: 44px;
+  }
+
+  /* ── Cards genéricos ── */
+  .dark-card {
+    padding: 28px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  .dark-card .card-num {
+    display: inline-block; margin-bottom: 14px;
+    padding: 5px 9px;
+    color: var(--gold);
+    border: 1px solid rgba(201,162,74,.3);
+    border-radius: 2px;
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  }
+  .dark-card h3 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 500; font-size: 22px;
+    color: var(--on-deep);
+    margin-bottom: 10px;
+  }
+  .dark-card p { font-size: 15px; color: var(--on-soft); line-height: 1.55; }
+
+  /* ── Por que agora ── */
+  section.why-now { background: var(--deep); padding: 90px 0; }
+
+  /* ── Como funciona (orquestração) ── */
+  section.como-funciona { background: linear-gradient(to bottom, #07193a, #0a2350); padding: 90px 0; }
+  .flow-card { position: relative; padding: 30px 26px; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 3px; }
+  .flow-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; margin-bottom: 18px;
+    border: 1px solid var(--gold); border-radius: 50%;
+    font-family: 'Newsreader', Georgia, serif; font-size: 16px; color: var(--gold);
+  }
+  .flow-card h3 { font-family: 'Newsreader', Georgia, serif; font-weight: 500; font-size: 20px; color: var(--on-deep); margin-bottom: 10px; }
+  .flow-card p { font-size: 14.5px; color: var(--on-soft); line-height: 1.55; }
+  .flow-arrow { display: flex; align-items: center; justify-content: center; color: var(--on-faint); }
+  @media (max-width: 860px) { .flow-arrow { display: none; } }
+
+  /* ── A frota — categorias overview ── */
+  section.frota-overview { background: var(--deep); padding: 90px 0 50px; }
+  .cat-chip {
+    display: flex; flex-direction: column; gap: 10px;
+    padding: 22px 20px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    text-decoration: none;
+    transition: border-color .2s, background .2s;
+  }
+  .cat-chip:hover { border-color: var(--line-med); background: rgba(255,255,255,.05); }
+  .cat-chip .cat-icon { font-family: 'Newsreader', Georgia, serif; font-size: 26px; color: var(--gold); line-height: 1; }
+  .cat-chip .cat-name { font-family: 'Newsreader', Georgia, serif; font-size: 17px; color: var(--on-deep); }
+  .cat-chip .cat-count { font-size: 12px; color: var(--on-faint); }
+
+  /* ── Categorias detalhadas ── */
+  .cat-section { padding: 76px 0; border-top: 1px solid var(--line); }
+  .cat-a { background: var(--deep); }
+  .cat-b { background: linear-gradient(to bottom, #07193a, #0a2350); }
+
+  .agent-pair { display: grid; grid-template-columns: repeat(2,1fr); gap: 18px; margin-bottom: 26px; }
+  .agent-card {
+    display: flex; gap: 16px;
+    padding: 22px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+  .agent-card img {
+    width: 58px; height: 58px; border-radius: 50%; object-fit: cover;
+    border: 1px solid var(--line-med); flex-shrink: 0;
+  }
+  .agent-card h4 { font-family: 'Newsreader', Georgia, serif; font-weight: 500; font-size: 19px; color: var(--on-deep); margin-bottom: 3px; }
+  .agent-role { display: block; font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); margin-bottom: 9px; }
+  .agent-card ul { margin: 0; padding-left: 16px; font-size: 13px; color: var(--on-soft); line-height: 1.6; }
+  .agent-card li { margin-bottom: 3px; }
+
+  .example-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .example-card {
+    padding: 18px 20px;
+    background: rgba(255,255,255,.03);
+    border-left: 2px solid var(--gold);
+    font-size: 14px; color: var(--on-soft); line-height: 1.55;
+  }
+  .example-card strong { color: var(--on-deep); }
+
+  /* ── Formas de contratar ── */
+  section.contratar { background: var(--deep); padding: 90px 0; }
+  .modo-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; align-items: stretch; }
+  @media (max-width: 860px) { .modo-grid { grid-template-columns: 1fr; } }
+
+  .modo-card {
+    display: flex; flex-direction: column;
+    padding: 30px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    transition: border-color .2s;
+  }
+  .modo-card:hover { border-color: var(--line-med); }
+
+  .modo-card.featured {
+    background: linear-gradient(160deg, rgba(10,47,99,.7), rgba(18,58,120,.5));
+    border-color: rgba(201,162,74,.45);
+    box-shadow: 0 24px 60px rgba(4,13,31,.5);
+  }
+  .card-badge {
+    display: inline-flex; align-self: flex-start;
+    padding: 5px 10px;
+    border-radius: 2px;
+    font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .badge-default { color: var(--gold); border: 1px solid rgba(201,162,74,.3); }
+  .badge-main { color: var(--gold); border: 1px solid var(--gold); background: rgba(201,162,74,.08); }
+  .badge-top { color: var(--on-soft); border: 1px solid var(--line); }
+
+  .modo-card h3 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 500; font-size: 24px;
+    color: var(--on-deep);
+    margin-bottom: 14px;
+  }
+  .modo-price { font-family: 'Newsreader', Georgia, serif; font-size: 32px; color: var(--gold); margin-bottom: 4px; }
+  .modo-price small { font-size: 16px; }
+  .modo-desc { margin-top: 12px; font-size: 14px; color: var(--on-soft); line-height: 1.55; }
+  .modo-period { font-size: 12px; color: var(--on-faint); }
+  .modo-includes { margin: 16px 0 0; padding-left: 16px; font-size: 13.5px; color: var(--on-soft); line-height: 1.6; }
+
+  /* ── Tese ── */
+  section.tese { background: linear-gradient(to bottom, #0a2350, #040d1f); padding: 90px 0; }
+  .tese-block {
+    padding: 52px;
+    background: linear-gradient(135deg, rgba(10,35,80,.95), rgba(18,58,120,.8));
+    border: 1px solid rgba(201,162,74,.2);
+    border-radius: 3px;
+    position: relative; overflow: hidden;
+  }
+  .tese-block::before {
+    content: '"';
+    position: absolute; top: -20px; left: 40px;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 200px; line-height: 1;
+    color: rgba(201,162,74,.07);
+    pointer-events: none;
+  }
+  .tese-text {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(22px, 2.8vw, 36px);
+    line-height: 1.28;
+    color: var(--on-deep);
+    max-width: 900px;
+    position: relative; z-index: 1;
+    margin-bottom: 20px;
+  }
+  .tese-sub {
+    font-size: 16px;
+    color: var(--on-soft);
+    max-width: 780px;
+    position: relative; z-index: 1;
+  }
+
+  /* ── Para quem tem dúvida ── */
+  section.duvidas { background: var(--deep); padding: 90px 0; }
+  .duvida-card { padding: 24px; background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 3px; }
+  .duvida-card h3 { font-family: 'Newsreader', Georgia, serif; font-weight: 500; font-size: 19px; color: var(--gold); margin-bottom: 10px; }
+  .duvida-card p { font-size: 14.5px; color: var(--on-soft); line-height: 1.55; }
+
+  /* ── Section: CTA Final ── */
+  section.cta-final {
+    padding: 100px 0;
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(29,79,154,.3) 0%, transparent 60%),
+      linear-gradient(to bottom, #0a2350, #040d1f);
+    text-align: center;
+  }
+  .cta-h2 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(32px, 4.6vw, 58px);
+    line-height: 1.08;
+    letter-spacing: -.025em;
+    color: var(--on-deep);
+    margin-bottom: 16px;
+  }
+  .cta-sub {
+    font-size: 17px; color: var(--on-soft);
+    margin-bottom: 42px;
+    max-width: 620px; margin-left: auto; margin-right: auto;
+  }
+  .cta-note {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--on-faint);
+    letter-spacing: .06em;
+  }
+
+  /* ── Footer ── */
+  footer.site {
+    padding: 32px 28px;
+    border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  footer.site img { height: 28px; filter: brightness(0) invert(1); opacity: .5; }
+  footer.site p { font-size: 12px; color: var(--on-faint); }
+
+  @media print { nav.top { display: none; } }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="top">
+  <img src="/strategy-partners-logo.svg" alt="Strategy Partners" class="logo" />
+  <div class="navlinks">
+    <a href="#frota" class="navlink">A frota</a>
+    <a href="#como-funciona" class="navlink">Como funciona</a>
+    <a href="#contratar" class="navlink">Formas de contratar</a>
+    <a href="/login" class="cta">Acessar o console</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <span></span>Strategy Partners · Frota de Agentes Especializados
+    </div>
+
+    <h1 class="hero-h1">
+      A especialista certa para o seu problema,<br />contratada <em>pelo tempo que você precisar.</em>
+    </h1>
+
+    <p class="hero-sub">
+      27 agentes de IA treinados como especialistas de verdade — jurídico, financeiro, segurança, vendas, programação e estratégia. Você descreve o desafio, o sistema seleciona quais agentes entram, eles respondem em paralelo e um agente orquestrador sintetiza tudo numa única resposta executiva. Sem contratar ninguém em tempo integral. Sem esperar mês para começar.
+    </p>
+
+    <div class="hero-actions">
+      <a href="/login" class="btn-primary">
+        Testar com o seu problema
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <a href="#frota" class="btn-ghost">Ver a frota completa</a>
+    </div>
+
+    <div class="hero-kpis">
+      <div class="kpi-item">
+        <div class="kpi-num">27</div>
+        <div class="kpi-label">agentes especialistas ativos na frota</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-num">6</div>
+        <div class="kpi-label">áreas cobertas: chat, vendas, segurança, financeiro, código e estratégia</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-num">Em paralelo</div>
+        <div class="kpi-label">vários agentes atacam o mesmo problema ao mesmo tempo, não em fila</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-num">Dias, não meses</div>
+        <div class="kpi-label">para colocar o especialista certo em ação — cancelável quando quiser</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Por que agora -->
+<section class="why-now">
+  <div class="deck">
+    <div class="sec-label"><span></span>O momento</div>
+    <h2 class="sec-h2">O problema é pontual. Por que a contratação seria permanente?</h2>
+    <p class="sec-sub">
+      Toda empresa hoje sente a pressão de usar IA de verdade — não um chatbot genérico, mas expertise que resolve o problema específico do trimestre. O gap não é tecnologia. É acesso rápido à especialidade certa, pelo tempo certo.
+    </p>
+
+    <div class="g3">
+      <div class="dark-card">
+        <span class="card-num">01</span>
+        <h3>Contratar sênior ficou caro e lento</h3>
+        <p>Um especialista de verdade — jurídico, segurança, dados, M&A — custa seis dígitos por ano e leva meses para contratar. O seu problema não vai esperar o processo seletivo terminar.</p>
+      </div>
+      <div class="dark-card">
+        <span class="card-num">02</span>
+        <h3>Nem todo problema é permanente</h3>
+        <p>Você não precisa de um head de compliance full-time para uma auditoria de LGPD, nem de um CFO fracionado para modelar um cenário. Precisa da expertise por semanas, não por um cargo.</p>
+      </div>
+      <div class="dark-card">
+        <span class="card-num">03</span>
+        <h3>Quem decide rápido, joga na frente</h3>
+        <p>Enquanto uma empresa espera aprovação de headcount, a concorrente já rodou o diagnóstico, testou a hipótese e ajustou o rumo — com uma frota de especialistas que entrou em ação no mesmo dia.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Como funciona -->
+<section class="como-funciona" id="como-funciona">
+  <div class="deck">
+    <div class="sec-label"><span></span>Como funciona</div>
+    <h2 class="sec-h2">Um problema. Vários especialistas. Uma resposta.</h2>
+    <p class="sec-sub">
+      Não é um chatbot atrás do outro. É um sistema de orquestração: você traz o desafio, ele decide — com a sua confirmação — quais agentes têm o perfil certo, eles trabalham em paralelo, e um agente orquestrador (o Maestro) cruza as respostas numa síntese que a diretoria consegue usar.
+    </p>
+
+    <div class="g4">
+      <div class="flow-card">
+        <span class="flow-num">1</span>
+        <h3>Você descreve o desafio</h3>
+        <p>Em linguagem natural, como falaria com um consultor: o problema, o contexto, a urgência.</p>
+      </div>
+      <div class="flow-card">
+        <span class="flow-num">2</span>
+        <h3>O sistema seleciona os agentes</h3>
+        <p>Roteamento de intenção escolhe quem tem o perfil certo — jurídico, financeiro, código, segurança — e você pode ajustar a seleção manualmente.</p>
+      </div>
+      <div class="flow-card">
+        <span class="flow-num">3</span>
+        <h3>Eles respondem em paralelo</h3>
+        <p>Cada agente entrega sua análise de forma independente, com nível de confiança e verificação cruzada automática.</p>
+      </div>
+      <div class="flow-card">
+        <span class="flow-num">4</span>
+        <h3>O Maestro sintetiza</h3>
+        <p>As respostas viram uma síntese executiva única — pronta para decisão, exportável em um clique.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- A frota — overview -->
+<section class="frota-overview" id="frota">
+  <div class="deck">
+    <div class="sec-label"><span></span>A frota</div>
+    <h2 class="sec-h2">Seis áreas. Vinte e sete especialistas. Um mundo de problemas que dá para resolver.</h2>
+    <p class="sec-sub">
+      Cada agente é treinado com currículo, credenciais e regras de atuação próprias — não é um prompt genérico com nome bonito. Veja abaixo os seis grupos e alguns exemplos reais do que cada um resolve.
+    </p>
+
+    <div class="g6">
+      <a href="#cat-chat" class="cat-chip"><span class="cat-icon">01</span><span class="cat-name">Chat &amp; Atendimento</span><span class="cat-count">3 agentes</span></a>
+      <a href="#cat-vendas" class="cat-chip"><span class="cat-icon">02</span><span class="cat-name">Vendas</span><span class="cat-count">3 agentes</span></a>
+      <a href="#cat-seguranca" class="cat-chip"><span class="cat-icon">03</span><span class="cat-name">Segurança</span><span class="cat-count">3 agentes</span></a>
+      <a href="#cat-financeiro" class="cat-chip"><span class="cat-icon">04</span><span class="cat-name">Financeiro</span><span class="cat-count">3 agentes</span></a>
+      <a href="#cat-programacao" class="cat-chip"><span class="cat-icon">05</span><span class="cat-name">Programação</span><span class="cat-count">4 agentes</span></a>
+      <a href="#cat-conhecimento" class="cat-chip"><span class="cat-icon">06</span><span class="cat-name">Conhecimento &amp; Operação</span><span class="cat-count">11 agentes</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- Categoria: Chat & Atendimento -->
+<section class="cat-section cat-a" id="cat-chat">
+  <div class="deck">
+    <div class="sec-label"><span></span>01 · Chat &amp; Atendimento</div>
+    <h2 class="sec-h2">A linha de frente que nunca dorme.</h2>
+    <p class="sec-sub">Triagem, atendimento e sumarização executiva — para quando o volume cresce mais rápido que o time.</p>
+
+    <div class="agent-pair">
+      <div class="agent-card">
+        <img src="/agentes/agente1.webp" alt="Relay" />
+        <div>
+          <h4>Relay</h4>
+          <span class="agent-role">Atendimento e triagem express</span>
+          <ul>
+            <li>Roteamento de tickets em tempo real por prioridade</li>
+            <li>Adaptação de tom automática — formal, empático ou técnico</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-card">
+        <img src="/agentes/agente3.webp" alt="Brief" />
+        <div>
+          <h4>Brief</h4>
+          <span class="agent-role">Triagem e sumarização executiva</span>
+          <ul>
+            <li>Extração de pontos-chave em documentos de até 200 páginas</li>
+            <li>Sumarização hierárquica com score de acionabilidade</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-strip">
+      <div class="example-card"><strong>Central de suporte:</strong> 40% do volume triado automaticamente por prioridade, sem aumentar o time.</div>
+      <div class="example-card"><strong>Reunião de diretoria:</strong> ata de 40 minutos vira resumo de uma página com pontos de ação em minutos.</div>
+      <div class="example-card"><strong>Atendimento bilíngue:</strong> PT/EN 24 horas por dia, sem perder o tom da marca.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Categoria: Vendas -->
+<section class="cat-section cat-b" id="cat-vendas">
+  <div class="deck">
+    <div class="sec-label"><span></span>02 · Vendas</div>
+    <h2 class="sec-h2">Do primeiro contato ao contrato assinado.</h2>
+    <p class="sec-sub">Prospecção, negociação e propostas comerciais com o rigor de quem já fechou centenas de deals.</p>
+
+    <div class="agent-pair">
+      <div class="agent-card">
+        <img src="/agentes/agente4.webp" alt="Apex" />
+        <div>
+          <h4>Apex</h4>
+          <span class="agent-role">SDR — prospecção e qualificação</span>
+          <ul>
+            <li>Scoring de ICP com dados firmográficos e comportamentais</li>
+            <li>Qualificação nativa nos frameworks BANT e MEDDIC</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-card">
+        <img src="/agentes/agente5.webp" alt="Titan" />
+        <div>
+          <h4>Titan</h4>
+          <span class="agent-role">Objeções, negociação e fechamento</span>
+          <ul>
+            <li>Mapa de objeções em tempo real com contra-argumentos</li>
+            <li>Análise de padrões win/loss com 18+ variáveis históricas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-strip">
+      <div class="example-card"><strong>Prospecção:</strong> lista qualificada por ICP rodando enquanto o time comercial dorme.</div>
+      <div class="example-card"><strong>Fechamento:</strong> objeções mapeadas e neutralizadas antes da call de negociação.</div>
+      <div class="example-card"><strong>Proposta comercial:</strong> copy testado por vertical, pronto em minutos — não em dias.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Categoria: Segurança -->
+<section class="cat-section cat-a" id="cat-seguranca">
+  <div class="deck">
+    <div class="sec-label"><span></span>03 · Segurança</div>
+    <h2 class="sec-h2">Antes que vire manchete.</h2>
+    <p class="sec-sub">Threat intelligence, compliance e detecção de anomalias operando como time de segurança dedicado.</p>
+
+    <div class="agent-pair">
+      <div class="agent-card">
+        <img src="/agentes/agente7.webp" alt="Aegis" />
+        <div>
+          <h4>Aegis</h4>
+          <span class="agent-role">Threat intelligence e análise de segurança</span>
+          <ul>
+            <li>Mapeamento de CVEs contra a infraestrutura ativa do cliente</li>
+            <li>Análise de kill-chain alinhada ao MITRE ATT&amp;CK</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-card">
+        <img src="/agentes/agente8.webp" alt="Lex" />
+        <div>
+          <h4>Lex</h4>
+          <span class="agent-role">Compliance, LGPD e regulatório</span>
+          <ul>
+            <li>Análise de lacunas LGPD artigo por artigo</li>
+            <li>Elaboração de DPIA com matriz de risco e mitigação</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-strip">
+      <div class="example-card"><strong>Infraestrutura:</strong> varredura contínua de CVEs contra os ativos em produção.</div>
+      <div class="example-card"><strong>Auditoria LGPD:</strong> checklist artigo por artigo com DPIA pronto para o DPO assinar.</div>
+      <div class="example-card"><strong>Monitoramento:</strong> movimentação lateral suspeita sinalizada, sem esperar o relatório mensal.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Categoria: Financeiro -->
+<section class="cat-section cat-b" id="cat-financeiro">
+  <div class="deck">
+    <div class="sec-label"><span></span>04 · Financeiro</div>
+    <h2 class="sec-h2">A conta fechada antes da reunião de board.</h2>
+    <p class="sec-sub">Modelagem financeira, BPO contábil e due diligence com o padrão de uma boutique de M&amp;A.</p>
+
+    <div class="agent-pair">
+      <div class="agent-card">
+        <img src="/agentes/agente10.webp" alt="Quorum" />
+        <div>
+          <h4>Quorum</h4>
+          <span class="agent-role">Análise financeira e modelagem</span>
+          <ul>
+            <li>Modelagem DCF, LBO e transações comparáveis</li>
+            <li>Simulação de cenários com Monte Carlo integrada</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-card">
+        <img src="/agentes/agente11.webp" alt="Ledger" />
+        <div>
+          <h4>Ledger</h4>
+          <span class="agent-role">Conciliação contábil e BPO financeiro</span>
+          <ul>
+            <li>Conciliação tripla automatizada — banco, ERP e razão</li>
+            <li>Aceleração de fechamento mensal com comentário de variações</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-strip">
+      <div class="example-card"><strong>Board de amanhã:</strong> modelagem DCF e cenários Monte Carlo prontos hoje à noite.</div>
+      <div class="example-card"><strong>Fechamento mensal:</strong> conciliação banco-ERP-razão acelerada, com exceções já sinalizadas.</div>
+      <div class="example-card"><strong>Due diligence:</strong> 40+ categorias de red flag mapeadas antes de assinar o deal.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Categoria: Programação -->
+<section class="cat-section cat-a" id="cat-programacao">
+  <div class="deck">
+    <div class="sec-label"><span></span>05 · Programação</div>
+    <h2 class="sec-h2">Do rascunho ao pull request.</h2>
+    <p class="sec-sub">Engenharia de software, code review, arquitetura e DevOps — um time técnico completo sob demanda.</p>
+
+    <div class="agent-pair">
+      <div class="agent-card">
+        <img src="/agentes/agente13.webp" alt="Forge" />
+        <div>
+          <h4>Forge</h4>
+          <span class="agent-role">Engenharia de software e geração de código</span>
+          <ul>
+            <li>Geração multi-linguagem — Python, Go, Rust, TypeScript</li>
+            <li>Testes automáticos com cobertura de edge cases</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-card">
+        <img src="/agentes/agente14.webp" alt="Codex" />
+        <div>
+          <h4>Codex</h4>
+          <span class="agent-role">Code review, refatoração e qualidade</span>
+          <ul>
+            <li>Varredura OWASP Top 10 com sugestões de correção</li>
+            <li>Quantificação de débito técnico com roadmap</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-strip">
+      <div class="example-card"><strong>Feature nova:</strong> código de produção em Python, Go ou TypeScript, com testes inclusos.</div>
+      <div class="example-card"><strong>Antes do merge:</strong> review com OWASP Top 10 e débito técnico quantificado.</div>
+      <div class="example-card"><strong>Nova arquitetura:</strong> modelagem DDD e contratos de API prontos para o time implementar.</div>
+      <div class="example-card"><strong>Deploy contínuo:</strong> pipelines CI/CD com quality gates e IaC em Terraform/Pulumi prontos para produção.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Categoria: Conhecimento & Operação -->
+<section class="cat-section cat-b" id="cat-conhecimento">
+  <div class="deck">
+    <div class="sec-label"><span></span>06 · Conhecimento &amp; Operação</div>
+    <h2 class="sec-h2">Jurídico, estratégia, dados e orquestração.</h2>
+    <p class="sec-sub">O grupo mais amplo da frota — de revisão de contrato a plano de M&amp;A, passando por BI, research e o próprio Maestro que orquestra todo o resto.</p>
+
+    <div class="agent-pair">
+      <div class="agent-card">
+        <img src="/agentes/agente17.webp" alt="Counsel" />
+        <div>
+          <h4>Counsel</h4>
+          <span class="agent-role">Análise jurídica e revisão de contratos</span>
+          <ul>
+            <li>Score de risco cláusula a cláusula em 18 tipos de contrato</li>
+            <li>Redline com posição de negociação anotada</li>
+          </ul>
+        </div>
+      </div>
+      <div class="agent-card">
+        <img src="/agentes/agente18.webp" alt="Beacon" />
+        <div>
+          <h4>Beacon</h4>
+          <span class="agent-role">Research profundo e inteligência de mercado</span>
+          <ul>
+            <li>Síntese multi-fonte com score de confiança por afirmação</li>
+            <li>Cross-referência entre bases internas e fontes abertas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="example-strip">
+      <div class="example-card"><strong>Contrato de fornecedor:</strong> revisão cláusula a cláusula com redline pronto para negociar.</div>
+      <div class="example-card"><strong>Entrada em mercado:</strong> research multi-fonte com nível de confiança por afirmação.</div>
+      <div class="example-card"><strong>M&amp;A:</strong> valuation, due diligence e plano de integração de sinergias com o Orbyx.</div>
+      <div class="example-card"><strong>Dashboard executivo:</strong> framework de KPIs e coorte/funil prontos para decisão do board.</div>
+      <div class="example-card"><strong>Consulta multi-agente:</strong> o Maestro cruza respostas paralelas da frota e sintetiza consenso em minutos.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Formas de contratar -->
+<section class="contratar" id="contratar">
+  <div class="deck">
+    <div class="sec-label"><span></span>Formas de contratar</div>
+    <h2 class="sec-h2">Pelo tempo que o problema exigir — nada mais.</h2>
+    <p class="sec-sub" style="margin-bottom: 48px;">
+      Três formatos, do problema pontual à operação contínua. Sem fidelidade — o que você contrata é o resultado, não um cargo.
+    </p>
+
+    <div class="modo-grid">
+      <article class="modo-card">
+        <span class="card-badge badge-default">Pontual</span>
+        <h3>Missão de Diagnóstico</h3>
+        <div class="modo-price">R$ 12k–22k</div>
+        <div class="modo-period">Sprint de 2 a 4 semanas</div>
+        <p class="modo-desc">Um problema específico, uma resposta específica. Combinação de 1 a 3 agentes selecionados para o desafio.</p>
+        <ul class="modo-includes">
+          <li>Seleção de agentes sob medida para o problema</li>
+          <li>Síntese executiva final com plano de ação</li>
+          <li>Sem renovação automática</li>
+        </ul>
+      </article>
+
+      <article class="modo-card featured">
+        <span class="card-badge badge-main">Mais contratado</span>
+        <h3>Agente Dedicado</h3>
+        <div class="modo-price">R$ 7k–12k<small>/mês</small></div>
+        <div class="modo-period">Assinatura mensal · por especialista</div>
+        <p class="modo-desc">Um agente embutido no seu fluxo de trabalho, disponível todos os dias, com histórico e contexto acumulado.</p>
+        <ul class="modo-includes">
+          <li>Um especialista (ex.: Counsel, Aegis, Forge) dedicado à sua operação</li>
+          <li>Verificação cruzada automática em cada resposta</li>
+          <li>Cancelável a qualquer momento, sem multa</li>
+        </ul>
+      </article>
+
+      <article class="modo-card">
+        <span class="card-badge badge-top">Operação contínua</span>
+        <h3>Frota sob Demanda</h3>
+        <div class="modo-price">R$ 25k–40k<small>/mês</small></div>
+        <div class="modo-period">Squad multiagente orquestrado</div>
+        <p class="modo-desc">De 3 a 6 agentes de categorias diferentes, coordenados pelo Maestro, cobrindo uma frente inteira do negócio.</p>
+        <ul class="modo-includes">
+          <li>Squad multiagente com orquestração e síntese contínua</li>
+          <li>Relatórios e exportação de decisões prontos para o board</li>
+          <li>Ajuste de composição do squad a qualquer momento</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Tese -->
+<section class="tese">
+  <div class="deck">
+    <div class="tese-block">
+      <p class="tese-text">
+        "Você não precisa contratar uma equipe inteira para resolver um problema específico. Precisa da especialista certa, pelo tempo certo — e da capacidade de rodar vários especialistas ao mesmo tempo no mesmo desafio."
+      </p>
+      <p class="tese-sub">
+        É por isso que a frota não entrega um agente por vez: ela seleciona quem tem o perfil certo, coloca todos para trabalhar em paralelo no seu problema, e devolve uma síntese única — não 27 respostas para você mesmo cruzar.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Para quem tem dúvida -->
+<section class="duvidas">
+  <div class="deck">
+    <div class="sec-label"><span></span>Para quem tem dúvida</div>
+    <h2 class="sec-h2">As perguntas que toda empresa séria faz antes de contratar.</h2>
+    <p class="sec-sub">Ótimo — é assim que deveria ser. Aqui está a resposta direta para cada uma.</p>
+
+    <div class="g3">
+      <div class="duvida-card">
+        <h3>"Isso não é só um chatbot?"</h3>
+        <p>Não. Cada agente tem currículo, credenciais e regras de atuação definidas — treinado como especialista de domínio, com guardrails próprios, não um prompt genérico com nome bonito.</p>
+      </div>
+      <div class="duvida-card">
+        <h3>"E o controle de qualidade?"</h3>
+        <p>Toda resposta passa por verificação cruzada automática, com nível de confiança visível. O Maestro sintetiza e sinaliza divergência entre agentes antes de qualquer decisão.</p>
+      </div>
+      <div class="duvida-card">
+        <h3>"Segurança e LGPD dos nossos dados?"</h3>
+        <p>Os próprios agentes Aegis e Lex tratam de segurança e conformidade — e a governança de acesso e retenção é parte do onboarding, não um adendo depois.</p>
+      </div>
+      <div class="duvida-card">
+        <h3>"Quanto tempo até começar?"</h3>
+        <p>Dias, não meses. Sem processo seletivo, sem período de adaptação — o especialista já chega treinado no domínio.</p>
+      </div>
+      <div class="duvida-card">
+        <h3>"Posso cancelar quando quiser?"</h3>
+        <p>Sim. Nenhum dos três formatos tem fidelidade. Você contrata o resultado enquanto ele fizer sentido para o seu problema.</p>
+      </div>
+      <div class="duvida-card">
+        <h3>"Preciso saber qual agente escolher?"</h3>
+        <p>Não. Descreva o problema em linguagem natural — o próprio sistema sugere a combinação de agentes, e você confirma ou ajusta antes de rodar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Final -->
+<section class="cta-final">
+  <div class="deck">
+    <h2 class="cta-h2">Qual problema você resolveria hoje<br />com a especialista certa ao lado?</h2>
+    <p class="cta-sub">Acesse o console, descreva o desafio e veja a frota trabalhar nele em paralelo.</p>
+    <a href="/login" class="btn-primary" style="display:inline-flex; margin: 0 auto;">
+      Testar com o seu problema
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <p class="cta-note">Acesso por convite — código diário obrigatório</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site">
+  <img src="/strategy-partners-logo.svg" alt="Strategy Partners" />
+  <p>Strategy Partners × code.angra.io · 2026</p>
+</footer>
+
+</body>
+</html>

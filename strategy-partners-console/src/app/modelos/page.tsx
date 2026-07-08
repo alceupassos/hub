@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { NavSidebar } from '@/components/NavSidebar'
 import { AGENTS, AGENTS_BY_CATEGORY } from '@/lib/agents'
 import { useLang } from '@/lib/lang'
+import { useAgentConfig } from '@/lib/agent-config'
 import { getT } from '@/lib/i18n'
 
 const CATEGORY_ORDER = ['chat', 'vendas', 'segurança', 'financeiro', 'programação', 'conhecimento']
@@ -28,10 +29,11 @@ const CATEGORY_LABEL_PT: Record<string, string> = {
 
 export default function ModelosPage() {
   const { lang } = useLang()
+  const { getDisplayName, isEnabled } = useAgentConfig()
   const t = getT(lang)
   const catLabels = lang === 'en' ? CATEGORY_LABEL_EN : CATEGORY_LABEL_PT
 
-  const activeCount = AGENTS.filter(a => a.active).length
+  const activeCount = AGENTS.filter(a => isEnabled(a.id)).length
 
   return (
     <div className="flex h-screen overflow-hidden bg-app-bg">
@@ -69,7 +71,7 @@ export default function ModelosPage() {
                     <div className="relative w-10 h-10 rounded-full overflow-hidden shrink-0 ring-2 ring-border-base group-hover:ring-accent/30 transition-all">
                       <Image
                         src={agent.avatar}
-                        alt={agent.name}
+                        alt={getDisplayName(agent.id)}
                         fill
                         className="object-cover"
                         sizes="40px"
@@ -77,10 +79,10 @@ export default function ModelosPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[13px] font-medium text-ink-0 truncate">{agent.name}</p>
+                        <p className="text-[13px] font-medium text-ink-0 truncate">{getDisplayName(agent.id)}</p>
                         <span
                           className="w-[6px] h-[6px] rounded-full shrink-0"
-                          style={{ backgroundColor: agent.active ? agent.dot : '#9CA3AF' }}
+                          style={{ backgroundColor: isEnabled(agent.id) ? agent.dot : '#9CA3AF' }}
                         />
                       </div>
                       <p className="text-[11px] text-ink-5 truncate">{agent.role}</p>
