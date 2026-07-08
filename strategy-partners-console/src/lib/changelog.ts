@@ -19,6 +19,28 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.02',
+    date: '2026-07-08',
+    title: {
+      pt: 'Clareza de metodologia no Workbench e no Comparativo de ROI',
+      en: 'Methodology clarity in the Workbench and ROI Comparator',
+    },
+    summary: {
+      pt: 'As telas de modelagem e de comparativo agora explicam, no topo, exatamente em que premissas se baseiam — para não haver dúvida sobre a origem dos números.',
+      en: 'The modeling and comparator screens now explain, up top, exactly which assumptions they rest on — so there is no doubt about where the numbers come from.',
+    },
+    highlights: [
+      {
+        pt: 'Workbench de Modelagem: nota deixando claro que os campos partem de premissas de exemplo editáveis (um sandbox), com as premissas de mercado vindas da base proprietária da firma; para um deal real, abre-se pelo Projeto.',
+        en: 'Modeling Workbench: a note clarifying that fields start from editable sample assumptions (a sandbox), with market assumptions drawn from the firm’s proprietary base; for a real deal, open it from the Project.',
+      },
+      {
+        pt: 'Comparativo de ROI: explicação de que é um modelo do processo completo de M&A (por workstream), não um deal específico, com todos os parâmetros ajustáveis ao mandato.',
+        en: 'ROI Comparator: explanation that it models the full M&A process (by workstream), not a specific deal, with every parameter adjustable to the mandate.',
+      },
+    ],
+  },
+  {
     version: '1.01',
     date: '2026-07-08',
     title: {

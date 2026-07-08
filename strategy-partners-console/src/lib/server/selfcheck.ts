@@ -77,9 +77,9 @@ export function checkConfig(): CheckResult[] {
   })
 
   out.push({
-    key: 'embeddings', label: 'Embeddings (Gemini)',
-    status: has(process.env.GEMINI_API_KEY) ? 'ok' : 'degraded',
-    detail: has(process.env.GEMINI_API_KEY) ? 'GEMINI_API_KEY configurada' : 'sem GEMINI_API_KEY — RAG narrativo off',
+    key: 'embeddings', label: 'Embeddings',
+    status: has(process.env.ANGRA_EMBED_KEY) ? 'ok' : 'degraded',
+    detail: has(process.env.ANGRA_EMBED_KEY) ? 'ANGRA_EMBED_KEY configurada' : 'sem ANGRA_EMBED_KEY — RAG narrativo off',
   })
 
   out.push({

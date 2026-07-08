@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { NavSidebar } from '@/components/NavSidebar'
 import { computeProcessRoi, type RoiParams } from '@/lib/finance/processRoi'
-import { Scale, Clock, TrendingDown, Plus, Minus, Sparkles } from 'lucide-react'
+import { Scale, Clock, TrendingDown, Plus, Minus, Sparkles, Info } from 'lucide-react'
 
 const brl = (n: number) => 'R$ ' + Math.round(n).toLocaleString('pt-BR')
 const phaseLabel: Record<string, string> = { pre_deal: 'Pré-Deal', post_deal: 'Pós-Deal' }
@@ -62,6 +62,18 @@ export default function ComparativoPage() {
               <h1 className="text-[20px] font-semibold text-ink-0 leading-tight">Comparativo de ROI do Processo de M&A</h1>
               <p className="text-[12.5px] text-ink-5">Custo, horas e prazo — <strong>com a frota de IA Angra</strong> vs. <strong>abordagem tradicional</strong>. Pré-deal e pós-deal.</p>
             </div>
+          </div>
+
+          <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-accent-over/40 bg-accent-soft px-4 py-3">
+            <Info size={15} className="text-accent mt-0.5 shrink-0" />
+            <p className="text-[12px] text-ink-3 leading-relaxed">
+              <strong>Base do cálculo:</strong> este comparativo <strong>não se refere a um deal específico</strong> — é um modelo de
+              esforço do <strong>processo completo de M&A</strong>, decomposto em workstreams (sourcing, triagem, valuation, diligence,
+              memorando de IC, negociação no pré-deal; plano de 100 dias, sinergias, retenção e reporting no pós-deal). Cada workstream
+              tem uma <strong>carga de horas e um prazo de referência</strong> de mesa de boutique, e um <strong>fator de compressão</strong>
+              que estima quanto do esforço a frota de IA acelera. Os quatro parâmetros abaixo (taxa horária, nº de alvos, custo do sistema,
+              duração e complexidade do dataroom) são <strong>editáveis</strong> — ajuste-os ao seu mandato e os gráficos e o balanço recalculam na hora.
+            </p>
           </div>
 
           {/* Drivers */}

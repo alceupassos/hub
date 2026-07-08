@@ -1,18 +1,18 @@
 import 'server-only'
 import { EMBEDDING_DIM } from '../db/schema'
 
-// Gemini embeddings (decision 4 in docs/planning/decisoes.md): embeddings come exclusively
-// from Gemini — a provider already in use — never a third-party embedding service.
-// gemini-embedding-001 defaults to 3072 dims but accepts outputDimensionality to match
-// EMBEDDING_DIM / vector(768). Auth via x-goog-api-key header (new-format "AQ." keys reject ?key=).
-const MODEL = process.env.GEMINI_EMBEDDING_MODEL ?? 'gemini-embedding-001'
+// Camada de embeddings da Angra. A chave e o modelo são resolvidos por variáveis NEUTRAS
+// (ANGRA_EMBED_KEY / ANGRA_EMBED_MODEL) — sem expor o provedor no código, coerente com o
+// mascaramento de modelo do resto do sistema. O modelo aceita outputDimensionality para casar
+// com EMBEDDING_DIM / vector(768). Auth via header (chaves novo formato rejeitam ?key=).
+const MODEL = process.env.ANGRA_EMBED_MODEL ?? 'gemini-embedding-001'
 const ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta'
 
 type TaskType = 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY'
 
 function apiKey(): string {
-  const key = process.env.GEMINI_API_KEY
-  if (!key) throw new Error('GEMINI_API_KEY não configurada — embeddings indisponíveis.')
+  const key = process.env.ANGRA_EMBED_KEY
+  if (!key) throw new Error('ANGRA_EMBED_KEY não configurada — embeddings indisponíveis.')
   return key
 }
 
@@ -35,7 +35,7 @@ export async function embedTexts(
     }),
   })
   if (!res.ok) {
-    throw new Error(`Gemini embeddings falhou (${res.status}): ${await res.text()}`)
+    throw new Error(`Serviço de embeddings falhou (${res.status}): ${await res.text()}`)
   }
   const data = (await res.json()) as { embeddings?: { values: number[] }[] }
   const embeddings = (data.embeddings ?? []).map(e => e.values)

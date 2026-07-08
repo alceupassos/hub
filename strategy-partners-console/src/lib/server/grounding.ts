@@ -69,7 +69,7 @@ export async function buildGrounding(question: string, lang: 'pt' | 'en' = 'pt')
 
   // RAG narrativo da firma (metodologia/Brasil/post-mortems) — só se houver KB + embeddings.
   let firmHits: { content: string }[] = []
-  if (firmKbId && process.env.GEMINI_API_KEY) {
+  if (firmKbId && process.env.ANGRA_EMBED_KEY) {
     firmHits = await hybridSearch(question, { knowledgeBaseId: firmKbId, limit: 4 }).catch(() => [])
   }
 

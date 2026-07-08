@@ -1,7 +1,7 @@
 'use client'
 import { useMemo, useState } from 'react'
 import { NavSidebar } from '@/components/NavSidebar'
-import { Calculator, TrendingUp, Layers, GitCompareArrows } from 'lucide-react'
+import { Calculator, TrendingUp, Layers, GitCompareArrows, Info } from 'lucide-react'
 import { dcf } from '@/lib/finance/dcf'
 import { lbo } from '@/lib/finance/lbo'
 import { accretionDilution } from '@/lib/finance/accretion_dilution'
@@ -277,6 +277,18 @@ export default function ModelagemPage() {
               <h1 className="text-[20px] font-semibold text-ink-0 leading-tight">Workbench de Modelagem</h1>
               <p className="text-[12.5px] text-ink-5">Motor determinístico — LBO, DCF, comparáveis e accretion/dilution. Os mesmos cálculos que os agentes usam no chat.</p>
             </div>
+          </div>
+
+          <div className="mb-5 flex items-start gap-2.5 rounded-lg border border-accent-over/40 bg-accent-soft px-4 py-3">
+            <Info size={15} className="text-accent mt-0.5 shrink-0" />
+            <p className="text-[12px] text-ink-3 leading-relaxed">
+              <strong>Sobre o que este workbench calcula:</strong> os valores abaixo partem de <strong>premissas de exemplo</strong>,
+              editáveis em todos os campos — é um <em>sandbox</em> de modelagem, não um deal específico. Ajuste os inputs para o seu caso.
+              As premissas de mercado sugeridas (múltiplos, betas, alavancagem, custo de dívida) vêm da <strong>base proprietária calibrada da firma</strong>,
+              com fonte e data. Para modelar um deal real do pipeline com os números já extraídos, abra o deal em{' '}
+              <a href="/projetos" className="text-accent underline">Projetos</a> e use o workbench a partir dele. O motor é o mesmo em ambos —
+              exato e auditável (cada resultado mostra a fórmula).
+            </p>
           </div>
 
           <div className="flex gap-1 mb-5 border-b border-border-div">

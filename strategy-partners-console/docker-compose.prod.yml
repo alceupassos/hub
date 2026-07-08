@@ -19,8 +19,10 @@ services:
       # Banco de dados + RAG (Fase 2). Mesma VPS Postgres do semantix, schema isolado
       # strategy_partners — nunca o schema do semantix. Sem novo container Postgres.
       - DATABASE_URL=${DATABASE_URL}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GEMINI_EMBEDDING_MODEL=${GEMINI_EMBEDDING_MODEL:-text-embedding-004}
+      # Embeddings — variáveis NEUTRAS (sem expor o provedor). Fallback lê a antiga GEMINI_* p/
+      # compatibilidade com .env já existente até a migração da chave.
+      - ANGRA_EMBED_KEY=${ANGRA_EMBED_KEY:-${GEMINI_API_KEY}}
+      - ANGRA_EMBED_MODEL=${ANGRA_EMBED_MODEL:-${GEMINI_EMBEDDING_MODEL:-gemini-embedding-001}}
       # Camada Anthropic / Eixo B (Fase 3) — desligada por padrão.
       - USE_ANTHROPIC_TIERS=${USE_ANTHROPIC_TIERS:-false}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}

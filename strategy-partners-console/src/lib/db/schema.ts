@@ -6,7 +6,7 @@ import { customType, index, integer, numeric, pgSchema, text, timestamp, uuid } 
 export const sp = pgSchema('strategy_partners')
 
 // Embedding dimension for the chosen Gemini model (text-embedding-004 → 768).
-// Keep in sync with GEMINI_EMBEDDING_MODEL / EMBEDDING_DIM in the RAG layer.
+// Keep in sync with ANGRA_EMBED_MODEL / EMBEDDING_DIM in the RAG layer.
 export const EMBEDDING_DIM = 768
 
 // pgvector column type. Stores number[] in JS, serializes to the pgvector literal `[a,b,c]`.
