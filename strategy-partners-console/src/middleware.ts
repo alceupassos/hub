@@ -26,13 +26,19 @@ export async function middleware(request: NextRequest) {
   }
 
   // 1) Sessão NextAuth (edge-safe; getToken retorna null sem AUTH_SECRET/sem token).
+  //    Atrás de um proxy HTTPS→HTTP (nginx termina TLS; o app ouve HTTP interno), o NextAuth
+  //    GRAVA o cookie como `__Secure-authjs.session-token`, mas o getToken pode procurar o nome
+  //    SEM o prefixo (por ver a requisição interna como HTTP) — mismatch que autentica mas não
+  //    mantém a sessão. Tentamos os DOIS nomes (secureCookie true/false) para ser resiliente.
   let hasSession = false
   if (process.env.AUTH_SECRET) {
-    try {
-      const token = await getToken({ req: request, secret: process.env.AUTH_SECRET })
-      hasSession = Boolean(token)
-    } catch {
-      hasSession = false
+    for (const secureCookie of [true, false]) {
+      try {
+        const token = await getToken({ req: request, secret: process.env.AUTH_SECRET, secureCookie })
+        if (token) { hasSession = true; break }
+      } catch {
+        // tenta o outro nome de cookie
+      }
     }
   }
 

@@ -19,6 +19,24 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.01',
+    date: '2026-07-08',
+    title: {
+      pt: 'Correção de acesso: login por email e senha estável',
+      en: 'Access fix: stable email & password login',
+    },
+    summary: {
+      pt: 'Ajuste no reconhecimento da sessão para que o login corporativo funcione de ponta a ponta atrás do nosso servidor seguro.',
+      en: 'Session recognition fix so corporate login works end-to-end behind our secure server.',
+    },
+    highlights: [
+      {
+        pt: 'Entrar com email e senha agora leva direto à plataforma, sem retornar à tela de acesso.',
+        en: 'Signing in with email and password now goes straight into the platform, without bouncing back to the login screen.',
+      },
+    ],
+  },
+  {
     version: '1.00',
     date: '2026-07-08',
     title: {
