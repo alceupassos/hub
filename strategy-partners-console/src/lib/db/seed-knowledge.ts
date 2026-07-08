@@ -8,8 +8,13 @@ import { assumptionsLibrary, dealPrecedents, goldenAnswers, marketMultiples, sec
 const D = (s: string) => new Date(s)
 
 export async function seedKnowledge(): Promise<{ seeded: boolean; counts?: Record<string, number> }> {
-  const existing = await db.select({ id: assumptionsLibrary.id }).from(assumptionsLibrary).limit(1).catch(() => [])
-  if (existing.length > 0) return { seeded: false }
+  // Idempotência por CAMADA: K1 (base original) e K2 (camada quant) semeiam de forma
+  // independente. Isso garante que uma base de produção que já tem K1 ainda receba K2 ao
+  // reexecutar o seed (antes o guard único abortava e a camada quant nunca entrava em prod).
+  const k1Exists = (await db.select({ id: assumptionsLibrary.id }).from(assumptionsLibrary).limit(1).catch(() => [])).length > 0
+  const k2Exists = (await db.select({ id: lboAssumptions.id }).from(lboAssumptions).limit(1).catch(() => [])).length > 0
+  if (k1Exists && k2Exists) return { seeded: false }
+  if (k1Exists && !k2Exists) return seedK2()
 
   // ── K. Premissas de custo de capital calibradas (Damodaran + mercado BR) ──
   await db.insert(assumptionsLibrary).values([
@@ -92,44 +97,8 @@ export async function seedKnowledge(): Promise<{ seeded: boolean; counts?: Recor
       answer: 'Modigliani-Miller lido ao contrário: em mercados imperfeitos, o valor mora nas imperfeições — benefício fiscal da dívida (incl. JCP no Brasil) vs. custo esperado de distress vs. flexibilidade estratégica. Modele a fronteira pelo HEADROOM de covenants, não só pela alavancagem nominal. No menu BR, compare custo all-in (debênture incentivada, CRI/CRA, 4131, BNDES), nunca o cupom nominal. Alvo típico de PME saudável: Dívida Líquida/EBITDA 1,5–2,5x com headroom confortável.' },
   ])
 
-  // ── K2. Premissas de LBO por setor (alavancagem, múltiplos, custo de dívida) — alimentam o motor ──
-  await db.insert(lboAssumptions).values([
-    { sector: 'saas', entryMultipleLow: '12.00', entryMultipleHigh: '18.00', exitMultipleLow: '12.00', exitMultipleHigh: '16.00', totalLeverageTurns: '4.00', seniorTurns: '3.00', seniorRate: '0.1400', mezzTurns: '1.00', mezzRate: '0.1800', typicalHoldYears: 5, source: 'estrutura de mesa (comps + termos de crédito BR)', asOfDate: D('2026-06-30') },
-    { sector: 'logtech', entryMultipleLow: '6.00', entryMultipleHigh: '9.00', exitMultipleLow: '7.00', exitMultipleHigh: '10.00', totalLeverageTurns: '3.50', seniorTurns: '2.50', seniorRate: '0.1350', mezzTurns: '1.00', mezzRate: '0.1750', typicalHoldYears: 5, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
-    { sector: 'healthtech', entryMultipleLow: '10.00', entryMultipleHigh: '15.00', exitMultipleLow: '10.00', exitMultipleHigh: '14.00', totalLeverageTurns: '3.50', seniorTurns: '2.50', seniorRate: '0.1400', mezzTurns: '1.00', mezzRate: '0.1800', typicalHoldYears: 5, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
-    { sector: 'varejo', entryMultipleLow: '5.00', entryMultipleHigh: '8.00', exitMultipleLow: '5.00', exitMultipleHigh: '8.00', totalLeverageTurns: '3.00', seniorTurns: '2.50', seniorRate: '0.1350', mezzTurns: '0.50', mezzRate: '0.1750', typicalHoldYears: 4, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
-    { sector: 'fintech', entryMultipleLow: '8.00', entryMultipleHigh: '14.00', exitMultipleLow: '8.00', exitMultipleHigh: '13.00', totalLeverageTurns: '2.50', seniorTurns: '2.00', seniorRate: '0.1450', mezzTurns: '0.50', mezzRate: '0.1900', typicalHoldYears: 5, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
-    { sector: 'agro', entryMultipleLow: '5.50', entryMultipleHigh: '9.00', exitMultipleLow: '6.00', exitMultipleHigh: '9.50', totalLeverageTurns: '3.00', seniorTurns: '2.50', seniorRate: '0.1300', mezzTurns: '0.50', mezzRate: '0.1700', typicalHoldYears: 6, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
-  ])
-
-  // ── K2. Parâmetros tributários (Brasil) — usados por tax.ts (ágio, alíquotas) ──
-  await db.insert(taxParameters).values([
-    { key: 'irpj_csll', label: 'Alíquota combinada IRPJ (25%) + CSLL (9%)', value: '34.0000', unit: '%', jurisdiction: 'BR', source: 'Lei 9.249/RIR', asOfDate: D('2026-01-01') },
-    { key: 'agio_amort_years', label: 'Prazo de amortização fiscal do ágio por rentabilidade futura', value: '5.0000', unit: 'anos', jurisdiction: 'BR', source: 'Lei 12.973/2014 (60 meses)', asOfDate: D('2026-01-01') },
-    { key: 'jcp_rate_ref', label: 'TJLP de referência p/ dedutibilidade de JCP', value: '7.5000', unit: '%', jurisdiction: 'BR', source: 'BNDES/CMN', asOfDate: D('2026-06-30') },
-    { key: 'itbi_ref', label: 'ITBI típico (transferência de imóveis em asset deals)', value: '3.0000', unit: '%', jurisdiction: 'BR', source: 'legislação municipal (média capitais)', asOfDate: D('2026-01-01') },
-    { key: 'pis_cofins_nc', label: 'PIS/COFINS não-cumulativo (regime lucro real)', value: '9.2500', unit: '%', jurisdiction: 'BR', source: 'Leis 10.637/10.833', asOfDate: D('2026-01-01') },
-    { key: 'ganho_capital_pj', label: 'Ganho de capital PJ (compõe a base IRPJ/CSLL do vendedor)', value: '34.0000', unit: '%', jurisdiction: 'BR', source: 'RIR', asOfDate: D('2026-01-01') },
-  ])
-
-  // ── K2. Termos de financiamento (menu de dívida BR) — custo all-in, não cupom nominal ──
-  await db.insert(financingTerms).values([
-    { instrument: 'senior_bank', label: 'Dívida sênior bancária (garantida)', allInRateLow: '0.1300', allInRateHigh: '0.1550', tenorYears: 5, notes: 'CDI + spread; covenants de alavancagem e cobertura de juros', source: 'mercado de crédito BR', asOfDate: D('2026-06-30') },
-    { instrument: 'debenture_incentivada', label: 'Debênture incentivada (infra, Lei 12.431)', allInRateLow: '0.1100', allInRateHigh: '0.1350', tenorYears: 8, notes: 'isenção de IR ao investidor PF → custo menor ao emissor', source: 'ANBIMA', asOfDate: D('2026-06-30') },
-    { instrument: 'cri_cra', label: 'CRI/CRA (lastro imobiliário/agro)', allInRateLow: '0.1150', allInRateHigh: '0.1400', tenorYears: 6, notes: 'securitização; isenção de IR ao investidor PF', source: 'ANBIMA', asOfDate: D('2026-06-30') },
-    { instrument: 'fidc', label: 'FIDC (antecipação de recebíveis)', allInRateLow: '0.1400', allInRateHigh: '0.1900', tenorYears: 3, notes: 'estrutura de cotas sênior/subordinada; útil p/ working capital', source: 'ANBIMA', asOfDate: D('2026-06-30') },
-    { instrument: '4131', label: 'Empréstimo externo (Lei 4.131)', allInRateLow: '0.0900', allInRateHigh: '0.1300', tenorYears: 5, notes: 'custo em moeda forte + hedge cambial; IOF e risco de FX', source: 'mercado', asOfDate: D('2026-06-30') },
-    { instrument: 'bndes', label: 'BNDES (linhas de investimento)', allInRateLow: '0.1000', allInRateHigh: '0.1300', tenorYears: 8, notes: 'TLP + spread; carência; direcionado a capex elegível', source: 'BNDES', asOfDate: D('2026-06-30') },
-  ])
-
-  // ── K2. Benchmarks de retorno (PE/VC no Brasil/LatAm) — calibram expectativa de IRR/MOIC ──
-  await db.insert(returnsBenchmarks).values([
-    { assetClass: 'pe_buyout', metric: 'gross_irr', p25: '18.00', p50: '25.00', p75: '35.00', unit: '%', region: 'BR/LatAm', source: 'benchmark de indústria', asOfDate: D('2026-01-01') },
-    { assetClass: 'pe_buyout', metric: 'moic', p25: '1.80', p50: '2.50', p75: '3.50', unit: 'x', region: 'BR/LatAm', source: 'benchmark de indústria', asOfDate: D('2026-01-01') },
-    { assetClass: 'growth', metric: 'gross_irr', p25: '20.00', p50: '30.00', p75: '45.00', unit: '%', region: 'BR/LatAm', source: 'benchmark', asOfDate: D('2026-01-01') },
-    { assetClass: 'growth', metric: 'moic', p25: '2.00', p50: '3.00', p75: '5.00', unit: 'x', region: 'BR/LatAm', source: 'benchmark', asOfDate: D('2026-01-01') },
-    { assetClass: 'venture', metric: 'moic', p25: '2.50', p50: '4.00', p75: '10.00', unit: 'x', region: 'BR/LatAm', source: 'benchmark', asOfDate: D('2026-01-01') },
-  ])
+  // ── K2. Camada quantitativa (LBO/tributário/financiamento/retornos) — alimenta o motor ──
+  await insertK2()
 
   const counts = {
     assumptions: (await db.select({ id: assumptionsLibrary.id }).from(assumptionsLibrary)).length,
@@ -143,4 +112,53 @@ export async function seedKnowledge(): Promise<{ seeded: boolean; counts?: Recor
     returnsBenchmarks: (await db.select({ id: returnsBenchmarks.id }).from(returnsBenchmarks)).length,
   }
   return { seeded: true, counts }
+}
+
+// ── Camada quantitativa (K2) — inserts isolados, reusados pelo seed completo e pelo seed incremental ──
+async function insertK2(): Promise<void> {
+  await db.insert(lboAssumptions).values([
+    { sector: 'saas', entryMultipleLow: '12.00', entryMultipleHigh: '18.00', exitMultipleLow: '12.00', exitMultipleHigh: '16.00', totalLeverageTurns: '4.00', seniorTurns: '3.00', seniorRate: '0.1400', mezzTurns: '1.00', mezzRate: '0.1800', typicalHoldYears: 5, source: 'estrutura de mesa (comps + termos de crédito BR)', asOfDate: D('2026-06-30') },
+    { sector: 'logtech', entryMultipleLow: '6.00', entryMultipleHigh: '9.00', exitMultipleLow: '7.00', exitMultipleHigh: '10.00', totalLeverageTurns: '3.50', seniorTurns: '2.50', seniorRate: '0.1350', mezzTurns: '1.00', mezzRate: '0.1750', typicalHoldYears: 5, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
+    { sector: 'healthtech', entryMultipleLow: '10.00', entryMultipleHigh: '15.00', exitMultipleLow: '10.00', exitMultipleHigh: '14.00', totalLeverageTurns: '3.50', seniorTurns: '2.50', seniorRate: '0.1400', mezzTurns: '1.00', mezzRate: '0.1800', typicalHoldYears: 5, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
+    { sector: 'varejo', entryMultipleLow: '5.00', entryMultipleHigh: '8.00', exitMultipleLow: '5.00', exitMultipleHigh: '8.00', totalLeverageTurns: '3.00', seniorTurns: '2.50', seniorRate: '0.1350', mezzTurns: '0.50', mezzRate: '0.1750', typicalHoldYears: 4, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
+    { sector: 'fintech', entryMultipleLow: '8.00', entryMultipleHigh: '14.00', exitMultipleLow: '8.00', exitMultipleHigh: '13.00', totalLeverageTurns: '2.50', seniorTurns: '2.00', seniorRate: '0.1450', mezzTurns: '0.50', mezzRate: '0.1900', typicalHoldYears: 5, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
+    { sector: 'agro', entryMultipleLow: '5.50', entryMultipleHigh: '9.00', exitMultipleLow: '6.00', exitMultipleHigh: '9.50', totalLeverageTurns: '3.00', seniorTurns: '2.50', seniorRate: '0.1300', mezzTurns: '0.50', mezzRate: '0.1700', typicalHoldYears: 6, source: 'estrutura de mesa', asOfDate: D('2026-06-30') },
+  ])
+  await db.insert(taxParameters).values([
+    { key: 'irpj_csll', label: 'Alíquota combinada IRPJ (25%) + CSLL (9%)', value: '34.0000', unit: '%', jurisdiction: 'BR', source: 'Lei 9.249/RIR', asOfDate: D('2026-01-01') },
+    { key: 'agio_amort_years', label: 'Prazo de amortização fiscal do ágio por rentabilidade futura', value: '5.0000', unit: 'anos', jurisdiction: 'BR', source: 'Lei 12.973/2014 (60 meses)', asOfDate: D('2026-01-01') },
+    { key: 'jcp_rate_ref', label: 'TJLP de referência p/ dedutibilidade de JCP', value: '7.5000', unit: '%', jurisdiction: 'BR', source: 'BNDES/CMN', asOfDate: D('2026-06-30') },
+    { key: 'itbi_ref', label: 'ITBI típico (transferência de imóveis em asset deals)', value: '3.0000', unit: '%', jurisdiction: 'BR', source: 'legislação municipal (média capitais)', asOfDate: D('2026-01-01') },
+    { key: 'pis_cofins_nc', label: 'PIS/COFINS não-cumulativo (regime lucro real)', value: '9.2500', unit: '%', jurisdiction: 'BR', source: 'Leis 10.637/10.833', asOfDate: D('2026-01-01') },
+    { key: 'ganho_capital_pj', label: 'Ganho de capital PJ (compõe a base IRPJ/CSLL do vendedor)', value: '34.0000', unit: '%', jurisdiction: 'BR', source: 'RIR', asOfDate: D('2026-01-01') },
+  ])
+  await db.insert(financingTerms).values([
+    { instrument: 'senior_bank', label: 'Dívida sênior bancária (garantida)', allInRateLow: '0.1300', allInRateHigh: '0.1550', tenorYears: 5, notes: 'CDI + spread; covenants de alavancagem e cobertura de juros', source: 'mercado de crédito BR', asOfDate: D('2026-06-30') },
+    { instrument: 'debenture_incentivada', label: 'Debênture incentivada (infra, Lei 12.431)', allInRateLow: '0.1100', allInRateHigh: '0.1350', tenorYears: 8, notes: 'isenção de IR ao investidor PF → custo menor ao emissor', source: 'ANBIMA', asOfDate: D('2026-06-30') },
+    { instrument: 'cri_cra', label: 'CRI/CRA (lastro imobiliário/agro)', allInRateLow: '0.1150', allInRateHigh: '0.1400', tenorYears: 6, notes: 'securitização; isenção de IR ao investidor PF', source: 'ANBIMA', asOfDate: D('2026-06-30') },
+    { instrument: 'fidc', label: 'FIDC (antecipação de recebíveis)', allInRateLow: '0.1400', allInRateHigh: '0.1900', tenorYears: 3, notes: 'estrutura de cotas sênior/subordinada; útil p/ working capital', source: 'ANBIMA', asOfDate: D('2026-06-30') },
+    { instrument: '4131', label: 'Empréstimo externo (Lei 4.131)', allInRateLow: '0.0900', allInRateHigh: '0.1300', tenorYears: 5, notes: 'custo em moeda forte + hedge cambial; IOF e risco de FX', source: 'mercado', asOfDate: D('2026-06-30') },
+    { instrument: 'bndes', label: 'BNDES (linhas de investimento)', allInRateLow: '0.1000', allInRateHigh: '0.1300', tenorYears: 8, notes: 'TLP + spread; carência; direcionado a capex elegível', source: 'BNDES', asOfDate: D('2026-06-30') },
+  ])
+  await db.insert(returnsBenchmarks).values([
+    { assetClass: 'pe_buyout', metric: 'gross_irr', p25: '18.00', p50: '25.00', p75: '35.00', unit: '%', region: 'BR/LatAm', source: 'benchmark de indústria', asOfDate: D('2026-01-01') },
+    { assetClass: 'pe_buyout', metric: 'moic', p25: '1.80', p50: '2.50', p75: '3.50', unit: 'x', region: 'BR/LatAm', source: 'benchmark de indústria', asOfDate: D('2026-01-01') },
+    { assetClass: 'growth', metric: 'gross_irr', p25: '20.00', p50: '30.00', p75: '45.00', unit: '%', region: 'BR/LatAm', source: 'benchmark', asOfDate: D('2026-01-01') },
+    { assetClass: 'growth', metric: 'moic', p25: '2.00', p50: '3.00', p75: '5.00', unit: 'x', region: 'BR/LatAm', source: 'benchmark', asOfDate: D('2026-01-01') },
+    { assetClass: 'venture', metric: 'moic', p25: '2.50', p50: '4.00', p75: '10.00', unit: 'x', region: 'BR/LatAm', source: 'benchmark', asOfDate: D('2026-01-01') },
+  ])
+}
+
+/** Seed incremental só da camada quant (quando K1 já existe em produção). */
+async function seedK2(): Promise<{ seeded: boolean; counts?: Record<string, number> }> {
+  await insertK2()
+  return {
+    seeded: true,
+    counts: {
+      lboAssumptions: (await db.select({ id: lboAssumptions.id }).from(lboAssumptions)).length,
+      taxParameters: (await db.select({ id: taxParameters.id }).from(taxParameters)).length,
+      financingTerms: (await db.select({ id: financingTerms.id }).from(financingTerms)).length,
+      returnsBenchmarks: (await db.select({ id: returnsBenchmarks.id }).from(returnsBenchmarks)).length,
+    },
+  }
 }
