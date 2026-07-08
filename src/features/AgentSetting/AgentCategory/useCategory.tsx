@@ -1,6 +1,6 @@
 import { Icon } from '@lobehub/ui';
 import { type MenuItemType } from 'antd/es/menu/interface';
-import { Activity, Bot, Handshake, LinkIcon, Mic2 } from 'lucide-react';
+import { Activity, Bot, Handshake, LinkIcon, Mic2, SearchCheck } from 'lucide-react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -18,7 +18,7 @@ export const useCategory = ({ mobile }: UseCategoryOptions = {}) => {
   const { t } = useTranslation('setting');
   const iconSize = mobile ? 20 : undefined;
   const isInbox = useAgentStore(builtinAgentSelectors.isInboxAgent);
-  const { enableAgentSelfIteration } = useServerConfigStore(featureFlagsSelectors);
+  const { enableAgentSelfIteration, enableDiscoveryQuestions } = useServerConfigStore(featureFlagsSelectors);
 
   const cateItems: MenuProps['items'] = useMemo(
     () =>
@@ -33,6 +33,11 @@ export const useCategory = ({ mobile }: UseCategoryOptions = {}) => {
           key: ChatSettingsTabs.Opening,
           label: t('agentTab.opening'),
         }) as MenuItemType,
+        enableDiscoveryQuestions && {
+          icon: <Icon icon={SearchCheck} size={iconSize} />,
+          key: ChatSettingsTabs.DiscoveryQuestions,
+          label: t('agentTab.discoveryQuestions'),
+        },
         enableAgentSelfIteration && {
           icon: <Icon icon={Activity} size={iconSize} />,
           key: ChatSettingsTabs.SelfIteration,
@@ -49,7 +54,7 @@ export const useCategory = ({ mobile }: UseCategoryOptions = {}) => {
           label: t('agentTab.connector', 'Connectors'),
         },
       ].filter(Boolean) as MenuProps['items'],
-    [t, isInbox, iconSize, enableAgentSelfIteration],
+    [t, isInbox, iconSize, enableAgentSelfIteration, enableDiscoveryQuestions],
   );
 
   return cateItems;

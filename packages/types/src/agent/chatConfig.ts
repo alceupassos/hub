@@ -68,6 +68,9 @@ export interface LobeAgentChatConfig extends AgentMemoryChatConfig, AgentSelfIte
    * When enabled, old messages will be compressed into summaries when token threshold is reached
    */
   enableContextCompression?: boolean;
+  enableDiscoveryQuestions?: boolean;
+  discoveryQuestionsMax?: number;
+  projectMemory?: string;
   enableFollowUpChips?: boolean;
   /**
    * Enable historical message count
@@ -229,6 +232,9 @@ export const AgentChatConfigSchema = z
     enableAutoScrollOnStreaming: z.boolean().optional(),
     enableCompressHistory: z.boolean().optional(),
     enableContextCompression: z.boolean().optional(),
+    enableDiscoveryQuestions: z.boolean().optional(),
+    discoveryQuestionsMax: z.number().min(1).max(8).optional(),
+    projectMemory: z.string().optional(),
     enableFollowUpChips: z.boolean().optional(),
     enableHistoryCount: z.boolean().optional(),
     enableMaxTokens: z.boolean().optional(),

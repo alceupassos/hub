@@ -276,6 +276,39 @@ class ChatService {
       };
     }
 
+    // =================== 1.3 discovery questions system role injection =================== //
+    let effectiveSystemRole = agentConfig.systemRole;
+    if (chatConfig.enableDiscoveryQuestions) {
+      const maxQuestions = chatConfig.discoveryQuestionsMax ?? 8;
+      const assistantCount = messages.filter((m) => m.role === 'assistant').length;
+      if (assistantCount < maxQuestions) {
+        const remaining = maxQuestions - assistantCount;
+        const instruction = [
+          `[DISCOVERY MODE — Question ${assistantCount + 1} of ${maxQuestions}]`,
+          `You are in Discovery Mode. Your goal is to deeply understand the user's need before providing any answer or plan.`,
+          ``,
+          `RULES:`,
+          `- Ask exactly ONE question per reply. Never answer the main request yet.`,
+          `- Base your question on what is still unknown or ambiguous in the user's request and previous answers.`,
+          `- Prioritize questions that uncover: (1) the real goal behind the request, (2) constraints or context, (3) audience or stakeholders, (4) timeline or resources, (5) success criteria.`,
+          `- Make each question specific, concise, and directly actionable.`,
+          `- Do NOT repeat questions already answered.`,
+          `- You have ${remaining} question(s) remaining. Use them wisely.`,
+          `- After ${maxQuestions} exchanges OR when you have sufficient context to give a truly accurate and complete answer, stop asking and deliver your full response.`,
+        ].join('\n');
+        effectiveSystemRole = effectiveSystemRole
+          ? `${instruction}\n\n${effectiveSystemRole}`
+          : instruction;
+      }
+    }
+
+    // =================== 1.4 project memory injection =================== //
+    if (chatConfig.projectMemory) {
+      effectiveSystemRole = effectiveSystemRole
+        ? `${effectiveSystemRole}\n\n---\n${chatConfig.projectMemory}`
+        : chatConfig.projectMemory;
+    }
+
     // Apply context engineering with preprocessing configuration
     // Note: agentConfig.systemRole is already resolved by resolveAgentConfig for builtin agents
     const modelMessages = await contextEngineering({
@@ -298,7 +331,7 @@ class ChatService {
       provider: payload.provider!,
       sessionId: options?.trace?.sessionId,
       stepContext: options?.stepContext,
-      systemRole: agentConfig.systemRole,
+      systemRole: effectiveSystemRole,
       tools: enabledToolIds,
       topicId,
       memoryContext: {

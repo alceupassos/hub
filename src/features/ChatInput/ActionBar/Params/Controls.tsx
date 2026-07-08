@@ -552,6 +552,7 @@ const Controls = memo<ControlsProps>(({ setUpdating, updating, variant = 'popove
     'enableAutoScrollOnStreaming',
   ]);
   const enableStreaming = form.getFieldValue(['chatConfig', 'enableStreaming']);
+  const enableDiscoveryQuestions = form.getFieldValue(['chatConfig', 'enableDiscoveryQuestions']);
   const enableFollowUpChips = form.getFieldValue(['chatConfig', 'enableFollowUpChips']);
   const globalFollowUp = useUserStore(systemAgentSelectors.followUpAction, isEqual);
   const globalFollowUpReady =
@@ -809,6 +810,20 @@ const Controls = memo<ControlsProps>(({ setUpdating, updating, variant = 'popove
                   size={'small'}
                   onChange={(checked) => {
                     handleFieldChange(['chatConfig', 'enableStreaming'], checked);
+                  }}
+                />
+              }
+            />
+            <ControlRow
+              tag="discovery"
+              title={t('settingDiscoveryQuestions.enabled.title')}
+              tooltip={t('settingDiscoveryQuestions.enabled.desc')}
+              action={
+                <Switch
+                  checked={Boolean(enableDiscoveryQuestions)}
+                  size={'small'}
+                  onChange={(checked) => {
+                    handleFieldChange(['chatConfig', 'enableDiscoveryQuestions'], checked);
                   }}
                 />
               }

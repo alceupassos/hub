@@ -388,6 +388,8 @@
   "promptTransform.actions.rewrite": "Expandir detalhes",
   "promptTransform.actions.translate": "Traduzir",
   "promptTransform.status.rewrite": "Expandindo detalhes...",
+  "promptTransform.actions.refineDiscovery": "Refinar resposta",
+  "promptTransform.status.refineDiscovery": "Refinando resposta...",
   "promptTransform.status.translate": "Traduzindo...",
   "recents": "Recentes",
   "regenerate": "Regenerar",

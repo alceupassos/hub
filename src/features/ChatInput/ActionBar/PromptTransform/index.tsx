@@ -3,11 +3,16 @@
 import { memo, useCallback } from 'react';
 
 import PromptTransformAction from '@/features/PromptTransform/PromptTransformAction';
+import { useAgentStore } from '@/store/agent';
+import { chatConfigSelectors } from '@/store/agent/selectors';
 
 import { useChatInputStore } from '../../store';
 
 const PromptTransform = memo(() => {
   const [editor, markdownContent] = useChatInputStore((s) => [s.editor, s.markdownContent]);
+  const isDiscoveryMode = useAgentStore(
+    (s) => chatConfigSelectors.currentChatConfig(s).enableDiscoveryQuestions === true,
+  );
 
   const onPromptChange = useCallback(
     (prompt: string) => {
@@ -21,6 +26,7 @@ const PromptTransform = memo(() => {
   // Image mode expands vague inputs; text mode forbids expansion.
   return (
     <PromptTransformAction
+      isDiscoveryMode={isDiscoveryMode}
       mode={'image'}
       prompt={markdownContent}
       onPromptChange={onPromptChange}

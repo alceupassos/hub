@@ -4,6 +4,7 @@ import { Flexbox } from '@lobehub/ui';
 import { cx } from 'antd-style';
 import { memo } from 'react';
 
+import DiscoveryBanner from '../DiscoveryQuestions/DiscoveryBanner';
 import FollowUpChips from '../FollowUp/FollowUpChips';
 import { contextSelectors, useConversationStore } from '../store';
 import Actions from './components/Actions';
@@ -119,7 +120,10 @@ const ChatItem = memo<ChatItemProps>(
           {belowMessage}
         </Flexbox>
         {id && conversationKey && (
-          <FollowUpChips conversationKey={conversationKey} messageId={id} />
+          <>
+            <DiscoveryBanner messageId={id} />
+            <FollowUpChips conversationKey={conversationKey} messageId={id} />
+          </>
         )}
         {actions && <Actions actions={actions} placement={placement} />}
       </Flexbox>

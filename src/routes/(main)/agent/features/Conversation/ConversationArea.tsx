@@ -10,6 +10,7 @@ import AgentHome from '@/features/AgentHome';
 import ChatMiniMap from '@/features/ChatMiniMap';
 import { ChatList, ConversationProvider } from '@/features/Conversation';
 import { useChatFollowUp } from '@/features/Conversation/hooks/useChatFollowUp';
+import { useProjectMemory } from '@/features/Conversation/hooks/useProjectMemory';
 import { mergeConversationHooks } from '@/features/Conversation/utils/mergeConversationHooks';
 import { useGatewayReconnect } from '@/hooks/useGatewayReconnect';
 import { useOperationState } from '@/hooks/useOperationState';
@@ -75,6 +76,12 @@ const Conversation = memo(() => {
   useGatewayReconnect(context.topicId, runningOperation);
 
   const agentChatConfig = useAgentStore(chatConfigByIdSelectors.getChatConfigById(context.agentId));
+  const projectMemoryHooks = useProjectMemory({
+    agentChatConfig,
+    agentId: context.agentId ?? undefined,
+    topicId: context.topicId ?? undefined,
+  });
+
   const chatFollowUpHooks = useChatFollowUp({
     agentChatConfig,
     conversationKey: chatKey,
@@ -82,7 +89,10 @@ const Conversation = memo(() => {
     topicId: context.topicId ?? undefined,
   });
 
-  const hooks = useMemo(() => mergeConversationHooks(chatFollowUpHooks), [chatFollowUpHooks]);
+  const hooks = useMemo(
+    () => mergeConversationHooks(projectMemoryHooks, chatFollowUpHooks),
+    [projectMemoryHooks, chatFollowUpHooks],
+  );
 
   return (
     <ConversationProvider

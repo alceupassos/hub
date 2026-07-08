@@ -16,6 +16,7 @@ export interface UserSystemAgentConfig {
   generationTopic: SystemAgentItem;
   historyCompress: SystemAgentItem;
   inputCompletion: SystemAgentItem;
+  projectMemory: SystemAgentItem;
   promptRewrite: PromptRewriteSystemAgent;
   thread: SystemAgentItem;
   topic: SystemAgentItem;

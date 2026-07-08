@@ -16,10 +16,12 @@ const historyCompress = (s: UserStore) => currentSystemAgent(s).historyCompress;
 const generationTopic = (s: UserStore) => currentSystemAgent(s).generationTopic;
 const inputCompletion = (s: UserStore) => currentSystemAgent(s).inputCompletion;
 const followUpAction = (s: UserStore) => currentSystemAgent(s).followUpAction;
+const projectMemory = (s: UserStore) => currentSystemAgent(s).projectMemory;
 
 export const systemAgentSelectors = {
   agentMeta,
   followUpAction,
+  projectMemory,
   generationTopic,
   historyCompress,
   inputCompletion,
