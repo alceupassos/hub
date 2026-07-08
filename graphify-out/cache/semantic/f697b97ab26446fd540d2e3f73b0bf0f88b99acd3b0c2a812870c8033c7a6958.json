@@ -1,0 +1,1 @@
+{"nodes": [{"id": "environment-variables_redis", "label": "Configure Redis Cache Service", "file_type": "document", "source_file": "docs/self-hosting/environment-variables/redis.mdx", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}
