@@ -5,6 +5,7 @@ import { WhatsNewBanner } from '@/components/WhatsNewBanner'
 import { AGENTS } from '@/lib/agents'
 import { getSubagentsFor } from '@/lib/agentTiers'
 import { PRINCIPAL_META, SHOWCASE_CASES, ACTIVITY_BY_PRINCIPAL } from '@/lib/fleetShowcase'
+import { DependencyGraph } from '@/components/charts/DependencyGraph'
 import { useLang } from '@/lib/lang'
 import { ArrowRight } from 'lucide-react'
 
@@ -38,13 +39,17 @@ export default function FrotaPage() {
         leads: 'The five lead agents', supported: 'supported by', actions: 'actions', mandates: 'mandates',
         subTitle: 'Subagents', subLead: `${totalSub} specialists executing the heavy work under each lead agent`,
         activity: 'Actions by lead agent', activitySub: 'Accumulated across mandates',
-        casesT: 'Example cases', casesSub: 'Illustrative past mandates — how the team acts end to end', lead: 'lead', outcome: 'Outcome' }
+        casesT: 'Example cases', casesSub: 'Illustrative past mandates — how the team acts end to end', lead: 'lead', outcome: 'Outcome',
+        graphT: 'How the fleet is wired',
+        graphSub: 'The fleet is a constellation: CAIO orchestrates at the center, the four partners (MERKO, ASTEN, NOVAE, TYCEN) go deep on each discipline, and the 22 subagents orbit the lead they serve, doing the heavy lifting. Each node lights up when the agent goes to work.' }
     : { manifestoLead: '5 especialistas principais. 22 subagentes. Uma decisão.',
         manifesto: 'CAIO orquestra; os quatro partners aprofundam; os subagentes fazem o trabalho pesado. Você recebe uma recomendação integrada — nunca quatro opiniões grampeadas.',
         leads: 'Os cinco agentes principais', supported: 'apoiado por', actions: 'ações', mandates: 'mandatos',
         subTitle: 'Subagentes', subLead: `${totalSub} especialistas executando o trabalho pesado sob cada agente principal`,
         activity: 'Ações por agente principal', activitySub: 'Acumulado ao longo de mandatos',
-        casesT: 'Casos de exemplo', casesSub: 'Mandatos passados ilustrativos — como o time atua de ponta a ponta', lead: 'líder', outcome: 'Resultado' }
+        casesT: 'Casos de exemplo', casesSub: 'Mandatos passados ilustrativos — como o time atua de ponta a ponta', lead: 'líder', outcome: 'Resultado',
+        graphT: 'Como a frota se organiza',
+        graphSub: 'A frota é uma constelação: o CAIO orquestra no centro, os quatro partners (MERKO, ASTEN, NOVAE, TYCEN) aprofundam cada disciplina e os 22 subagentes orbitam o principal que servem, fazendo o trabalho pesado. Cada nó acende quando o agente entra em ação.' }
 
   return (
     <div className="flex h-screen overflow-hidden bg-app-bg">
@@ -57,6 +62,19 @@ export default function FrotaPage() {
         </div>
 
         <div className="px-8 py-8 max-w-[1040px] mx-auto">
+
+          {/* ── Hero: grafo de dependência da frota ── */}
+          <section className="frota-rise mb-14">
+            <h2 className="text-[13px] font-semibold text-ink-0">{L.graphT}</h2>
+            <p className="text-[12.5px] leading-[1.6] text-ink-4 mt-1 mb-4 max-w-[80ch]">{L.graphSub}</p>
+            <div className="rounded-[14px] bg-surface border border-border-card px-4 pt-4 pb-3">
+              <DependencyGraph
+                activeIds={ORDER}
+                doneIds={AGENTS.filter(a => a.tier === 'subagente').map(a => a.id)}
+                en={en}
+              />
+            </div>
+          </section>
 
           {/* ── Hero: constelação + manifesto ── */}
           <section className="frota-rise grid lg:grid-cols-[minmax(0,440px)_1fr] gap-8 items-center mb-14">

@@ -43,6 +43,9 @@ export interface VerifyState extends VerifyResult {
 export interface AgentSelectionResult {
   selected: string[]
   excluded: { id: string; reason: string }[]
+  // W8: agentes adicionais que o orquestrador recomenda ativar para ESTE desafio,
+  // cada um com justificativa positiva. Opcional → backward-compatible com respostas antigas.
+  recommendations?: { agentId: string; reason: string }[]
 }
 
 export interface Agent {

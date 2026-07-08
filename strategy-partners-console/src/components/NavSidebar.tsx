@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from 'react'
 import {
   MessageSquare, Folder, Grid3X3, BarChart2, Book, Settings, Plus, ChevronDown,
   ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare, Users, LogOut,
-  Calculator, Scale, Activity, Handshake,
+  Calculator, Scale, Activity, Handshake, Landmark, LineChart, CalendarRange,
 } from 'lucide-react'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
@@ -143,6 +143,9 @@ function NavContent() {
     { icon: Calculator,    label: t.modeling,      href: '/modelagem',    matchPaths: ['/modelagem'] },
     { icon: Scale,         label: t.roiCompare,    href: '/comparativo',  matchPaths: ['/comparativo'] },
     { icon: Handshake,     label: t.negotiation,   href: '/negociacao',   matchPaths: ['/negociacao'] },
+    { icon: Landmark,      label: t.advDebt,       href: '/advisory?tab=divida',       matchPaths: ['/advisory'] },
+    { icon: LineChart,     label: t.advReview,     href: '/advisory?tab=revisao',      matchPaths: [] },
+    { icon: CalendarRange, label: t.advPlan,       href: '/advisory?tab=planejamento', matchPaths: [] },
     { icon: Grid3X3,       label: t.agentsNav,     href: '/modelos',      matchPaths: ['/modelos'] },
     { icon: BarChart2,     label: t.reports,       href: '/relatorios',   matchPaths: ['/relatorios'] },
     { icon: Book,          label: t.knowledge,     href: '/conhecimento', matchPaths: ['/conhecimento'] },

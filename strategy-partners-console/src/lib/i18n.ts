@@ -17,6 +17,9 @@ const T = {
     modeling:      'Modeling',
     roiCompare:    'ROI Comparator',
     negotiation:   'Negotiation',
+    advDebt:       'Debt Restructuring',
+    advReview:     'Strategic Review',
+    advPlan:       'Long-Range Planning',
     workspace:     'Workspace',
     // ── Agent categories ────────────────────────────────────────────────────
     catChat:        'Chat',
@@ -152,6 +155,9 @@ const T = {
     modeling:      'Modelagem',
     roiCompare:    'Comparativo ROI',
     negotiation:   'Negociação',
+    advDebt:       'Reestruturação de Dívida',
+    advReview:     'Revisão Estratégica',
+    advPlan:       'Planejamento LP',
     workspace:     'Workspace',
     // ── Agent categories ────────────────────────────────────────────────────
     catChat:        'Chat',

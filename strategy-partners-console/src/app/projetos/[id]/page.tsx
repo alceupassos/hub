@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { NavSidebar } from '@/components/NavSidebar'
-import { ArrowLeft, ClipboardCheck, GitMerge, Folder } from 'lucide-react'
+import { ArrowLeft, ClipboardCheck, GitMerge, Folder, Calculator } from 'lucide-react'
 import { useLang } from '@/lib/lang'
 
 interface Project {
@@ -28,14 +28,15 @@ export default function ProjectDetailPage() {
   }, [id])
 
   const L = lang === 'en'
-    ? { back: 'Projects', dd: 'Due diligence', ddSub: 'Checklist, red flags and valuation triangulation', pmi: 'Post-merger integration', pmiSub: 'Synergies, 100-day plan and integration risks', demo: 'Demo project — connect the database to persist real data.' }
-    : { back: 'Projetos', dd: 'Due diligence', ddSub: 'Checklist, red flags e triangulação de valuation', pmi: 'Integração pós-fusão (PMI)', pmiSub: 'Sinergias, plano de 100 dias e riscos de integração', demo: 'Projeto de demonstração — conecte o banco para persistir dados reais.' }
+    ? { back: 'Projects', dd: 'Due diligence', ddSub: 'Checklist, red flags and valuation triangulation', pmi: 'Post-merger integration', pmiSub: 'Synergies, 100-day plan and integration risks', model: 'Model deal', modelSub: 'Valuation, scenarios and ROI modeling', demo: 'Demo project — connect the database to persist real data.' }
+    : { back: 'Projetos', dd: 'Due diligence', ddSub: 'Checklist, red flags e triangulação de valuation', pmi: 'Integração pós-fusão (PMI)', pmiSub: 'Sinergias, plano de 100 dias e riscos de integração', model: 'Modelar deal', modelSub: 'Valuation, cenários e modelagem de ROI', demo: 'Projeto de demonstração — conecte o banco para persistir dados reais.' }
 
   const name = project?.name ?? decodeURIComponent(id)
   const type = project?.type
   const modules = [
     { key: 'due-diligence', href: `/projetos/${id}/due-diligence`, icon: ClipboardCheck, title: L.dd, sub: L.ddSub, on: type !== 'pmi' },
     { key: 'pmi', href: `/projetos/${id}/pmi`, icon: GitMerge, title: L.pmi, sub: L.pmiSub, on: type !== 'pre_deal' },
+    { key: 'modelagem', href: `/projetos/${id}/modelagem`, icon: Calculator, title: L.model, sub: L.modelSub, on: true },
   ]
 
   return (

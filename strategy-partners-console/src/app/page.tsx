@@ -10,6 +10,7 @@ import { TimelineView } from '@/components/TimelineView'
 import { ComposerBar } from '@/components/ComposerBar'
 import { Inspector } from '@/components/Inspector'
 import { AgentSelectionModal } from '@/components/AgentSelectionModal'
+import { AgentSuggestions, type AgentRecommendation } from '@/components/AgentSuggestions'
 import { SwarmModal } from '@/components/SwarmModal'
 import { AGENTS } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
@@ -96,6 +97,11 @@ export default function ConsolePage() {
   const [agentSelection, setAgentSelection] = useState<AgentSelectionResult | null>(null)
   const [enrichedPending, setEnrichedPending] = useState('')
 
+  // ── Agent Recommendations state (W8) ──────────────────────────────────────
+  // Sugestões de especialistas adicionais para o desafio atual. Aceitar liga a
+  // participação (models.on); dispensar/aceitar apenas remove da lista local.
+  const [recommendations, setRecommendations] = useState<AgentRecommendation[]>([])
+
   const activeModels = models.filter(m => m.on)
   const activeCount = activeModels.length
 
@@ -103,6 +109,41 @@ export default function ConsolePage() {
     setModels(prev => prev.map(m => (m.id === id ? { ...m, on: !m.on } : m)))
 
   const toggleInspector = () => setInspectorOpen(prev => !prev)
+
+  // Liga a participação de um agente recomendado (idempotente). Se o id ainda não
+  // existe em `models` (agente fora do roster ativo), mapeia da frota AGENTS primeiro.
+  const acceptRecommendation = (id: string) => {
+    setModels(prev => {
+      if (prev.some(m => m.id === id)) {
+        return prev.map(m => (m.id === id ? { ...m, on: true } : m))
+      }
+      const agent = AGENTS.find(a => a.id === id)
+      if (!agent) return prev
+      return [...prev, { ...agentToModel(agent, getDisplayName), on: true }]
+    })
+    setRecommendations(prev => prev.filter(r => r.agentId !== id))
+  }
+
+  const dismissRecommendation = (id: string) => {
+    setRecommendations(prev => prev.filter(r => r.agentId !== id))
+  }
+
+  const acceptAllRecommendations = () => {
+    setModels(prev => {
+      const next = [...prev]
+      for (const { agentId } of recommendations) {
+        const idx = next.findIndex(m => m.id === agentId)
+        if (idx >= 0) {
+          next[idx] = { ...next[idx], on: true }
+        } else {
+          const agent = AGENTS.find(a => a.id === agentId)
+          if (agent) next.push({ ...agentToModel(agent, getDisplayName), on: true })
+        }
+      }
+      return next
+    })
+    setRecommendations([])
+  }
 
   function buildEnrichedQuestion(original: string, questions: string[], answers: string[]): string {
     if (!questions.length) return original
@@ -151,19 +192,25 @@ export default function ConsolePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // Enviamos a frota HABILITADA inteira (não só os ativos) para que o
+          // orquestrador possa recomendar especialistas atualmente inativos.
           question: enriched,
-          agents: activeModels.map(m => {
-            const a = AGENTS.find(ag => ag.id === m.id)
-            return { id: m.id, name: m.name, role: a?.role ?? '', category: a?.category ?? '' }
-          }),
+          agents: enabledAgents.map(a => ({
+            id: a.id,
+            name: getDisplayName(a.id),
+            role: a.role,
+            category: a.category,
+          })),
           lang,
         }),
       })
       const data = (await res.json()) as AgentSelectionResult
       setAgentSelection(data)
+      setRecommendations(data.recommendations ?? [])
       setSelectionPhase('ready')
     } catch {
       setAgentSelection({ selected: activeModels.map(m => m.id), excluded: [] })
+      setRecommendations([])
       setSelectionPhase('ready')
     }
   }
@@ -421,6 +468,17 @@ export default function ConsolePage() {
 
         <div className="flex-1 min-h-0 overflow-y-auto p-[18px]">
           <div className="max-w-[900px] mx-auto">
+            {recommendations.length > 0 && (
+              <div className="mb-[14px]">
+                <AgentSuggestions
+                  recommendations={recommendations}
+                  onAccept={acceptRecommendation}
+                  onDismiss={dismissRecommendation}
+                  onAcceptAll={acceptAllRecommendations}
+                  lang={lang}
+                />
+              </div>
+            )}
             {tab === 'comparar' && (
               <ComparareView
                 activeModels={activeModels}

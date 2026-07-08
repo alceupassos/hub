@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { X, Loader2, Check, AlertTriangle, Sparkles } from 'lucide-react'
 import type { Model } from '@/lib/types'
 import { useLang } from '@/lib/lang'
+import { DependencyGraph } from '@/components/charts/DependencyGraph'
 
 interface Props {
   open: boolean
@@ -53,6 +54,12 @@ export function SwarmModal({ open, onClose, models, participatingIds, agentLoadi
   const complete = allDone && !synthLoading
   const pct = complete ? 100 : Math.round((done / total) * 85 + (synthLoading ? 8 : synthDone ? 15 : 0))
 
+  // Ids para o grafo da frota: acende quem está executando / concluído. CAIO (síntese) entra à parte.
+  const activeIds = ids.filter(id => agentLoading[id])
+  const doneIds = ids.filter(id => statusOf(id) === 'done')
+  if (synthLoading) activeIds.push('caio')
+  else if (synthDone) doneIds.push('caio')
+
   const L = en
     ? { title: 'Live execution', running: 'analyzing…', doneL: 'done', timeoutL: 'timed out', scopeL: 'out of scope', pending: 'queued', synth: 'Synthesis (CAIO)', synthRun: 'consolidating…', synthOk: 'ready', complete: 'Execution complete', inflight: 'Running', close: 'Close' }
     : { title: 'Execução ao vivo', running: 'analisando…', doneL: 'concluído', timeoutL: 'tempo excedido', scopeL: 'fora de escopo', pending: 'na fila', synth: 'Síntese (CAIO)', synthRun: 'consolidando…', synthOk: 'pronta', complete: 'Execução concluída', inflight: 'Em execução', close: 'Fechar' }
@@ -90,6 +97,10 @@ export function SwarmModal({ open, onClose, models, participatingIds, agentLoadi
 
         {/* agents */}
         <div className="px-5 py-3 overflow-y-auto space-y-1">
+          {/* grafo da frota acendendo em tempo real conforme os agentes concluem */}
+          <div className="mb-3 pb-3 border-b border-border-div">
+            <DependencyGraph activeIds={activeIds} doneIds={doneIds} en={en} />
+          </div>
           {ids.map(id => {
             const m = models.find(x => x.id === id)
             const s = statusOf(id)

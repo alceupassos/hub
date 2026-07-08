@@ -19,6 +19,40 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.05',
+    date: '2026-07-09',
+    title: {
+      pt: 'Advisory estratégico integral e modelagem por deal',
+      en: 'Full strategic advisory and per-deal modeling',
+    },
+    summary: {
+      pt: 'A plataforma passa a cobrir o advisory estratégico como um todo — não apenas M&A — e conecta a modelagem aos deals do pipeline, com mais transparência na frota.',
+      en: 'The platform now covers strategic advisory as a whole — not only M&A — and connects modeling to pipeline deals, with more transparency across the fleet.',
+    },
+    highlights: [
+      {
+        pt: 'Novas áreas de advisory: Reestruturação de Dívida (DSCR/ICR, headroom de covenants, comparação de refinanciamento), Revisão Estratégica (ROIC × WACC, EVA, alocação de capital) e Planejamento de Longo Prazo (projeção plurianual).',
+        en: 'New advisory areas: Debt Restructuring (DSCR/ICR, covenant headroom, refinancing comparison), Strategic Review (ROIC × WACC, EVA, capital allocation) and Long-Range Planning (multi-year projection).',
+      },
+      {
+        pt: 'Modelagem por deal: a partir de um projeto do pipeline, o workbench abre pré-preenchido com as métricas extraídas e as premissas calibradas do setor, distinguindo o que é extraído, calibrado ou premissa.',
+        en: 'Per-deal modeling: from a pipeline project, the workbench opens pre-filled with extracted metrics and calibrated sector assumptions, distinguishing extracted, calibrated and assumed inputs.',
+      },
+      {
+        pt: 'Citações clicáveis no chat por deal: cada referência abre o trecho exato do documento-fonte.',
+        en: 'Clickable citations in deal chat: each reference opens the exact source-document excerpt.',
+      },
+      {
+        pt: 'Recomendação de especialistas: o orquestrador sugere quais agentes ativar para o desafio, com justificativa, e você aceita ou dispensa.',
+        en: 'Specialist recommendation: the orchestrator suggests which agents to activate for the challenge, with a rationale, and you accept or dismiss.',
+      },
+      {
+        pt: 'Mapa da frota: visualização da constelação de agentes e suas dependências, no war room e na página da frota.',
+        en: 'Fleet map: constellation view of agents and their dependencies, in the war room and the fleet page.',
+      },
+    ],
+  },
+  {
     version: '1.04',
     date: '2026-07-08',
     title: {
