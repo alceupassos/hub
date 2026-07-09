@@ -5,6 +5,19 @@
 // Paleta categórica FIXA (ordem nunca ciclada) — coerente com o resto do app.
 export const SERIES_COLORS = ['#0B3A78', '#1F9D6B', '#8B5CF6', '#C77800', '#B4462F', '#0E7490'] as const
 
+// Cores semânticas por "tom" (tone) — usadas por KPI tiles, bolhas e donuts para
+// sinalizar estado (bom/atenção/ruim) sem depender da paleta de séries.
+export type Tone = 'accent' | 'success' | 'warn' | 'danger' | 'neutral' | 'info'
+export const TONE_COLORS: Record<Tone, string> = {
+  accent: 'var(--color-accent)',
+  success: '#1F9D6B',
+  warn: '#C77800',
+  danger: '#B4462F',
+  neutral: 'var(--color-ink-3)',
+  info: '#0E7490',
+}
+export const toneColor = (tone?: Tone, fallback = 'var(--color-ink-2)') => (tone ? TONE_COLORS[tone] : fallback)
+
 // Formatadores
 export const fmtNum = (n: number, d = 1) =>
   Number.isFinite(n) ? n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: d }) : '—'

@@ -250,6 +250,11 @@ export const executionLogs = sp.table('execution_logs', {
   modelUsed: text('model_used'),
   durationMs: integer('duration_ms'),
   confidence: integer('confidence'),
+  // ── Modelo de custo/esforço (X1) — persistido a partir de src/lib/server/costModel.ts ──
+  taskType: text('task_type'),                                  // chat|analysis|modeling|diligence|synthesis|deepdive
+  tokensOutput: integer('tokens_output'),                       // tokens de saída (reais ou estimados)
+  costBrl: numeric('cost_brl', { precision: 12, scale: 4 }),    // custo de compute em R$
+  analystHoursEq: numeric('analyst_hours_eq', { precision: 8, scale: 2 }), // horas de analista equivalentes
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

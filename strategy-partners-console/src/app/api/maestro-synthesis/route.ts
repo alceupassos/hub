@@ -2,14 +2,28 @@ import { NextRequest } from 'next/server'
 import { AGENTS } from '@/lib/agents'
 import { IDENTITY_GUARD, detectPromptInjection } from '@/lib/server/security'
 import { logSecurityEvent } from '@/lib/server/security-events'
-import { ANTHROPIC_MODELS, anthropicTiersEnabled, resolveAnthropicModel } from '@/lib/modelTiers'
+import { ANTHROPIC_MODELS, anthropicTiersEnabled, resolveAnthropicModel, tierOf } from '@/lib/modelTiers'
 import { callAnthropic } from '@/lib/server/providers/anthropic'
 import { logExecution } from '@/lib/server/execution-log'
 import { buildGrounding } from '@/lib/server/grounding'
 import { requireRole } from '@/lib/auth/rbac'
+import { classifyTask, estimateCost, type CostResult } from '@/lib/server/costModel'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+// Subconjunto do CostResult devolvido ao cliente (Inspector). Sem nome de provedor.
+function costPayload(c: CostResult, lang: 'pt' | 'en') {
+  return {
+    computeCostUsd: c.computeCostUsd,
+    computeCostBrl: c.computeCostBrl,
+    analystHoursEquivalent: c.analystHoursEquivalent,
+    analystCostBrl: c.analystCostBrl,
+    savingsMultiple: c.savingsMultiple,
+    taskLabel: lang === 'en' ? c.taskLabelEn : c.taskLabel,
+    tokens: c.tokens,
+  }
+}
 
 // Synthesis-specific role note appended to the shared identity guard (no founder narrative).
 const SYNTHESIS_ROLE = `## Role
@@ -121,8 +135,14 @@ Seja completo, específico e de nível executivo em todas as seções.`
         messages: [{ role: 'user', content: userPrompt }],
         maxTokens: 2800,
       })
-      void logExecution({ agentId: 'caio', route: 'api/maestro-synthesis', question, responsePreview: text, modelUsed: maestro ? resolveAnthropicModel(maestro) : ANTHROPIC_MODELS.opus })
-      return Response.json({ synthesis: text })
+      const cost = estimateCost({
+        taskType: classifyTask({ route: 'api/maestro-synthesis' }),
+        tier: maestro ? tierOf(maestro) : 'opus',
+        agentCount: agentResponses.length,
+        realOutputTokens: undefined,
+      })
+      void logExecution({ agentId: 'caio', route: 'api/maestro-synthesis', question, responsePreview: text, modelUsed: maestro ? resolveAnthropicModel(maestro) : ANTHROPIC_MODELS.opus, taskType: cost.taskType, tokensOutput: cost.tokens, costBrl: cost.computeCostBrl, analystHoursEq: cost.analystHoursEquivalent })
+      return Response.json({ synthesis: text, cost: costPayload(cost, lang) })
     } catch (err) {
       console.error('[maestro-synthesis] anthropic error:', err)
       return Response.json({ error: 'Serviço de IA indisponível (camada Anthropic). Tente novamente em instantes.' }, { status: 502 })
@@ -158,9 +178,17 @@ Seja completo, específico e de nível executivo em todas as seções.`
 
   const data = (await upstream.json()) as {
     choices?: { message?: { content?: string } }[]
+    usage?: { completion_tokens?: number }
   }
   const synthesis = data.choices?.[0]?.message?.content ?? ''
 
-  void logExecution({ agentId: 'caio', route: 'api/maestro-synthesis', question, responsePreview: synthesis, modelUsed: model })
-  return Response.json({ synthesis })
+  const cost = estimateCost({
+    taskType: classifyTask({ route: 'api/maestro-synthesis' }),
+    tier: maestro ? tierOf(maestro) : 'opus',
+    agentCount: agentResponses.length,
+    realOutputTokens: data.usage?.completion_tokens ?? undefined,
+  })
+
+  void logExecution({ agentId: 'caio', route: 'api/maestro-synthesis', question, responsePreview: synthesis, modelUsed: model, taskType: cost.taskType, tokensOutput: cost.tokens, costBrl: cost.computeCostBrl, analystHoursEq: cost.analystHoursEquivalent })
+  return Response.json({ synthesis, cost: costPayload(cost, lang) })
 }

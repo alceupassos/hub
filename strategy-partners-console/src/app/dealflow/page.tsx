@@ -5,6 +5,9 @@ import { NavSidebar } from '@/components/NavSidebar'
 import { WhatsNewBanner } from '@/components/WhatsNewBanner'
 import { Sparkles, Upload, X, TrendingUp, Trophy } from 'lucide-react'
 import { useLang } from '@/lib/lang'
+import { StatTiles } from '@/components/charts/StatTiles'
+import { ScatterBubble } from '@/components/charts/ScatterBubble'
+import { fmtCompact, type Tone } from '@/components/charts/chartUtils'
 
 interface Deal {
   id: string
@@ -13,6 +16,17 @@ interface Deal {
   stage: string
   scoreCache: number | null
   sourceType: string | null
+  arr?: number | null
+  recommendation?: string | null
+}
+
+const RECO_TONE: Record<string, Tone> = { go: 'success', no_go: 'danger', watch: 'warn' }
+
+function median(nums: number[]): number | null {
+  if (!nums.length) return null
+  const s = [...nums].sort((a, b) => a - b)
+  const m = Math.floor(s.length / 2)
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2
 }
 
 const STAGE_LABEL: Record<string, string> = { sourcing: 'Sourcing', screening: 'Screening', diligence: 'Diligence', loi: 'LOI', closing: 'Closing', closed: 'Fechado' }
@@ -53,10 +67,30 @@ export default function DealflowPage() {
   }
 
   const L = lang === 'en'
-    ? { title: 'Dealflow', sub: 'Targets ranked by diligence score', ingest: 'Ingest deck', leaderboard: 'Leaderboard', score: 'Score', rescore: 'Re-score', demo: 'Demo data — connect the database to persist real deals.' }
-    : { title: 'Dealflow', sub: 'Targets ranqueados por score de diligência', ingest: 'Ingerir deck', leaderboard: 'Leaderboard', score: 'Pontuar', rescore: 'Repontuar', demo: 'Dados de demonstração — conecte o banco para persistir deals reais.' }
+    ? { title: 'Dealflow', sub: 'Targets ranked by diligence score', ingest: 'Ingest deck', leaderboard: 'Leaderboard', score: 'Score', rescore: 'Re-score', demo: 'Demo data — connect the database to persist real deals.',
+        kpiCount: 'Deals', kpiMedian: 'Median score', kpiArr: 'Total ARR', kpiGo: 'Go recommendations',
+        mapTitle: 'Score × ARR map', mapCaption: 'What: each bubble is a deal — score on the X axis, ARR on the Y axis, bubble size ∝ ARR, colored by recommendation (go / watch / no-go). For: spotting the high-score, high-ARR targets worth prioritizing at a glance.',
+        axScore: 'Score', axArr: 'ARR' }
+    : { title: 'Dealflow', sub: 'Targets ranqueados por score de diligência', ingest: 'Ingerir deck', leaderboard: 'Leaderboard', score: 'Pontuar', rescore: 'Repontuar', demo: 'Dados de demonstração — conecte o banco para persistir deals reais.',
+        kpiCount: 'Deals', kpiMedian: 'Score mediano', kpiArr: 'ARR total', kpiGo: 'Recomendações go',
+        mapTitle: 'Mapa score × ARR', mapCaption: 'O que é: cada bolha é um deal — score no eixo X, ARR no eixo Y, tamanho ∝ ARR, cor pela recomendação (go / watch / no-go). Para que serve: enxergar num relance os alvos de alto score e alto ARR que merecem prioridade.',
+        axScore: 'Score', axArr: 'ARR' }
 
   const ranked = [...deals].sort((a, b) => (b.scoreCache ?? -1) - (a.scoreCache ?? -1))
+
+  const scores = deals.map(d => d.scoreCache).filter((s): s is number => s != null)
+  const medScore = median(scores)
+  const totalArr = deals.reduce((a, d) => a + (d.arr ?? 0), 0)
+  const goCount = deals.filter(d => d.recommendation === 'go').length
+  const tiles = [
+    { label: L.kpiCount, value: deals.length, tone: 'accent' as Tone },
+    { label: L.kpiMedian, value: medScore != null ? String(Math.round(medScore)) : '—', tone: 'neutral' as Tone },
+    { label: L.kpiArr, value: totalArr > 0 ? fmtCompact(totalArr) : '—', tone: 'info' as Tone },
+    { label: L.kpiGo, value: goCount, tone: goCount > 0 ? ('success' as Tone) : ('neutral' as Tone) },
+  ]
+  const bubbles = deals
+    .filter(d => d.scoreCache != null && d.arr != null && Number.isFinite(d.arr))
+    .map(d => ({ x: d.scoreCache as number, y: d.arr as number, r: d.arr as number, label: d.name, tone: d.recommendation ? RECO_TONE[d.recommendation] : undefined }))
 
   return (
     <div className="flex h-screen overflow-hidden bg-app-bg">
@@ -75,6 +109,17 @@ export default function DealflowPage() {
 
         <div className="px-8 py-6">
           {!live && <p className="text-[12px] text-ink-6 mb-4">{L.demo}</p>}
+
+          <div className="mb-6"><StatTiles tiles={tiles} /></div>
+
+          {bubbles.length > 0 && (
+            <div className="bg-surface border border-border-card rounded-[12px] p-5 mb-6">
+              <p className="text-[12px] font-semibold text-ink-0 mb-1">{L.mapTitle}</p>
+              <p className="text-[11px] text-ink-6 mb-4 leading-relaxed">{L.mapCaption}</p>
+              <ScatterBubble points={bubbles} xLabel={L.axScore} yLabel={L.axArr} fmtX={n => String(Math.round(n))} fmtY={fmtCompact} />
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5 text-[12px] font-semibold text-ink-0 mb-3"><Trophy size={14} className="text-accent" /> {L.leaderboard}</div>
           <div className="space-y-2">
             {ranked.map((d, i) => (

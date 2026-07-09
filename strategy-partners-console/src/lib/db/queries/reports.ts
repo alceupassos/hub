@@ -7,6 +7,9 @@ export interface ReportStats {
   totalSessions: number
   avgLatencyMs: number | null
   reasoningPct: number
+  totalCostBrl: number
+  totalTokens: number
+  totalAnalystHours: number
   topAgents: { agentId: string; sessions: number }[]
 }
 
@@ -14,10 +17,13 @@ export interface ReportStats {
 // → a página cai no fallback de demonstração.
 export async function getReportStats(): Promise<ReportStats | null> {
   try {
-    const [totals] = await db.execute<{ total: number; avg_ms: number | null; reasoning: number }>(sql`
+    const [totals] = await db.execute<{ total: number; avg_ms: number | null; reasoning: number; cost_brl: number; tokens: number; analyst_hours: number }>(sql`
       SELECT count(*)::int AS total,
              avg(duration_ms)::int AS avg_ms,
-             count(*) FILTER (WHERE model_used ilike '%reason%' OR model_used ilike '%pro%' OR model_used ilike '%opus%')::int AS reasoning
+             count(*) FILTER (WHERE model_used ilike '%reason%' OR model_used ilike '%pro%' OR model_used ilike '%opus%')::int AS reasoning,
+             coalesce(sum(cost_brl), 0)::float8 AS cost_brl,
+             coalesce(sum(tokens_output), 0)::bigint AS tokens,
+             coalesce(sum(analyst_hours_eq), 0)::float8 AS analyst_hours
       FROM strategy_partners.execution_logs
     `).then(r => r.rows)
 
@@ -36,6 +42,9 @@ export async function getReportStats(): Promise<ReportStats | null> {
       totalSessions: total,
       avgLatencyMs: totals.avg_ms != null ? Number(totals.avg_ms) : null,
       reasoningPct: total > 0 ? Math.round((Number(totals.reasoning) / total) * 100) : 0,
+      totalCostBrl: Number(totals.cost_brl ?? 0),
+      totalTokens: Number(totals.tokens ?? 0),
+      totalAnalystHours: Number(totals.analyst_hours ?? 0),
       topAgents: top.map(r => ({ agentId: r.agent_id, sessions: Number(r.sessions) })),
     }
   } catch {

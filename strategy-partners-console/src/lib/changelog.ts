@@ -19,6 +19,36 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.09',
+    date: '2026-07-09',
+    title: {
+      pt: 'Custo de execução real, visão de portfólio e feedback de progresso',
+      en: 'Real execution cost, portfolio views and progress feedback',
+    },
+    summary: {
+      pt: 'A execução passou a reportar custo e esforço reais por tipo de tarefa, o dealflow/pipeline/projetos ganharam visão analítica, e a espera pela síntese ganhou um indicador vivo. Bilíngue PT/EN ampliado.',
+      en: 'Execution now reports real cost and effort by task type, dealflow/pipeline/projects gained analytical views, and the synthesis wait got a live indicator. Broader PT/EN coverage.',
+    },
+    highlights: [
+      {
+        pt: 'Custo de execução realista: cada análise mostra o custo de compute (barato) ao lado do esforço equivalente em horas de analista (caro) — escalado por tipo de tarefa e complexidade, substituindo os números fictícios do painel de execução.',
+        en: 'Realistic execution cost: each analysis shows the compute cost (cheap) alongside the equivalent effort in analyst hours (expensive) — scaled by task type and complexity, replacing the previous placeholder figures in the execution panel.',
+      },
+      {
+        pt: 'Dealflow com dispersão score × valor e KPIs; Pipeline com funil de conversão entre estágios; Projetos com painel de portfólio e dashboard por deal (indicadores, gauge de score, football field de valuation).',
+        en: 'Dealflow with score × value scatter and KPIs; Pipeline with a stage-to-stage conversion funnel; Projects with a portfolio header and a per-deal dashboard (indicators, score gauge, valuation football field).',
+      },
+      {
+        pt: 'Indicador de progresso da síntese: enquanto a frota trabalha, uma animação sóbria mostra os agentes participando, o tempo decorrido e a etapa atual — sem percentuais falsos.',
+        en: 'Synthesis progress indicator: while the fleet works, a sober animation shows the participating agents, elapsed time and the current step — with no fake percentages.',
+      },
+      {
+        pt: 'Relatórios com custo de IA total e esforço equivalente acumulado; cobertura bilíngue PT/EN ampliada nas telas de modelagem, negociação e assessoria.',
+        en: 'Reports now include total AI cost and accumulated equivalent effort; broader PT/EN coverage across the modeling, negotiation and advisory screens.',
+      },
+    ],
+  },
+  {
     version: '1.08',
     date: '2026-07-09',
     title: {

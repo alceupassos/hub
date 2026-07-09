@@ -1,30 +1,21 @@
 'use client'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
 import { ChevronRight, ChevronLeft, FileText, Settings2 } from 'lucide-react'
 import type { Model } from '@/lib/types'
 import { useLang } from '@/lib/lang'
 import { getT } from '@/lib/i18n'
 import { Switch } from './ui/Switch'
 
-// Métricas de execução "vivas". Tokens e custo são MONOTÔNICOS (só sobem, como um contador
-// acumulado); a latência oscila (é por-resposta). O custo deriva dos tokens (coerente).
-function useLiveMetrics() {
-  const [m, setM] = useState({ lat: 1.24, tok: 4812, cost: 0.14 })
-  useEffect(() => {
-    const id = setInterval(() => {
-      setM(prev => {
-        const tok = prev.tok + Math.floor(60 + Math.random() * 340) // sempre cresce
-        return {
-          lat: Math.round((0.82 + Math.random() * 1.7) * 100) / 100, // oscila
-          tok,
-          cost: Math.round((tok / 1000) * 0.03 * 100) / 100, // deriva dos tokens → sempre cresce
-        }
-      })
-    }, 2000)
-    return () => clearInterval(id)
-  }, [])
-  return m
+// Custo/esforço REAL da última execução — vem de estimateCost() no servidor (costModel.ts),
+// nunca de um número inventado. Null enquanto não houve execução → mostramos '—'.
+export interface InspectorCost {
+  computeCostUsd: number
+  computeCostBrl: number
+  analystHoursEquivalent: number
+  analystCostBrl: number
+  savingsMultiple: number
+  taskLabel: string
+  tokens: number
 }
 
 interface Props {
@@ -36,12 +27,13 @@ interface Props {
   agentConf?: Record<string, number>
   participatingIds?: string[]
   isRunning?: boolean
+  cost?: InspectorCost | null
+  latencyMs?: number | null
 }
 
-export function Inspector({ open, models, activeCount, toggleModel, toggleInspector, agentConf = {}, participatingIds = [], isRunning = false }: Props) {
+export function Inspector({ open, models, activeCount, toggleModel, toggleInspector, agentConf = {}, participatingIds = [], isRunning = false, cost = null, latencyMs = null }: Props) {
   const { lang } = useLang()
   const t = getT(lang)
-  const live = useLiveMetrics()
 
   // Concordância REAL derivada das confianças dos agentes que participaram (não valores fixos).
   const confs = participatingIds.map(id => agentConf[id]).filter((c): c is number => typeof c === 'number' && c > 0)
@@ -85,12 +77,12 @@ export function Inspector({ open, models, activeCount, toggleModel, toggleInspec
       </div>
 
       <div className="px-[15px] pb-4 space-y-4 overflow-y-auto">
-        {/* Metrics */}
+        {/* Metrics — reais da última execução (sem números fake). '—' quando ainda não há dados. */}
         <div className="space-y-[9px]">
           {[
-            { label: t.latency, value: `${live.lat.toFixed(2)}s` },
-            { label: t.tokens,  value: live.tok.toLocaleString('pt-BR') },
-            { label: t.cost,    value: `US$ ${live.cost.toFixed(2)}` },
+            { label: t.latency, value: latencyMs != null ? `${(latencyMs / 1000).toFixed(2)}s` : '—' },
+            { label: t.tokens,  value: cost ? cost.tokens.toLocaleString('pt-BR') : '—' },
+            { label: t.cost,    value: cost ? `US$ ${cost.computeCostUsd.toFixed(2)} · R$ ${cost.computeCostBrl.toFixed(2)}` : '—' },
             { label: t.agentsNav ?? 'Agents', value: `${activeCount}/${models.length}` },
           ].map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
@@ -98,6 +90,26 @@ export function Inspector({ open, models, activeCount, toggleModel, toggleInspec
               <span className="font-mono text-[12px] text-ink-0 tabular-nums transition-opacity">{value}</span>
             </div>
           ))}
+        </div>
+
+        <div className="h-px bg-border-div" />
+
+        {/* Esforço equivalente — o argumento de valor: horas de analista que a IA condensou. */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[11.5px] font-semibold text-ink-0">{lang === 'en' ? 'Equivalent effort' : 'Esforço equivalente'}</span>
+            {cost && (
+              <span className="text-[9.5px] font-mono font-semibold px-[6px] py-[2px] rounded-full bg-[#1F9D6B]/12 text-[#1F9D6B]">
+                {`×${cost.savingsMultiple.toFixed(0)} ${lang === 'en' ? 'cheaper' : 'mais barato'}`}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[11.5px] text-ink-5">{cost ? cost.taskLabel : (lang === 'en' ? 'Analyst hours' : 'Horas de analista')}</span>
+            <span className="font-mono text-[12px] text-ink-0 tabular-nums">
+              {cost ? `${cost.analystHoursEquivalent}h ≈ R$ ${cost.analystCostBrl.toLocaleString('pt-BR')}` : '—'}
+            </span>
+          </div>
         </div>
 
         <div className="h-px bg-border-div" />

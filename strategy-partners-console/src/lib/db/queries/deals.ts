@@ -1,5 +1,5 @@
 import 'server-only'
-import { desc, eq, sql } from 'drizzle-orm'
+import { desc, eq, getTableColumns, sql } from 'drizzle-orm'
 import { db } from '../index'
 import {
   dealActivity, dealComments, dealMetrics, dealScores, projects, theses,
@@ -8,9 +8,25 @@ import {
 
 // Um "deal" é um project (type pre_deal por padrão) com estágio/score. Todas as queries por projectId.
 
+// Retorna as linhas de deal com dois campos derivados, ambos ADITIVOS (backward-compatible):
+//   arr            — ARR do deal_metrics mais recente (numeric → float; null se não houver)
+//   recommendation — recomendação do deal_scores mais recente (go|no_go|watch; null se não houver)
+// Feito via subconsultas correlacionadas para pegar sempre a métrica/score mais recente por projeto.
 export async function listDeals() {
   return db
-    .select()
+    .select({
+      ...getTableColumns(projects),
+      arr: sql<number | null>`(
+        select ${dealMetrics.arr}::float8 from ${dealMetrics}
+        where ${dealMetrics.projectId} = ${projects.id}
+        order by ${dealMetrics.extractedAt} desc limit 1
+      )`,
+      recommendation: sql<string | null>`(
+        select ${dealScores.recommendation} from ${dealScores}
+        where ${dealScores.projectId} = ${projects.id}
+        order by ${dealScores.createdAt} desc limit 1
+      )`,
+    })
     .from(projects)
     .where(eq(projects.type, 'pre_deal'))
     .orderBy(sql`${projects.scoreCache} desc nulls last`, desc(projects.createdAt))

@@ -15,6 +15,11 @@ export interface ExecutionLogInput {
   modelUsed?: string | null
   durationMs?: number | null
   confidence?: number | null
+  // Modelo de custo/esforço (X1) — vindos de estimateCost() em costModel.ts.
+  taskType?: string | null
+  tokensOutput?: number | null
+  costBrl?: number | null        // R$ (convertido p/ string na persistência — coluna numeric)
+  analystHoursEq?: number | null
 }
 
 export async function logExecution(input: ExecutionLogInput): Promise<void> {
@@ -30,6 +35,11 @@ export async function logExecution(input: ExecutionLogInput): Promise<void> {
       modelUsed: input.modelUsed ? maskModel(input.modelUsed) : null, // nunca gravar nome real
       durationMs: input.durationMs ?? null,
       confidence: input.confidence ?? null,
+      taskType: input.taskType ?? null,
+      tokensOutput: input.tokensOutput ?? null,
+      // numeric → drizzle espera string; converte de forma null-safe.
+      costBrl: input.costBrl != null ? String(input.costBrl) : null,
+      analystHoursEq: input.analystHoursEq != null ? String(input.analystHoursEq) : null,
     })
   } catch (err) {
     console.error('[execution-log] falha ao persistir (ignorada):', err)

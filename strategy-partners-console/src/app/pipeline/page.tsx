@@ -4,8 +4,10 @@ import { useRouter } from 'next/navigation'
 import { NavSidebar } from '@/components/NavSidebar'
 import { KanbanSquare } from 'lucide-react'
 import { useLang } from '@/lib/lang'
+import { Funnel } from '@/components/charts/Funnel'
+import { fmtCompact } from '@/components/charts/chartUtils'
 
-interface Deal { id: string; name: string; clientName: string | null; stage: string; scoreCache: number | null }
+interface Deal { id: string; name: string; clientName: string | null; stage: string; scoreCache: number | null; arr?: number | null }
 
 const STAGES = ['sourcing', 'screening', 'diligence', 'loi', 'closing', 'closed'] as const
 const STAGE_LABEL: Record<string, { pt: string; en: string }> = {
@@ -52,6 +54,19 @@ export default function PipelinePage() {
 
   const label = (s: string) => (lang === 'en' ? STAGE_LABEL[s]?.en : STAGE_LABEL[s]?.pt) ?? s
 
+  const hasArr = deals.some(d => d.arr != null && Number.isFinite(d.arr))
+  const funnelStages = STAGES.map(stage => {
+    const col = deals.filter(d => d.stage === stage)
+    return {
+      label: label(stage),
+      count: col.length,
+      value: hasArr ? col.reduce((a, d) => a + (d.arr ?? 0), 0) : undefined,
+    }
+  })
+  const F = lang === 'en'
+    ? { title: 'Stage funnel', caption: 'What: deal count per stage from sourcing to close, with step-to-step conversion between stages (Σ ARR when available). For: seeing where the pipeline narrows and which stage is leaking deals.' }
+    : { title: 'Funil de estágios', caption: 'O que é: número de deals por estágio, de sourcing a fechamento, com a conversão passo-a-passo entre estágios (Σ ARR quando disponível). Para que serve: ver onde o pipeline estreita e qual estágio está perdendo deals.' }
+
   return (
     <div className="flex h-screen overflow-hidden bg-app-bg">
       <NavSidebar />
@@ -59,6 +74,12 @@ export default function PipelinePage() {
         <div className="border-b border-border-base bg-surface px-8 py-5">
           <h1 className="text-[17px] font-semibold text-ink-0 flex items-center gap-2"><KanbanSquare size={17} className="text-accent" /> Pipeline</h1>
           <p className="text-[12px] text-ink-5 mt-0.5">{lang === 'en' ? 'Drag deals across stages' : 'Arraste deals entre os estágios'}{!live && (lang === 'en' ? ' · demo' : ' · demonstração')}</p>
+        </div>
+
+        <div className="shrink-0 border-b border-border-div bg-surface px-8 py-4">
+          <p className="text-[12px] font-semibold text-ink-0 mb-1">{F.title}</p>
+          <p className="text-[11px] text-ink-6 mb-3 leading-relaxed max-w-3xl">{F.caption}</p>
+          <div className="max-w-2xl"><Funnel stages={funnelStages} fmtValue={fmtCompact} /></div>
         </div>
 
         <div className="flex-1 overflow-x-auto">

@@ -8,7 +8,7 @@ import { ComparareView, FleetVitalsBar } from '@/components/ComparareView'
 import { SinteseView } from '@/components/SinteseView'
 import { TimelineView } from '@/components/TimelineView'
 import { ComposerBar } from '@/components/ComposerBar'
-import { Inspector } from '@/components/Inspector'
+import { Inspector, type InspectorCost } from '@/components/Inspector'
 import { AgentSelectionModal } from '@/components/AgentSelectionModal'
 import { AgentSuggestions, type AgentRecommendation } from '@/components/AgentSuggestions'
 import { SwarmModal } from '@/components/SwarmModal'
@@ -27,6 +27,29 @@ async function fetchWithTimeout(input: string, init: RequestInit, ms = 45000): P
     return await fetch(input, { ...init, signal: ctrl.signal })
   } finally {
     clearTimeout(timer)
+  }
+}
+
+// Soma os custos/esforços REAIS de uma execução (N agentes + síntese) num único total para o
+// Inspector. Nunca inventa números — só agrega o que o servidor devolveu (estimateCost).
+function aggregateCosts(parts: InspectorCost[]): InspectorCost | null {
+  if (parts.length === 0) return null
+  const sum = parts.reduce(
+    (acc, c) => ({
+      computeCostUsd: acc.computeCostUsd + c.computeCostUsd,
+      computeCostBrl: acc.computeCostBrl + c.computeCostBrl,
+      analystHoursEquivalent: acc.analystHoursEquivalent + c.analystHoursEquivalent,
+      analystCostBrl: acc.analystCostBrl + c.analystCostBrl,
+      tokens: acc.tokens + c.tokens,
+    }),
+    { computeCostUsd: 0, computeCostBrl: 0, analystHoursEquivalent: 0, analystCostBrl: 0, tokens: 0 },
+  )
+  // taskLabel representativo: o da parte mais "pesada" (maior esforço de analista).
+  const heaviest = parts.reduce((a, b) => (b.analystHoursEquivalent > a.analystHoursEquivalent ? b : a))
+  return {
+    ...sum,
+    taskLabel: heaviest.taskLabel,
+    savingsMultiple: sum.computeCostBrl > 0 ? sum.analystCostBrl / sum.computeCostBrl : 0,
   }
 }
 
@@ -82,6 +105,8 @@ export default function ConsolePage() {
   const [participatingIds, setParticipatingIds] = useState<string[]>([])
   const [agentTimings, setAgentTimings] = useState<Record<string, number>>({})
   const [agentVerify, setAgentVerify] = useState<Record<string, VerifyState>>({})
+  const [runCost, setRunCost] = useState<InspectorCost | null>(null)
+  const [runLatencyMs, setRunLatencyMs] = useState<number | null>(null)
   const [sessionHistory, setSessionHistory] = useState<
     { avgConf: number; agentCount: number; ts: number }[]
   >([])
@@ -234,10 +259,17 @@ export default function ConsolePage() {
     setAgentTimings({})
     setAgentVerify({})
     setSynthesis('')
+    setRunCost(null)
+    setRunLatencyMs(null)
 
     const ids = overrideIds ?? activeModels.map(m => m.id)
     setParticipatingIds(ids)
     setAgentLoading(Object.fromEntries(ids.map(id => [id, true])))
+
+    // Custo/esforço REAL acumulado da execução (agentes + síntese). Medimos também a latência
+    // de parede (Date.now) — nada disso é inventado, tudo vem de estimateCost() no servidor.
+    const runStart = Date.now()
+    const costs: InspectorCost[] = []
 
     // Parallel queries — each resolves independently to update cards as they arrive
     const responses = await Promise.all(
@@ -249,7 +281,8 @@ export default function ConsolePage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ agentId, question: q, lang, personaOverride: getPersonaOverride(agentId) }),
           }, 240000) // 240s: tempo nunca deve ser o motivo de um agente não responder (reasoner é lento)
-          const data = (await res.json()) as { response?: string; confidence?: number; model?: string }
+          const data = (await res.json()) as { response?: string; confidence?: number; model?: string; cost?: InspectorCost | null }
+          if (data.cost) costs.push(data.cost)
           const elapsed = (Date.now() - t0) / 1000
           const agentName = activeModels.find(m => m.id === agentId)?.name ?? agentId
           const agentResponse = data.response ?? ''
@@ -320,7 +353,8 @@ export default function ConsolePage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: q, agentResponses: answered, lang }),
         }, 120000)
-        const synData = (await synRes.json()) as { synthesis?: string }
+        const synData = (await synRes.json()) as { synthesis?: string; cost?: InspectorCost | null }
+        if (synData.cost) costs.push(synData.cost)
         setSynthesis(synData.synthesis?.trim() ? synData.synthesis : fallbackSyn)
       }
       const allConfs = Object.values(agentConf)
@@ -331,6 +365,8 @@ export default function ConsolePage() {
     } catch {
       setSynthesis(fallbackSyn)
     } finally {
+      setRunCost(aggregateCosts(costs))
+      setRunLatencyMs(Date.now() - runStart)
       setSynthLoading(false)
       setIsRunning(false)
     }
@@ -537,6 +573,8 @@ export default function ConsolePage() {
         agentConf={agentConf}
         participatingIds={participatingIds}
         isRunning={isRunning}
+        cost={runCost}
+        latencyMs={runLatencyMs}
       />
     </div>
   )

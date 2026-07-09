@@ -5,6 +5,7 @@ import type { Model } from '@/lib/types'
 import type { Translations } from '@/lib/i18n'
 import { isPrincipal } from '@/lib/agentTiers'
 import { DeliverableButtons } from '@/components/DeliverableButtons'
+import { SynthesisPulse } from '@/components/SynthesisPulse'
 
 interface Props {
   activeModels: Model[]
@@ -53,12 +54,7 @@ export function SinteseView({ activeModels, agentConf, question, synthesis, synt
 
       {/* Synthesis body */}
       {synthLoading ? (
-        <div className="space-y-2 animate-pulse">
-          <div className="h-3 bg-active-bg rounded w-3/4" />
-          <div className="h-3 bg-active-bg rounded w-full" />
-          <div className="h-3 bg-active-bg rounded w-5/6" />
-          <div className="h-3 bg-active-bg rounded w-2/3" />
-        </div>
+        <SynthesisPulse activeModels={activeModels.map(m => ({ id: m.id, name: m.name, dot: m.dot }))} />
       ) : synthesis ? (
         <div className="prose prose-sm max-w-none text-ink-2
           [&_h2]:text-[14px] [&_h2]:font-semibold [&_h2]:text-ink-0 [&_h2]:mt-5 [&_h2]:mb-2

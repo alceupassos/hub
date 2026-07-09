@@ -17,16 +17,20 @@ import { roicWaccSpread, capitalAllocation, valueDrivers, reinvestmentValue, sen
 import { projectFinancials, runPlanScenarios, planValuation, fundingGap, breakEvenYear, DEFAULT_LRP_SCENARIOS } from '@/lib/finance/longRangePlan'
 import { BarComparison } from '@/components/charts/BarComparison'
 import { fmtCompact } from '@/components/charts/chartUtils'
+import { useLang, type Lang } from '@/lib/lang'
 
 const brl = (n: number) => (Number.isFinite(n) ? n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '—')
 const pct = (n: number | null | undefined, d = 1) => (n == null || !Number.isFinite(n) ? '—' : `${(n * 100).toFixed(d)}%`)
 
 type Tab = 'divida' | 'revisao' | 'planejamento'
-const TABS: { key: Tab; label: string; icon: LucideIcon }[] = [
-  { key: 'divida', label: 'Reestruturação de dívida', icon: Landmark },
-  { key: 'revisao', label: 'Revisão estratégica', icon: Scale },
-  { key: 'planejamento', label: 'Planejamento LP', icon: LineChart },
+const TABS: { key: Tab; icon: LucideIcon }[] = [
+  { key: 'divida', icon: Landmark },
+  { key: 'revisao', icon: Scale },
+  { key: 'planejamento', icon: LineChart },
 ]
+const tabLabels = (lang: Lang): Record<Tab, string> => lang === 'en'
+  ? { divida: 'Debt restructuring', revisao: 'Strategic review', planejamento: 'LP planning' }
+  : { divida: 'Reestruturação de dívida', revisao: 'Revisão estratégica', planejamento: 'Planejamento LP' }
 const isTab = (v: string | null): v is Tab => v === 'divida' || v === 'revisao' || v === 'planejamento'
 
 function Field({ label, value, onChange, step = 1 }: { label: string; value: number; onChange: (n: number) => void; step?: number }) {
@@ -72,6 +76,7 @@ function Row({ k, v, strong }: { k: string; v: string; strong?: boolean }) {
 
 // ── Aba 1: Reestruturação de dívida ─────────────────────────────────────────
 function DebtPanel() {
+  const { lang } = useLang()
   const [principal, setPrincipal] = useState(1000)
   const [curRate, setCurRate] = useState(0.16)
   const [curYears, setCurYears] = useState(5)
@@ -105,11 +110,11 @@ function DebtPanel() {
   const waterfall = useMemo(() => {
     const subordinated = Math.max(0, netDebt - principal)
     const tranches = [
-      { name: 'Sênior (modelada)', amount: principal, seniority: 1, rate: curRate },
-      ...(subordinated > 0 ? [{ name: 'Subordinada', amount: subordinated, seniority: 2, rate: curRate + 0.02 }] : []),
+      { name: lang === 'en' ? 'Senior (modeled)' : 'Sênior (modelada)', amount: principal, seniority: 1, rate: curRate },
+      ...(subordinated > 0 ? [{ name: lang === 'en' ? 'Subordinated' : 'Subordinada', amount: subordinated, seniority: 2, rate: curRate + 0.02 }] : []),
     ]
     return debtWaterfall(tranches, recoveryValue)
-  }, [principal, netDebt, curRate, recoveryValue])
+  }, [principal, netDebt, curRate, recoveryValue, lang])
 
   // DSCR ano a ano ao longo de toda a amortização atual (EBITDA constante = input, piso = covenant).
   const dscrSched = useMemo(() => {
@@ -123,86 +128,173 @@ function DebtPanel() {
     return breakEvenRate(principal, curYears, curType, cap)
   }, [principal, curYears, curType, ebitda, minCov])
 
+  const en = lang === 'en'
+  const L = en
+    ? {
+        noteWhat: 'Debt restructuring — draws the amortization schedule, tests coverage and covenants and compares refinancing.',
+        noteUse: 'Choose the amortization system (bullet, linear/SAC or French/Price) and the rates. The panel computes DSCR/ICR, covenant headroom (leverage and coverage, with a breach flag) and the NPV of the proposal’s interest savings vs. the current debt. Use it to defend a waiver request or a refinancing thesis with the lender.',
+        fPrincipal: 'Principal', fEbitda: 'Annual EBITDA', gCurrent: 'Current debt', fCurRate: 'Current rate (dec.)', fCurYears: 'Current term (years)', fCurType: 'Current system',
+        gProposal: 'Proposal', fPropRate: 'Proposed rate (dec.)', fPropYears: 'Proposed term (years)', fPropType: 'Proposed system',
+        gCovenants: 'Covenants', fNetDebt: 'Net debt', fMaxLev: 'Leverage cap (x)', fMinCov: 'Coverage floor (x)', gDistressed: 'Distressed', fRecovery: 'Recovery value',
+        optFrench: 'French (Price)', optLinear: 'Linear (SAC)', optBullet: 'Bullet',
+        kDscr1: 'DSCR (year 1)', kIcr1: 'ICR (year 1)', kLeverage: 'Leverage',
+        refiVerdictTitle: 'Refinancing verdict', vRefi: 'Refinance', vKeep: 'Keep current debt', vIndiff: 'Indifferent',
+        rNpvSavings: 'NPV of interest savings', rTotalSaved: 'Total interest saved', rAllInDelta: 'Δ all-in cost (nominal)',
+        svcTitle: 'Debt service — current vs. proposal', svcA: 'Current', svcB: 'Proposal',
+        svc1: 'Year-1 service', svcAvg: 'Average service/year', svcTotal: 'Total interest (life)',
+        amortTitle: (f: string) => `Amortization schedule — current debt (${f})`,
+        thYear: 'Year', thOpenBal: 'Opening balance', thInterest: 'Interest', thAmort: 'Amortization', thPayment: 'Payment', thCloseBal: 'Closing balance',
+        waterfallTitle: 'Recovery waterfall (distressed)',
+        waterfallDesc: (
+          <>
+            Distributes the <strong>recovery value</strong> (liquidated EV/collateral) across creditors by seniority:
+            the most senior tranche is repaid before the next receives anything. Adjust the recovery value to see the
+            <em> fulcrum</em> and how much is left for equity.
+          </>
+        ),
+        kTotalRecovery: 'Total recovery', kBlendedRecovery: 'Blended recovery', kResidualEquity: 'Residual to equity',
+        thTranche: 'Tranche', thClaim: 'Claim', thRecovery: 'Recovery', thRecoveredPct: '% recovered', thShortfall: 'Shortfall',
+        trSenior: 'Senior (modeled)', trSub: 'Subordinated',
+        dscrTitle: 'Year-by-year DSCR',
+        dscrDesc: (floor: string) => (
+          <>
+            Crosses EBITDA (constant = input) with each year’s debt service across the current amortization and flags the years
+            that breach the covenant floor ({floor}x) — where cash tightens and the restructuring must act.
+          </>
+        ),
+        kMinDscr: 'Minimum DSCR', yearWord: 'year', kYearsBelow: 'Years below floor',
+        thEbitda: 'EBITDA', thService: 'Service',
+        beTitle: 'Rate break-even',
+        beDesc: (cap: string) => (
+          <>
+            Highest interest rate whose peak service still fits the affordable ceiling (EBITDA / coverage floor = {cap}).
+            It is the ceiling of the refinancing request: &ldquo;up to what rate can this asset bear&rdquo;.
+          </>
+        ),
+        kBeRate: 'Break-even rate', kPeakService: 'Peak service', kCurRate: 'Current rate',
+      }
+    : {
+        noteWhat: 'Reestruturação de dívida — desenha a tabela de amortização, testa cobertura e covenants e compara refinanciamento.',
+        noteUse: 'Escolha o sistema de amortização (bullet, linear/SAC ou francês/Price) e as taxas. O painel calcula DSCR/ICR, a folga de covenants (alavancagem e cobertura, com flag de quebra) e o VPL da economia de juros da proposta vs. a dívida atual. Use para defender um pedido de waiver ou uma tese de refinanciamento junto ao credor.',
+        fPrincipal: 'Principal', fEbitda: 'EBITDA anual', gCurrent: 'Dívida atual', fCurRate: 'Taxa atual (dec.)', fCurYears: 'Prazo atual (anos)', fCurType: 'Sistema atual',
+        gProposal: 'Proposta', fPropRate: 'Taxa proposta (dec.)', fPropYears: 'Prazo proposto (anos)', fPropType: 'Sistema proposto',
+        gCovenants: 'Covenants', fNetDebt: 'Dívida líquida', fMaxLev: 'Teto alavancagem (x)', fMinCov: 'Piso cobertura (x)', gDistressed: 'Distressed', fRecovery: 'Valor de recuperação',
+        optFrench: 'Francês (Price)', optLinear: 'Linear (SAC)', optBullet: 'Bullet',
+        kDscr1: 'DSCR (ano 1)', kIcr1: 'ICR (ano 1)', kLeverage: 'Alavancagem',
+        refiVerdictTitle: 'Veredito do refinanciamento', vRefi: 'Refinanciar', vKeep: 'Manter dívida atual', vIndiff: 'Indiferente',
+        rNpvSavings: 'VPL da economia de juros', rTotalSaved: 'Juros totais economizados', rAllInDelta: 'Δ custo all-in (nominal)',
+        svcTitle: 'Serviço da dívida — atual vs. proposta', svcA: 'Atual', svcB: 'Proposta',
+        svc1: 'Serviço 1º ano', svcAvg: 'Serviço médio/ano', svcTotal: 'Juros totais (vida)',
+        amortTitle: (f: string) => `Tabela de amortização — dívida atual (${f})`,
+        thYear: 'Ano', thOpenBal: 'Saldo inicial', thInterest: 'Juros', thAmort: 'Amortização', thPayment: 'Prestação', thCloseBal: 'Saldo final',
+        waterfallTitle: 'Cascata de recuperação (distressed)',
+        waterfallDesc: (
+          <>
+            Distribui o <strong>valor de recuperação</strong> (EV/colateral liquidado) entre credores por senioridade:
+            a tranche mais sênior é quitada antes de a próxima receber. Ajuste o valor de recuperação para ver quem é o
+            <em> fulcro</em> e quanto sobra ao equity.
+          </>
+        ),
+        kTotalRecovery: 'Recuperação total', kBlendedRecovery: 'Recuperação média', kResidualEquity: 'Resíduo ao equity',
+        thTranche: 'Tranche', thClaim: 'Claim', thRecovery: 'Recuperação', thRecoveredPct: '% recuperado', thShortfall: 'Shortfall',
+        trSenior: 'Sênior (modelada)', trSub: 'Subordinada',
+        dscrTitle: 'DSCR ano a ano',
+        dscrDesc: (floor: string) => (
+          <>
+            Cruza o EBITDA (constante = input) com o serviço da dívida de cada ano da amortização atual e sinaliza os anos
+            que furam o piso de covenant ({floor}x) — é onde o caixa aperta e a reestruturação precisa atuar.
+          </>
+        ),
+        kMinDscr: 'DSCR mínimo', yearWord: 'ano', kYearsBelow: 'Anos abaixo do piso',
+        thEbitda: 'EBITDA', thService: 'Serviço',
+        beTitle: 'Break-even da taxa',
+        beDesc: (cap: string) => (
+          <>
+            Maior taxa de juros cujo serviço de pico ainda cabe no teto acessível (EBITDA / piso de cobertura = {cap}).
+            É o teto do pedido de refinanciamento: &ldquo;até que taxa este ativo aguenta&rdquo;.
+          </>
+        ),
+        kBeRate: 'Taxa de equilíbrio', kPeakService: 'Serviço de pico', kCurRate: 'Taxa atual',
+      }
+
   // Comparativo de serviço anual: atual vs proposto (barras).
   const serviceRows = [
-    { label: 'Serviço 1º ano', a: refi.current.firstYearService, b: refi.proposed.firstYearService },
-    { label: 'Serviço médio/ano', a: refi.current.averageAnnualService, b: refi.proposed.averageAnnualService },
-    { label: 'Juros totais (vida)', a: refi.current.totalInterest, b: refi.proposed.totalInterest },
+    { label: L.svc1, a: refi.current.firstYearService, b: refi.proposed.firstYearService },
+    { label: L.svcAvg, a: refi.current.averageAnnualService, b: refi.proposed.averageAnnualService },
+    { label: L.svcTotal, a: refi.current.totalInterest, b: refi.proposed.totalInterest },
   ]
 
   const verdictColor = refi.verdict === 'refinanciar' ? '#1F9D6B' : refi.verdict === 'manter' ? '#B4462F' : '#0F141A'
 
   return (
     <div>
-      <PanelNote
-        what="Reestruturação de dívida — desenha a tabela de amortização, testa cobertura e covenants e compara refinanciamento."
-        use="Escolha o sistema de amortização (bullet, linear/SAC ou francês/Price) e as taxas. O painel calcula DSCR/ICR, a folga de covenants (alavancagem e cobertura, com flag de quebra) e o VPL da economia de juros da proposta vs. a dívida atual. Use para defender um pedido de waiver ou uma tese de refinanciamento junto ao credor." />
+      <PanelNote what={L.noteWhat} use={L.noteUse} />
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">
         <div className="grid grid-cols-2 gap-3 content-start">
-          <Field label="Principal" value={principal} onChange={setPrincipal} step={50} />
-          <Field label="EBITDA anual" value={ebitda} onChange={setEbitda} step={20} />
-          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">Dívida atual</div>
-          <Field label="Taxa atual (dec.)" value={curRate} onChange={setCurRate} step={0.005} />
-          <Field label="Prazo atual (anos)" value={curYears} onChange={setCurYears} />
-          <SelectField label="Sistema atual" value={curType} onChange={v => setCurType(v as AmortizationType)}
-            options={[{ v: 'french', l: 'Francês (Price)' }, { v: 'linear', l: 'Linear (SAC)' }, { v: 'bullet', l: 'Bullet' }]} />
-          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">Proposta</div>
-          <Field label="Taxa proposta (dec.)" value={propRate} onChange={setPropRate} step={0.005} />
-          <Field label="Prazo proposto (anos)" value={propYears} onChange={setPropYears} />
-          <SelectField label="Sistema proposto" value={propType} onChange={v => setPropType(v as AmortizationType)}
-            options={[{ v: 'french', l: 'Francês (Price)' }, { v: 'linear', l: 'Linear (SAC)' }, { v: 'bullet', l: 'Bullet' }]} />
-          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">Covenants</div>
-          <Field label="Dívida líquida" value={netDebt} onChange={setNetDebt} step={50} />
-          <Field label="Teto alavancagem (x)" value={maxLev} onChange={setMaxLev} step={0.25} />
-          <Field label="Piso cobertura (x)" value={minCov} onChange={setMinCov} step={0.05} />
-          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">Distressed</div>
-          <Field label="Valor de recuperação" value={recoveryValue} onChange={setRecoveryValue} step={50} />
+          <Field label={L.fPrincipal} value={principal} onChange={setPrincipal} step={50} />
+          <Field label={L.fEbitda} value={ebitda} onChange={setEbitda} step={20} />
+          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">{L.gCurrent}</div>
+          <Field label={L.fCurRate} value={curRate} onChange={setCurRate} step={0.005} />
+          <Field label={L.fCurYears} value={curYears} onChange={setCurYears} />
+          <SelectField label={L.fCurType} value={curType} onChange={v => setCurType(v as AmortizationType)}
+            options={[{ v: 'french', l: L.optFrench }, { v: 'linear', l: L.optLinear }, { v: 'bullet', l: L.optBullet }]} />
+          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">{L.gProposal}</div>
+          <Field label={L.fPropRate} value={propRate} onChange={setPropRate} step={0.005} />
+          <Field label={L.fPropYears} value={propYears} onChange={setPropYears} />
+          <SelectField label={L.fPropType} value={propType} onChange={v => setPropType(v as AmortizationType)}
+            options={[{ v: 'french', l: L.optFrench }, { v: 'linear', l: L.optLinear }, { v: 'bullet', l: L.optBullet }]} />
+          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">{L.gCovenants}</div>
+          <Field label={L.fNetDebt} value={netDebt} onChange={setNetDebt} step={50} />
+          <Field label={L.fMaxLev} value={maxLev} onChange={setMaxLev} step={0.25} />
+          <Field label={L.fMinCov} value={minCov} onChange={setMinCov} step={0.05} />
+          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">{L.gDistressed}</div>
+          <Field label={L.fRecovery} value={recoveryValue} onChange={setRecoveryValue} step={50} />
         </div>
 
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">DSCR (ano 1)</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kDscr1}</div>
               <div className="text-[24px] font-semibold text-accent">{Number.isFinite(cov.dscr) ? `${cov.dscr.toFixed(2)}x` : '∞'}</div>
             </div>
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">ICR (ano 1)</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kIcr1}</div>
               <div className="text-[24px] font-semibold text-ink-0">{Number.isFinite(cov.icr) ? `${cov.icr.toFixed(2)}x` : '∞'}</div>
             </div>
             <div className={`p-4 rounded-xl border ${covenant.anyBreach ? 'border-[#B4462F]/30 bg-[#FBEAE5]' : 'border-success/40 bg-success-bg'}`}>
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">Alavancagem</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kLeverage}</div>
               <div className="text-[24px] font-semibold" style={{ color: covenant.anyBreach ? '#B4462F' : '#1F9D6B' }}>{covenant.actualLeverage.toFixed(2)}x</div>
             </div>
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <div className="text-[11px] uppercase tracking-wider text-ink-6 mb-1">Veredito do refinanciamento</div>
+            <div className="text-[11px] uppercase tracking-wider text-ink-6 mb-1">{L.refiVerdictTitle}</div>
             <div className="text-[22px] font-semibold" style={{ color: verdictColor }}>
-              {refi.verdict === 'refinanciar' ? 'Refinanciar' : refi.verdict === 'manter' ? 'Manter dívida atual' : 'Indiferente'}
+              {refi.verdict === 'refinanciar' ? L.vRefi : refi.verdict === 'manter' ? L.vKeep : L.vIndiff}
             </div>
-            <Row k="VPL da economia de juros" v={brl(refi.npvInterestSavings)} strong />
-            <Row k="Juros totais economizados" v={brl(refi.totalInterestSaved)} />
-            <Row k="Δ custo all-in (nominal)" v={brl(refi.allInCostDelta)} />
+            <Row k={L.rNpvSavings} v={brl(refi.npvInterestSavings)} strong />
+            <Row k={L.rTotalSaved} v={brl(refi.totalInterestSaved)} />
+            <Row k={L.rAllInDelta} v={brl(refi.allInCostDelta)} />
             <p className="mt-2 text-[11px] text-ink-6 leading-relaxed">{refi.note}</p>
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">Serviço da dívida — atual vs. proposta</h3>
-            <BarComparison rows={serviceRows} seriesA="Atual" seriesB="Proposta" fmt={fmtCompact} />
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">{L.svcTitle}</h3>
+            <BarComparison rows={serviceRows} seriesA={L.svcA} seriesB={L.svcB} fmt={fmtCompact} />
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-2">Tabela de amortização — dívida atual ({curSched.formula})</h3>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-2">{L.amortTitle(curSched.formula)}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-[11.5px] font-mono">
                 <thead>
                   <tr className="text-ink-6 text-left">
-                    <th className="py-1 pr-2 font-medium">Ano</th>
-                    <th className="py-1 pr-2 font-medium text-right">Saldo inicial</th>
-                    <th className="py-1 pr-2 font-medium text-right">Juros</th>
-                    <th className="py-1 pr-2 font-medium text-right">Amortização</th>
-                    <th className="py-1 pr-2 font-medium text-right">Prestação</th>
-                    <th className="py-1 font-medium text-right">Saldo final</th>
+                    <th className="py-1 pr-2 font-medium">{L.thYear}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thOpenBal}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thInterest}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thAmort}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thPayment}</th>
+                    <th className="py-1 font-medium text-right">{L.thCloseBal}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -224,23 +316,19 @@ function DebtPanel() {
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">Cascata de recuperação (distressed)</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Distribui o <strong>valor de recuperação</strong> (EV/colateral liquidado) entre credores por senioridade:
-              a tranche mais sênior é quitada antes de a próxima receber. Ajuste o valor de recuperação para ver quem é o
-              <em> fulcro</em> e quanto sobra ao equity.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.waterfallTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.waterfallDesc}</p>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Recuperação total</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kTotalRecovery}</div>
                 <div className="text-[18px] font-semibold text-accent">{brl(waterfall.totalRecovery)}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Recuperação média</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kBlendedRecovery}</div>
                 <div className="text-[18px] font-semibold text-ink-0">{pct(waterfall.blendedRecoveryPct)}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Resíduo ao equity</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kResidualEquity}</div>
                 <div className="text-[18px] font-semibold text-success">{brl(waterfall.residual)}</div>
               </div>
             </div>
@@ -248,11 +336,11 @@ function DebtPanel() {
               <table className="w-full text-[11.5px] font-mono">
                 <thead>
                   <tr className="text-ink-6 text-left">
-                    <th className="py-1 pr-2 font-medium">Tranche</th>
-                    <th className="py-1 pr-2 font-medium text-right">Claim</th>
-                    <th className="py-1 pr-2 font-medium text-right">Recuperação</th>
-                    <th className="py-1 pr-2 font-medium text-right">% recuperado</th>
-                    <th className="py-1 font-medium text-right">Shortfall</th>
+                    <th className="py-1 pr-2 font-medium">{L.thTranche}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thClaim}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thRecovery}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thRecoveredPct}</th>
+                    <th className="py-1 font-medium text-right">{L.thShortfall}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -272,21 +360,18 @@ function DebtPanel() {
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">DSCR ano a ano</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Cruza o EBITDA (constante = input) com o serviço da dívida de cada ano da amortização atual e sinaliza os anos
-              que furam o piso de covenant ({minCov.toFixed(2)}x) — é onde o caixa aperta e a reestruturação precisa atuar.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.dscrTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.dscrDesc(minCov.toFixed(2))}</p>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">DSCR mínimo</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kMinDscr}</div>
                 <div className="text-[18px] font-semibold" style={{ color: dscrSched.anyBelowFloor ? '#B4462F' : '#1F9D6B' }}>
                   {Number.isFinite(dscrSched.minDscr) ? `${dscrSched.minDscr.toFixed(2)}x` : '∞'}
-                  {dscrSched.minDscrYear ? <span className="text-[11px] text-ink-6 font-normal"> · ano {dscrSched.minDscrYear}</span> : null}
+                  {dscrSched.minDscrYear ? <span className="text-[11px] text-ink-6 font-normal"> · {L.yearWord} {dscrSched.minDscrYear}</span> : null}
                 </div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Anos abaixo do piso</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kYearsBelow}</div>
                 <div className="text-[18px] font-semibold text-ink-0">{dscrSched.yearsBelowFloor.length}</div>
               </div>
             </div>
@@ -294,9 +379,9 @@ function DebtPanel() {
               <table className="w-full text-[11.5px] font-mono">
                 <thead>
                   <tr className="text-ink-6 text-left">
-                    <th className="py-1 pr-2 font-medium">Ano</th>
-                    <th className="py-1 pr-2 font-medium text-right">EBITDA</th>
-                    <th className="py-1 pr-2 font-medium text-right">Serviço</th>
+                    <th className="py-1 pr-2 font-medium">{L.thYear}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thEbitda}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thService}</th>
                     <th className="py-1 font-medium text-right">DSCR</th>
                   </tr>
                 </thead>
@@ -316,22 +401,19 @@ function DebtPanel() {
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">Break-even da taxa</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Maior taxa de juros cujo serviço de pico ainda cabe no teto acessível (EBITDA / piso de cobertura = {brl(minCov <= 0 ? ebitda : ebitda / minCov)}).
-              É o teto do pedido de refinanciamento: &ldquo;até que taxa este ativo aguenta&rdquo;.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.beTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.beDesc(brl(minCov <= 0 ? ebitda : ebitda / minCov))}</p>
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Taxa de equilíbrio</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kBeRate}</div>
                 <div className="text-[18px] font-semibold" style={{ color: beRate.feasible ? '#1F9D6B' : '#B4462F' }}>{pct(beRate.rate)}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Serviço de pico</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kPeakService}</div>
                 <div className="text-[18px] font-semibold text-ink-0">{brl(beRate.annualServicePeak)}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Taxa atual</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kCurRate}</div>
                 <div className="text-[18px] font-semibold" style={{ color: curRate <= beRate.rate ? '#1F9D6B' : '#B4462F' }}>{pct(curRate)}</div>
               </div>
             </div>
@@ -345,6 +427,7 @@ function DebtPanel() {
 
 // ── Aba 2: Revisão estratégica ──────────────────────────────────────────────
 function ReviewPanel() {
+  const { lang } = useLang()
   const [nopat, setNopat] = useState(200)
   const [revenue, setRevenue] = useState(2000)
   const [investedCapital, setInvestedCapital] = useState(1000)
@@ -366,88 +449,136 @@ function ReviewPanel() {
   }, [nopat, investedCapital, wacc])
 
   const verdictColor = spread.verdict === 'cria' ? '#1F9D6B' : spread.verdict === 'destroi' ? '#B4462F' : '#0F141A'
+  const en = lang === 'en'
+  const vLabel = (v: string) => v === 'cria' ? (en ? 'Creates value' : 'Cria valor') : v === 'destroi' ? (en ? 'Destroys value' : 'Destrói valor') : (en ? 'Neutral' : 'Neutro')
+  const L = en
+    ? {
+        noteWhat: 'Strategic review — measures whether the business creates or destroys value (ROIC vs. WACC) and guides capital allocation.',
+        noteUse: 'Enter NOPAT, invested capital, revenue and WACC. The panel computes the ROIC−WACC spread, EVA (economic profit), decomposes ROIC into margin × turnover (DuPont) and recommends reinvest, buy back or deleverage based on the spread and growth. Use it to support the capital allocation thesis at the board.',
+        fNopat: 'NOPAT', fRevenue: 'Revenue', fInvested: 'Invested capital', fWacc: 'WACC (dec.)', fGrowth: 'Growth (dec.)', fReinvest: 'Reinvestment rate (dec.)',
+        kRoic: 'ROIC', kSpread: 'Spread', kEva: 'EVA', verdictTitle: 'Verdict',
+        spreadTitle: 'ROIC vs. WACC (percentage points)', spreadRowLabel: 'ROIC vs. WACC',
+        allocTitle: 'Recommended capital allocation',
+        dupontTitle: 'DuPont decomposition of ROIC', rMargin: 'NOPAT margin', rTurnover: 'Capital turnover', rRoic: 'ROIC (margin × turnover)', rEconProfit: 'Economic profit (EVA)',
+        growthTitle: 'Value of growth',
+        growthDesc: (
+          <>
+            Reinvesting part of NOPAT (making profit grow at g = reinvestment rate × ROIC) only creates value if
+            ROIC exceeds WACC. Compares, over 10 years, the PV of reinvesting vs. returning all the capital.
+          </>
+        ),
+        kGrowthG: 'Growth (g)', kValueOfGrowth: 'Value of growth', kVerdict: 'Verdict',
+        sensTitle: 'Sensitivity to WACC',
+        sensDesc: (
+          <>
+            With ROIC fixed, it sweeps WACC around the current value: as the cost of capital rises, the spread and EVA
+            fall. The indifference point (EVA = 0) is where WACC = ROIC.
+          </>
+        ),
+        thWacc: 'WACC', thSpread: 'Spread', thEva: 'EVA', thRefValue: 'Ref. value (NOPAT/WACC)',
+      }
+    : {
+        noteWhat: 'Revisão estratégica — mede se o negócio cria ou destrói valor (ROIC vs. WACC) e orienta a alocação de capital.',
+        noteUse: 'Informe NOPAT, capital investido, receita e WACC. O painel calcula o spread ROIC−WACC, o EVA (economic profit), decompõe o ROIC em margem × giro (DuPont) e recomenda reinvestir, recomprar ou desalavancar conforme o spread e o crescimento. Use para embasar a tese de alocação de capital no board.',
+        fNopat: 'NOPAT', fRevenue: 'Receita', fInvested: 'Capital investido', fWacc: 'WACC (dec.)', fGrowth: 'Crescimento (dec.)', fReinvest: 'Taxa reinvestimento (dec.)',
+        kRoic: 'ROIC', kSpread: 'Spread', kEva: 'EVA', verdictTitle: 'Veredito',
+        spreadTitle: 'ROIC vs. WACC (pontos percentuais)', spreadRowLabel: 'ROIC vs. WACC',
+        allocTitle: 'Alocação de capital recomendada',
+        dupontTitle: 'Decomposição DuPont do ROIC', rMargin: 'Margem NOPAT', rTurnover: 'Giro de capital', rRoic: 'ROIC (margem × giro)', rEconProfit: 'Lucro econômico (EVA)',
+        growthTitle: 'Valor do crescimento',
+        growthDesc: (
+          <>
+            Reinvestir parte do NOPAT (fazendo o lucro crescer a g = taxa de reinvestimento × ROIC) só cria valor se o
+            ROIC superar o WACC. Compara, em 10 anos, o VP de reinvestir contra devolver todo o capital.
+          </>
+        ),
+        kGrowthG: 'Crescimento (g)', kValueOfGrowth: 'Valor do crescimento', kVerdict: 'Veredito',
+        sensTitle: 'Sensibilidade ao WACC',
+        sensDesc: (
+          <>
+            Com o ROIC fixo, varre o WACC em torno do valor atual: à medida que o custo de capital sobe, o spread e o EVA
+            caem. O ponto de indiferença (EVA = 0) é onde WACC = ROIC.
+          </>
+        ),
+        thWacc: 'WACC', thSpread: 'Spread', thEva: 'EVA', thRefValue: 'Valor ref. (NOPAT/WACC)',
+      }
 
   // Barras: ROIC vs WACC (escala em %). Reusa BarComparison em pontos percentuais.
-  const spreadRows = [{ label: 'ROIC vs. WACC', a: wacc * 100, b: spread.roic * 100 }]
+  const spreadRows = [{ label: L.spreadRowLabel, a: wacc * 100, b: spread.roic * 100 }]
 
   return (
     <div>
-      <PanelNote
-        what="Revisão estratégica — mede se o negócio cria ou destrói valor (ROIC vs. WACC) e orienta a alocação de capital."
-        use="Informe NOPAT, capital investido, receita e WACC. O painel calcula o spread ROIC−WACC, o EVA (economic profit), decompõe o ROIC em margem × giro (DuPont) e recomenda reinvestir, recomprar ou desalavancar conforme o spread e o crescimento. Use para embasar a tese de alocação de capital no board." />
+      <PanelNote what={L.noteWhat} use={L.noteUse} />
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
         <div className="grid grid-cols-2 gap-3 content-start">
-          <Field label="NOPAT" value={nopat} onChange={setNopat} step={10} />
-          <Field label="Receita" value={revenue} onChange={setRevenue} step={100} />
-          <Field label="Capital investido" value={investedCapital} onChange={setInvestedCapital} step={100} />
-          <Field label="WACC (dec.)" value={wacc} onChange={setWacc} step={0.005} />
-          <Field label="Crescimento (dec.)" value={growth} onChange={setGrowth} step={0.01} />
-          <Field label="Taxa reinvestimento (dec.)" value={reinvestmentRate} onChange={setReinvestmentRate} step={0.05} />
+          <Field label={L.fNopat} value={nopat} onChange={setNopat} step={10} />
+          <Field label={L.fRevenue} value={revenue} onChange={setRevenue} step={100} />
+          <Field label={L.fInvested} value={investedCapital} onChange={setInvestedCapital} step={100} />
+          <Field label={L.fWacc} value={wacc} onChange={setWacc} step={0.005} />
+          <Field label={L.fGrowth} value={growth} onChange={setGrowth} step={0.01} />
+          <Field label={L.fReinvest} value={reinvestmentRate} onChange={setReinvestmentRate} step={0.05} />
         </div>
 
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">ROIC</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kRoic}</div>
               <div className="text-[24px] font-semibold text-accent">{pct(spread.roic)}</div>
             </div>
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">Spread</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kSpread}</div>
               <div className="text-[24px] font-semibold" style={{ color: verdictColor }}>{pct(spread.spread)}</div>
             </div>
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">EVA</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kEva}</div>
               <div className="text-[24px] font-semibold text-ink-0">{brl(spread.eva)}</div>
             </div>
           </div>
 
           <div className={`p-4 rounded-xl border ${spread.verdict === 'cria' ? 'border-success/40 bg-success-bg' : spread.verdict === 'destroi' ? 'border-[#B4462F]/30 bg-[#FBEAE5]' : 'border-border-card bg-surface'}`}>
-            <div className="text-[11px] uppercase tracking-wider text-ink-6">Veredito</div>
+            <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.verdictTitle}</div>
             <div className="text-[22px] font-semibold" style={{ color: verdictColor }}>
-              {spread.verdict === 'cria' ? 'Cria valor' : spread.verdict === 'destroi' ? 'Destrói valor' : 'Neutro'}
+              {vLabel(spread.verdict)}
             </div>
             <p className="mt-1 text-[11px] text-ink-6 leading-relaxed">{spread.note}</p>
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">ROIC vs. WACC (pontos percentuais)</h3>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">{L.spreadTitle}</h3>
             <BarComparison rows={spreadRows} seriesA="WACC" seriesB="ROIC" fmt={(n) => `${n.toFixed(1)}%`} />
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-2">Alocação de capital recomendada</h3>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-2">{L.allocTitle}</h3>
             <div className="text-[18px] font-semibold text-accent capitalize">{alloc.recommendation}</div>
             <p className="mt-1 text-[11px] text-ink-6 leading-relaxed">{alloc.rationale}</p>
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">Decomposição DuPont do ROIC</h3>
-            <Row k="Margem NOPAT" v={pct(drivers.nopatMargin)} />
-            <Row k="Giro de capital" v={`${drivers.capitalTurnover.toFixed(2)}x`} />
-            <Row k="ROIC (margem × giro)" v={pct(drivers.roic)} strong />
-            <Row k="Lucro econômico (EVA)" v={brl(drivers.economicProfit)} />
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">{L.dupontTitle}</h3>
+            <Row k={L.rMargin} v={pct(drivers.nopatMargin)} />
+            <Row k={L.rTurnover} v={`${drivers.capitalTurnover.toFixed(2)}x`} />
+            <Row k={L.rRoic} v={pct(drivers.roic)} strong />
+            <Row k={L.rEconProfit} v={brl(drivers.economicProfit)} />
             <p className="mt-2 text-[11px] text-ink-6">{drivers.note}</p>
           </div>
 
           <div className={`p-4 rounded-xl border ${reinvest.verdict === 'cria' ? 'border-success/40 bg-success-bg' : reinvest.verdict === 'destroi' ? 'border-[#B4462F]/30 bg-[#FBEAE5]' : 'border-border-card bg-surface'}`}>
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">Valor do crescimento</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Reinvestir parte do NOPAT (fazendo o lucro crescer a g = taxa de reinvestimento × ROIC) só cria valor se o
-              ROIC superar o WACC. Compara, em 10 anos, o VP de reinvestir contra devolver todo o capital.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.growthTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.growthDesc}</p>
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Crescimento (g)</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kGrowthG}</div>
                 <div className="text-[18px] font-semibold text-accent">{pct(reinvest.growthRate)}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Valor do crescimento</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kValueOfGrowth}</div>
                 <div className="text-[18px] font-semibold" style={{ color: reinvest.createsValue ? '#1F9D6B' : reinvest.valueOfGrowth < 0 ? '#B4462F' : '#0F141A' }}>{brl(reinvest.valueOfGrowth)}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Veredito</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kVerdict}</div>
                 <div className="text-[18px] font-semibold capitalize" style={{ color: reinvest.verdict === 'cria' ? '#1F9D6B' : reinvest.verdict === 'destroi' ? '#B4462F' : '#0F141A' }}>
-                  {reinvest.verdict === 'cria' ? 'Cria valor' : reinvest.verdict === 'destroi' ? 'Destrói valor' : 'Neutro'}
+                  {vLabel(reinvest.verdict)}
                 </div>
               </div>
             </div>
@@ -455,19 +586,16 @@ function ReviewPanel() {
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">Sensibilidade ao WACC</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Com o ROIC fixo, varre o WACC em torno do valor atual: à medida que o custo de capital sobe, o spread e o EVA
-              caem. O ponto de indiferença (EVA = 0) é onde WACC = ROIC.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.sensTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.sensDesc}</p>
             <div className="overflow-x-auto">
               <table className="w-full text-[11.5px] font-mono">
                 <thead>
                   <tr className="text-ink-6 text-left">
-                    <th className="py-1 pr-2 font-medium">WACC</th>
-                    <th className="py-1 pr-2 font-medium text-right">Spread</th>
-                    <th className="py-1 pr-2 font-medium text-right">EVA</th>
-                    <th className="py-1 font-medium text-right">Valor ref. (NOPAT/WACC)</th>
+                    <th className="py-1 pr-2 font-medium">{L.thWacc}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thSpread}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thEva}</th>
+                    <th className="py-1 font-medium text-right">{L.thRefValue}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -492,6 +620,7 @@ function ReviewPanel() {
 
 // ── Aba 3: Planejamento de longo prazo ──────────────────────────────────────
 function PlanPanel() {
+  const { lang } = useLang()
   const [revenue0, setRevenue0] = useState(1000)
   const [years, setYears] = useState(5)
   const [growth, setGrowth] = useState(0.1)
@@ -524,50 +653,136 @@ function PlanPanel() {
   // Break-even do plano: primeiro ano em que o FCFF acumulado vira positivo (com interpolação).
   const beYear = useMemo(() => breakEvenYear(proj), [proj])
 
+  const en = lang === 'en'
+  const yearWord = en ? 'Year' : 'Ano'
+  const L = en
+    ? {
+        noteWhat: 'Long-range planning — projects revenue, EBITDA, capex, ΔNWC and FCFF across the strategic horizon.',
+        noteUse: 'Set growth, EBITDA margin and the capex and working-capital intensities. The panel projects FCFF year by year (FCFF = EBIT·(1−T) + D&A − capex − ΔNWC), accumulates free cash and runs pessimistic/base/optimistic scenarios. Use it to size investment capacity, funding need and the value the plan sustains.',
+        fRevenue0: 'Base-year revenue', fYears: 'Horizon (years)', fGrowth: 'Growth (dec.)', fMargin: 'EBITDA margin (dec.)', fCapex: 'Capex/Revenue (dec.)', fNwc: 'NWC/Revenue (dec.)', fTax: 'Tax (dec.)',
+        gValCash: 'Valuation & cash', fWacc: 'WACC (dec.)', fTermG: 'Terminal g (dec.)', fStartCash: 'Starting cash', fMinCash: 'Minimum cash',
+        kCumFcff: 'Cumulative FCFF', kRevCagr: 'Revenue CAGR', kFinalRev: 'Final revenue',
+        revFcffTitle: 'Revenue vs. FCFF per year', barA: 'Revenue', barB: 'FCFF', cagr: 'CAGR',
+        projTitle: (f: string) => `Multi-year projection (${f})`,
+        thYear: 'Year', thRevenue: 'Revenue', thEbitda: 'EBITDA', thCapex: 'Capex', thNwc: 'ΔNWC', thFcff: 'FCFF', thCumFcff: 'Cum. FCFF',
+        valTitle: 'Plan valuation',
+        valDesc: (
+          <>
+            Discounts the projected FCFF at the WACC and adds the Gordon terminal value — delivers the Enterprise Value the plan
+            sustains. The Gordon method requires WACC &gt; terminal g.
+          </>
+        ),
+        kEv: 'Enterprise Value', kPvExplicit: 'Explicit PV', kPvTerminal: 'Terminal PV',
+        valFallback: (w: string, g: string) => `Adjust the WACC (${w}) to be greater than the terminal g (${g}) — the Gordon terminal value diverges when WACC ≤ g.`,
+        fundTitle: 'Funding need',
+        fundDesc: (min: string) => (
+          <>
+            Accumulates cash (starting cash + FCFF) year by year and flags when it breaches the minimum cushion. The peak
+            need is how much to raise so cash never falls below {min}.
+          </>
+        ),
+        kPeakFunding: 'Peak funding', kLiquidityTrough: 'Liquidity trough', kYearsBelowMin: 'Years below minimum',
+        thCumCash: 'Cumulative cash',
+        fundBottom: (peak: string, trough: string, tYear: string, min: string) => funding.peakFundingNeed > 0
+          ? `Raise ${peak} to avoid breaching the minimum cushion (trough of ${trough} in year ${tYear}).`
+          : `Self-sufficient cash: the trough of ${trough} never falls below the minimum of ${min}. No funding needed.`,
+        beTitle: 'Plan break-even',
+        beDesc: (
+          <>
+            First year in which the plan’s cumulative FCFF turns positive (payback), with linear interpolation within the
+            crossing year.
+          </>
+        ),
+        kBeYear: 'Break-even year', beNotReached: 'Not reached', beYearFmt: (y: string) => `Year ${y}`,
+        beBottom: (y: string) => beYear == null
+          ? 'The cumulative FCFF never turns positive over the horizon — the plan does not pay for itself without additional levers.'
+          : `The plan’s cumulative free cash covers the initial investment around year ${y}.`,
+      }
+    : {
+        noteWhat: 'Planejamento de longo prazo — projeta receita, EBITDA, capex, ΔNWC e FCFF ao longo do horizonte estratégico.',
+        noteUse: 'Defina o crescimento, a margem EBITDA e as intensidades de capex e capital de giro. O painel projeta o FCFF ano a ano (FCFF = EBIT·(1−T) + D&A − capex − ΔNWC), acumula o caixa livre e roda cenários pessimista/base/otimista. Use para dimensionar capacidade de investimento, necessidade de captação e o valor sustentado pelo plano.',
+        fRevenue0: 'Receita ano-base', fYears: 'Horizonte (anos)', fGrowth: 'Crescimento (dec.)', fMargin: 'Margem EBITDA (dec.)', fCapex: 'Capex/Receita (dec.)', fNwc: 'NWC/Receita (dec.)', fTax: 'Imposto (dec.)',
+        gValCash: 'Valuation & caixa', fWacc: 'WACC (dec.)', fTermG: 'g terminal (dec.)', fStartCash: 'Caixa inicial', fMinCash: 'Caixa mínimo',
+        kCumFcff: 'FCFF acumulado', kRevCagr: 'CAGR receita', kFinalRev: 'Receita final',
+        revFcffTitle: 'Receita vs. FCFF por ano', barA: 'Receita', barB: 'FCFF', cagr: 'CAGR',
+        projTitle: (f: string) => `Projeção plurianual (${f})`,
+        thYear: 'Ano', thRevenue: 'Receita', thEbitda: 'EBITDA', thCapex: 'Capex', thNwc: 'ΔNWC', thFcff: 'FCFF', thCumFcff: 'FCFF acum.',
+        valTitle: 'Valuation do plano',
+        valDesc: (
+          <>
+            Desconta o FCFF projetado ao WACC e soma o valor terminal de Gordon — entrega o Enterprise Value que o plano
+            sustenta. O método de Gordon exige WACC &gt; g terminal.
+          </>
+        ),
+        kEv: 'Enterprise Value', kPvExplicit: 'PV explícito', kPvTerminal: 'PV terminal',
+        valFallback: (w: string, g: string) => `Ajuste o WACC (${w}) para ser maior que o g terminal (${g}) — o valor terminal de Gordon diverge quando WACC ≤ g.`,
+        fundTitle: 'Necessidade de captação',
+        fundDesc: (min: string) => (
+          <>
+            Acumula o caixa (caixa inicial + FCFF) ano a ano e sinaliza quando ele fura o colchão mínimo. O pico de
+            necessidade é quanto captar para que o caixa nunca caia abaixo de {min}.
+          </>
+        ),
+        kPeakFunding: 'Pico de captação', kLiquidityTrough: 'Vale de liquidez', kYearsBelowMin: 'Anos abaixo do mínimo',
+        thCumCash: 'Caixa acumulado',
+        fundBottom: (peak: string, trough: string, tYear: string, min: string) => funding.peakFundingNeed > 0
+          ? `Captação de ${peak} para não furar o colchão mínimo (vale de ${trough} no ano ${tYear}).`
+          : `Caixa autossuficiente: o vale de ${trough} nunca cai abaixo do mínimo de ${min}. Sem necessidade de captação.`,
+        beTitle: 'Break-even do plano',
+        beDesc: (
+          <>
+            Primeiro ano em que o FCFF acumulado do plano vira positivo (payback), com interpolação linear dentro do ano
+            de cruzamento.
+          </>
+        ),
+        kBeYear: 'Ano de break-even', beNotReached: 'Não atinge', beYearFmt: (y: string) => `Ano ${y}`,
+        beBottom: (y: string) => beYear == null
+          ? 'O FCFF acumulado nunca fica positivo no horizonte — o plano não se paga sem alavancas adicionais.'
+          : `O caixa livre acumulado do plano cobre o investimento inicial por volta do ano ${y}.`,
+      }
+
   // Barras: receita vs. FCFF por ano.
-  const rows = proj.rows.map(r => ({ label: `Ano ${r.year}`, a: r.revenue, b: r.fcff }))
+  const rows = proj.rows.map(r => ({ label: `${yearWord} ${r.year}`, a: r.revenue, b: r.fcff }))
   const scenColor: Record<string, string> = { bear: '#B4462F', base: '#0B3A78', bull: '#1F9D6B' }
 
   return (
     <div>
-      <PanelNote
-        what="Planejamento de longo prazo — projeta receita, EBITDA, capex, ΔNWC e FCFF ao longo do horizonte estratégico."
-        use="Defina o crescimento, a margem EBITDA e as intensidades de capex e capital de giro. O painel projeta o FCFF ano a ano (FCFF = EBIT·(1−T) + D&A − capex − ΔNWC), acumula o caixa livre e roda cenários pessimista/base/otimista. Use para dimensionar capacidade de investimento, necessidade de captação e o valor sustentado pelo plano." />
+      <PanelNote what={L.noteWhat} use={L.noteUse} />
       <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5">
         <div className="grid grid-cols-2 gap-3 content-start">
-          <Field label="Receita ano-base" value={revenue0} onChange={setRevenue0} step={100} />
-          <Field label="Horizonte (anos)" value={years} onChange={setYears} />
-          <Field label="Crescimento (dec.)" value={growth} onChange={setGrowth} step={0.01} />
-          <Field label="Margem EBITDA (dec.)" value={margin} onChange={setMargin} step={0.01} />
-          <Field label="Capex/Receita (dec.)" value={capexPct} onChange={setCapexPct} step={0.01} />
-          <Field label="NWC/Receita (dec.)" value={nwcPct} onChange={setNwcPct} step={0.01} />
-          <Field label="Imposto (dec.)" value={tax} onChange={setTax} step={0.01} />
-          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">Valuation & caixa</div>
-          <Field label="WACC (dec.)" value={planWacc} onChange={setPlanWacc} step={0.005} />
-          <Field label="g terminal (dec.)" value={terminalGrowth} onChange={setTerminalGrowth} step={0.005} />
-          <Field label="Caixa inicial" value={startingCash} onChange={setStartingCash} step={25} />
-          <Field label="Caixa mínimo" value={minCash} onChange={setMinCash} step={25} />
+          <Field label={L.fRevenue0} value={revenue0} onChange={setRevenue0} step={100} />
+          <Field label={L.fYears} value={years} onChange={setYears} />
+          <Field label={L.fGrowth} value={growth} onChange={setGrowth} step={0.01} />
+          <Field label={L.fMargin} value={margin} onChange={setMargin} step={0.01} />
+          <Field label={L.fCapex} value={capexPct} onChange={setCapexPct} step={0.01} />
+          <Field label={L.fNwc} value={nwcPct} onChange={setNwcPct} step={0.01} />
+          <Field label={L.fTax} value={tax} onChange={setTax} step={0.01} />
+          <div className="col-span-2 mt-1 text-[10px] uppercase tracking-wider text-ink-6 font-semibold">{L.gValCash}</div>
+          <Field label={L.fWacc} value={planWacc} onChange={setPlanWacc} step={0.005} />
+          <Field label={L.fTermG} value={terminalGrowth} onChange={setTerminalGrowth} step={0.005} />
+          <Field label={L.fStartCash} value={startingCash} onChange={setStartingCash} step={25} />
+          <Field label={L.fMinCash} value={minCash} onChange={setMinCash} step={25} />
         </div>
 
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">FCFF acumulado</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kCumFcff}</div>
               <div className="text-[24px] font-semibold text-accent">{brl(proj.cumulativeFcff)}</div>
             </div>
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">CAGR receita</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kRevCagr}</div>
               <div className="text-[24px] font-semibold text-success">{pct(proj.revenueCagr)}</div>
             </div>
             <div className="p-4 rounded-xl border border-border-card bg-surface">
-              <div className="text-[11px] uppercase tracking-wider text-ink-6">Receita final</div>
+              <div className="text-[11px] uppercase tracking-wider text-ink-6">{L.kFinalRev}</div>
               <div className="text-[24px] font-semibold text-ink-0">{brl(proj.rows.length ? proj.rows[proj.rows.length - 1].revenue : revenue0)}</div>
             </div>
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">Receita vs. FCFF por ano</h3>
-            <BarComparison rows={rows} seriesA="Receita" seriesB="FCFF" fmt={fmtCompact} />
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-3">{L.revFcffTitle}</h3>
+            <BarComparison rows={rows} seriesA={L.barA} seriesB={L.barB} fmt={fmtCompact} />
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -575,24 +790,24 @@ function PlanPanel() {
               <div key={s.name} className="p-4 rounded-xl border border-border-card bg-surface">
                 <div className="text-[11px] uppercase tracking-wider" style={{ color: scenColor[s.name] }}>{s.label}</div>
                 <div className="text-[20px] font-semibold text-ink-0">{brl(s.cumulativeFcff)}</div>
-                <div className="text-[11px] text-ink-5">CAGR {pct(s.revenueCagr)}</div>
+                <div className="text-[11px] text-ink-5">{L.cagr} {pct(s.revenueCagr)}</div>
               </div>
             ))}
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-2">Projeção plurianual ({proj.formula})</h3>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-2">{L.projTitle(proj.formula)}</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-[11.5px] font-mono">
                 <thead>
                   <tr className="text-ink-6 text-left">
-                    <th className="py-1 pr-2 font-medium">Ano</th>
-                    <th className="py-1 pr-2 font-medium text-right">Receita</th>
-                    <th className="py-1 pr-2 font-medium text-right">EBITDA</th>
-                    <th className="py-1 pr-2 font-medium text-right">Capex</th>
-                    <th className="py-1 pr-2 font-medium text-right">ΔNWC</th>
-                    <th className="py-1 pr-2 font-medium text-right">FCFF</th>
-                    <th className="py-1 font-medium text-right">FCFF acum.</th>
+                    <th className="py-1 pr-2 font-medium">{L.thYear}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thRevenue}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thEbitda}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thCapex}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thNwc}</th>
+                    <th className="py-1 pr-2 font-medium text-right">{L.thFcff}</th>
+                    <th className="py-1 font-medium text-right">{L.thCumFcff}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -613,51 +828,45 @@ function PlanPanel() {
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">Valuation do plano</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Desconta o FCFF projetado ao WACC e soma o valor terminal de Gordon — entrega o Enterprise Value que o plano
-              sustenta. O método de Gordon exige WACC &gt; g terminal.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.valTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.valDesc}</p>
             {valuation ? (
               <>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                    <div className="text-[10px] uppercase tracking-wider text-ink-6">Enterprise Value</div>
+                    <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kEv}</div>
                     <div className="text-[18px] font-semibold text-accent">{brl(valuation.enterpriseValue)}</div>
                   </div>
                   <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                    <div className="text-[10px] uppercase tracking-wider text-ink-6">PV explícito</div>
+                    <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kPvExplicit}</div>
                     <div className="text-[18px] font-semibold text-ink-0">{brl(valuation.pvExplicit)}</div>
                   </div>
                   <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                    <div className="text-[10px] uppercase tracking-wider text-ink-6">PV terminal</div>
+                    <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kPvTerminal}</div>
                     <div className="text-[18px] font-semibold text-ink-0">{brl(valuation.pvTerminal)}</div>
                   </div>
                 </div>
                 <p className="mt-2 text-[11px] text-ink-6 leading-relaxed">{valuation.formula}</p>
               </>
             ) : (
-              <p className="text-[12px] text-[#B4462F]">Ajuste o WACC ({pct(planWacc)}) para ser maior que o g terminal ({pct(terminalGrowth)}) — o valor terminal de Gordon diverge quando WACC ≤ g.</p>
+              <p className="text-[12px] text-[#B4462F]">{L.valFallback(pct(planWacc), pct(terminalGrowth))}</p>
             )}
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">Necessidade de captação</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Acumula o caixa (caixa inicial + FCFF) ano a ano e sinaliza quando ele fura o colchão mínimo. O pico de
-              necessidade é quanto captar para que o caixa nunca caia abaixo de {brl(minCash)}.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.fundTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.fundDesc(brl(minCash))}</p>
             <div className="grid grid-cols-3 gap-3 mb-3">
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Pico de captação</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kPeakFunding}</div>
                 <div className="text-[18px] font-semibold" style={{ color: funding.peakFundingNeed > 0 ? '#B4462F' : '#1F9D6B' }}>{brl(funding.peakFundingNeed)}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Vale de liquidez</div>
-                <div className="text-[18px] font-semibold text-ink-0">{brl(funding.troughCash)}{funding.troughYear ? <span className="text-[11px] text-ink-6 font-normal"> · ano {funding.troughYear}</span> : null}</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kLiquidityTrough}</div>
+                <div className="text-[18px] font-semibold text-ink-0">{brl(funding.troughCash)}{funding.troughYear ? <span className="text-[11px] text-ink-6 font-normal"> · {yearWord.toLowerCase()} {funding.troughYear}</span> : null}</div>
               </div>
               <div className="p-3 rounded-lg border border-border-card bg-app-bg">
-                <div className="text-[10px] uppercase tracking-wider text-ink-6">Anos abaixo do mínimo</div>
+                <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kYearsBelowMin}</div>
                 <div className="text-[18px] font-semibold text-ink-0">{funding.breachYears.length}</div>
               </div>
             </div>
@@ -665,9 +874,9 @@ function PlanPanel() {
               <table className="w-full text-[11.5px] font-mono">
                 <thead>
                   <tr className="text-ink-6 text-left">
-                    <th className="py-1 pr-2 font-medium">Ano</th>
+                    <th className="py-1 pr-2 font-medium">{L.thYear}</th>
                     <th className="py-1 pr-2 font-medium text-right">FCFF</th>
-                    <th className="py-1 font-medium text-right">Caixa acumulado</th>
+                    <th className="py-1 font-medium text-right">{L.thCumCash}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -682,28 +891,21 @@ function PlanPanel() {
               </table>
             </div>
             <p className="mt-2 text-[11px] text-ink-6 leading-relaxed">
-              {funding.peakFundingNeed > 0
-                ? `Captação de ${brl(funding.peakFundingNeed)} para não furar o colchão mínimo (vale de ${brl(funding.troughCash)} no ano ${funding.troughYear ?? '—'}).`
-                : `Caixa autossuficiente: o vale de ${brl(funding.troughCash)} nunca cai abaixo do mínimo de ${brl(minCash)}. Sem necessidade de captação.`}
+              {L.fundBottom(brl(funding.peakFundingNeed), brl(funding.troughCash), String(funding.troughYear ?? '—'), brl(minCash))}
             </p>
           </div>
 
           <div className="p-4 rounded-xl border border-border-card bg-surface">
-            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">Break-even do plano</h3>
-            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">
-              Primeiro ano em que o FCFF acumulado do plano vira positivo (payback), com interpolação linear dentro do ano
-              de cruzamento.
-            </p>
+            <h3 className="text-[12px] font-semibold text-ink-1 mb-1">{L.beTitle}</h3>
+            <p className="text-[11px] text-ink-6 mb-3 leading-relaxed">{L.beDesc}</p>
             <div className="p-3 rounded-lg border border-border-card bg-app-bg inline-block">
-              <div className="text-[10px] uppercase tracking-wider text-ink-6">Ano de break-even</div>
+              <div className="text-[10px] uppercase tracking-wider text-ink-6">{L.kBeYear}</div>
               <div className="text-[18px] font-semibold" style={{ color: beYear == null ? '#B4462F' : '#1F9D6B' }}>
-                {beYear == null ? 'Não atinge' : `Ano ${beYear.toFixed(1)}`}
+                {beYear == null ? L.beNotReached : L.beYearFmt(beYear.toFixed(1))}
               </div>
             </div>
             <p className="mt-2 text-[11px] text-ink-6 leading-relaxed">
-              {beYear == null
-                ? 'O FCFF acumulado nunca fica positivo no horizonte — o plano não se paga sem alavancas adicionais.'
-                : `O caixa livre acumulado do plano cobre o investimento inicial por volta do ano ${beYear.toFixed(1)}.`}
+              {L.beBottom(beYear == null ? '' : beYear.toFixed(1))}
             </p>
           </div>
         </div>
@@ -713,9 +915,11 @@ function PlanPanel() {
 }
 
 function AdvisoryWorkbench() {
+  const { lang } = useLang()
   const searchParams = useSearchParams()
   const urlTab = searchParams.get('tab')
   const [tab, setTab] = useState<Tab>(isTab(urlTab) ? urlTab : 'divida')
+  const tabLabel = tabLabels(lang)
 
   // Os 3 itens do menu apontam para a MESMA rota /advisory mudando só o ?tab=. O Next
   // navega client-side sem remontar o componente, então sincronizamos a aba quando o
@@ -734,26 +938,37 @@ function AdvisoryWorkbench() {
               <Scale size={18} className="text-white" />
             </div>
             <div>
-              <h1 className="text-[20px] font-semibold text-ink-0 leading-tight">Assessoria Estratégica</h1>
-              <p className="text-[12.5px] text-ink-5">Além do M&A — reestruturação de dívida, revisão estratégica e planejamento de longo prazo. Motor determinístico e auditável.</p>
+              <h1 className="text-[20px] font-semibold text-ink-0 leading-tight">{lang === 'en' ? 'Strategic Advisory' : 'Assessoria Estratégica'}</h1>
+              <p className="text-[12.5px] text-ink-5">{lang === 'en' ? 'Beyond M&A — debt restructuring, strategic review and long-range planning. Deterministic, auditable engine.' : 'Além do M&A — reestruturação de dívida, revisão estratégica e planejamento de longo prazo. Motor determinístico e auditável.'}</p>
             </div>
           </div>
 
           <div className="mb-5 flex items-start gap-2.5 rounded-lg border border-accent-over/40 bg-accent-soft px-4 py-3">
             <Info size={15} className="text-accent mt-0.5 shrink-0" />
             <p className="text-[12px] text-ink-3 leading-relaxed">
-              <strong>Sobre este workbench:</strong> estende a plataforma da assessoria de fusões e aquisições para o
-              ciclo completo de <strong>advisory estratégico</strong>. Todos os campos são <strong>premissas editáveis</strong> —
-              um <em>sandbox</em> analítico, não um cliente específico. Cada resultado mostra a fórmula usada: o motor é
-              exato e auditável (nunca &ldquo;a IA estimou&rdquo;).
+              {lang === 'en' ? (
+                <>
+                  <strong>About this workbench:</strong> extends the M&A advisory platform to the full
+                  cycle of <strong>strategic advisory</strong>. Every field is an <strong>editable assumption</strong> —
+                  an analytical <em>sandbox</em>, not a specific client. Each result shows the formula used: the engine is
+                  exact and auditable (never &ldquo;the AI estimated&rdquo;).
+                </>
+              ) : (
+                <>
+                  <strong>Sobre este workbench:</strong> estende a plataforma da assessoria de fusões e aquisições para o
+                  ciclo completo de <strong>advisory estratégico</strong>. Todos os campos são <strong>premissas editáveis</strong> —
+                  um <em>sandbox</em> analítico, não um cliente específico. Cada resultado mostra a fórmula usada: o motor é
+                  exato e auditável (nunca &ldquo;a IA estimou&rdquo;).
+                </>
+              )}
             </p>
           </div>
 
           <div className="flex gap-1 mb-5 border-b border-border-div">
-            {TABS.map(({ key, label, icon: Icon }) => (
+            {TABS.map(({ key, icon: Icon }) => (
               <button key={key} onClick={() => setTab(key)}
                 className={`flex items-center gap-1.5 px-3.5 py-2 text-[12.5px] font-medium border-b-2 -mb-px transition-colors ${tab === key ? 'border-accent text-accent' : 'border-transparent text-ink-5 hover:text-ink-3'}`}>
-                <Icon size={14} /> {label}
+                <Icon size={14} /> {tabLabel[key]}
               </button>
             ))}
           </div>

@@ -5,6 +5,8 @@ import { NavSidebar } from '@/components/NavSidebar'
 import { Plus, Folder, Clock, Users, X } from 'lucide-react'
 import { useLang } from '@/lib/lang'
 import { getT } from '@/lib/i18n'
+import { StatTiles } from '@/components/charts/StatTiles'
+import type { Tone } from '@/components/charts/chartUtils'
 
 type ProjType = 'pre_deal' | 'pmi'
 
@@ -67,6 +69,17 @@ export default function ProjetosPage() {
   useEffect(() => { load() }, [])
 
   const activeCount = projects.filter(p => p.status === 'ativo').length
+  const preDealCount = projects.filter(p => p.type === 'pre_deal').length
+  const pmiCount = projects.filter(p => p.type === 'pmi').length
+  const PL = lang === 'en'
+    ? { total: 'Projects', active: 'Active', preDeal: 'Pre-deal', pmi: 'PMI' }
+    : { total: 'Projetos', active: 'Ativos', preDeal: 'Pré-deal', pmi: 'PMI' }
+  const portfolioTiles = [
+    { label: PL.total, value: projects.length, tone: 'accent' as Tone },
+    { label: PL.active, value: activeCount, tone: activeCount > 0 ? ('success' as Tone) : ('neutral' as Tone) },
+    { label: PL.preDeal, value: preDealCount, tone: 'info' as Tone },
+    { label: PL.pmi, value: pmiCount, tone: 'neutral' as Tone },
+  ]
 
   const statusLabel = (s?: string) => {
     if (s === 'ativo') return t.statusActive
@@ -95,6 +108,7 @@ export default function ProjetosPage() {
         </div>
 
         <div className="px-8 py-6 space-y-3">
+          <div className="mb-3"><StatTiles tiles={portfolioTiles} /></div>
           {projects.map(proj => (
             <Link
               key={proj.id}

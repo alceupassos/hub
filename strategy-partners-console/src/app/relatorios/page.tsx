@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { NavSidebar } from '@/components/NavSidebar'
 import { AGENTS } from '@/lib/agents'
-import { BarChart2, MessageSquare, Zap, TrendingUp } from 'lucide-react'
+import { BarChart2, MessageSquare, Zap, TrendingUp, DollarSign, Clock } from 'lucide-react'
 import { useLang } from '@/lib/lang'
 import { useAgentConfig } from '@/lib/agent-config'
 import { getT } from '@/lib/i18n'
@@ -11,6 +11,9 @@ interface Stats {
   totalSessions: number
   avgLatencyMs: number | null
   reasoningPct: number
+  totalCostBrl: number
+  totalTokens: number
+  totalAnalystHours: number
   topAgents: { agentId: string; sessions: number }[]
 }
 
@@ -51,6 +54,9 @@ export default function RelatoriosPage() {
     { label: t.agentsActive,   value: String(activeAgents), delta: `${t.of} ${AGENTS.length}`, icon: Zap, color: '#10B981' },
     { label: t.avgLatency,     value: stats?.avgLatencyMs != null ? `${(stats.avgLatencyMs / 1000).toFixed(2)}s` : '1.42s', delta: live ? '' : '-8%', icon: TrendingUp, color: '#F97316' },
     { label: t.reasoningUsed,  value: stats ? `${stats.reasoningPct}%` : '23%', delta: t.ofSessions, icon: BarChart2, color: '#8B5CF6' },
+    // Custo IA total (compute) e esforço humano equivalente — o argumento de valor da frota.
+    { label: lang === 'en' ? 'Total AI cost' : 'Custo IA total', value: stats ? `R$ ${stats.totalCostBrl.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}` : 'R$ 42,80', delta: live ? '' : (lang === 'en' ? 'demo' : 'demonstração'), icon: DollarSign, color: '#0EA5E9' },
+    { label: lang === 'en' ? 'Equivalent effort' : 'Esforço equivalente', value: stats ? `${Math.round(stats.totalAnalystHours).toLocaleString('pt-BR')}h` : '318h', delta: live ? '' : (lang === 'en' ? 'demo' : 'demonstração'), icon: Clock, color: '#E11D48' },
   ]
 
   return (

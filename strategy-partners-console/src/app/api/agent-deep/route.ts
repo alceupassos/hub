@@ -3,14 +3,28 @@ import { AGENTS } from '@/lib/agents'
 import { buildPersonaContent } from '@/lib/server/persona'
 import { IDENTITY_GUARD, detectPromptInjection } from '@/lib/server/security'
 import { logSecurityEvent } from '@/lib/server/security-events'
-import { anthropicTiersEnabled, resolveAnthropicModel } from '@/lib/modelTiers'
+import { anthropicTiersEnabled, resolveAnthropicModel, tierOf } from '@/lib/modelTiers'
 import { callAnthropic } from '@/lib/server/providers/anthropic'
 import { logExecution } from '@/lib/server/execution-log'
 import { buildGrounding } from '@/lib/server/grounding'
 import { requireRole } from '@/lib/auth/rbac'
+import { classifyTask, estimateCost, type CostResult } from '@/lib/server/costModel'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
+// Subconjunto do CostResult devolvido ao cliente (Inspector). Sem nome de provedor.
+function costPayload(c: CostResult, lang: 'pt' | 'en') {
+  return {
+    computeCostUsd: c.computeCostUsd,
+    computeCostBrl: c.computeCostBrl,
+    analystHoursEquivalent: c.analystHoursEquivalent,
+    analystCostBrl: c.analystCostBrl,
+    savingsMultiple: c.savingsMultiple,
+    taskLabel: lang === 'en' ? c.taskLabelEn : c.taskLabel,
+    tokens: c.tokens,
+  }
+}
 
 export async function POST(req: NextRequest) {
   const { ok } = await requireRole(['admin', 'partner', 'analyst', 'client_viewer'])
@@ -65,8 +79,14 @@ export async function POST(req: NextRequest) {
         messages: [{ role: 'user', content: userPrompt }],
         maxTokens: 4000,
       })
-      void logExecution({ agentId, route: 'api/agent-deep', question, responsePreview: text, modelUsed: resolveAnthropicModel(agent) })
-      return Response.json({ agentId, response: text })
+      const cost = estimateCost({
+        taskType: classifyTask({ route: 'api/agent-deep' }),
+        tier: tierOf(agent),
+        agentCount: 1,
+        realOutputTokens: undefined,
+      })
+      void logExecution({ agentId, route: 'api/agent-deep', question, responsePreview: text, modelUsed: resolveAnthropicModel(agent), taskType: cost.taskType, tokensOutput: cost.tokens, costBrl: cost.computeCostBrl, analystHoursEq: cost.analystHoursEquivalent })
+      return Response.json({ agentId, response: text, cost: costPayload(cost, lang) })
     } catch (err) {
       console.error('[agent-deep] anthropic error:', err)
       return Response.json({ error: 'Serviço de IA indisponível (camada Anthropic). Tente novamente em instantes.' }, { status: 502 })
@@ -102,9 +122,17 @@ export async function POST(req: NextRequest) {
 
   const data = (await upstream.json()) as {
     choices?: { message?: { content?: string } }[]
+    usage?: { completion_tokens?: number }
   }
   const response = data.choices?.[0]?.message?.content ?? ''
 
-  void logExecution({ agentId, route: 'api/agent-deep', question, responsePreview: response, modelUsed: model })
-  return Response.json({ agentId, response })
+  const cost = estimateCost({
+    taskType: classifyTask({ route: 'api/agent-deep' }),
+    tier: tierOf(agent),
+    agentCount: 1,
+    realOutputTokens: data.usage?.completion_tokens ?? undefined,
+  })
+
+  void logExecution({ agentId, route: 'api/agent-deep', question, responsePreview: response, modelUsed: model, taskType: cost.taskType, tokensOutput: cost.tokens, costBrl: cost.computeCostBrl, analystHoursEq: cost.analystHoursEquivalent })
+  return Response.json({ agentId, response, cost: costPayload(cost, lang) })
 }
