@@ -17,6 +17,7 @@ import type { Agent } from '@/lib/types'
 import type { Tab, Model, VerifyResult, VerifyState, AgentSelectionResult } from '@/lib/types'
 import { useLang } from '@/lib/lang'
 import { useAgentConfig } from '@/lib/agent-config'
+import { useAgentSuggestionsPref } from '@/lib/prefs'
 import { getT } from '@/lib/i18n'
 
 // fetch com timeout — garante que uma requisição travada não deixe a análise pendurada para sempre
@@ -126,6 +127,8 @@ export default function ConsolePage() {
   // Sugestões de especialistas adicionais para o desafio atual. Aceitar liga a
   // participação (models.on); dispensar/aceitar apenas remove da lista local.
   const [recommendations, setRecommendations] = useState<AgentRecommendation[]>([])
+  // Flag (default OFF): o orquestrador só propõe especialistas extras se o usuário optar.
+  const [suggestionsOn, setSuggestionsOn] = useAgentSuggestionsPref()
 
   const activeModels = models.filter(m => m.on)
   const activeCount = activeModels.length
@@ -168,6 +171,13 @@ export default function ConsolePage() {
       return next
     })
     setRecommendations([])
+  }
+
+  // Liga/desliga as sugestões do orquestrador. Ao ligar dentro do painel, revela
+  // imediatamente as recomendações já calculadas para este desafio (sem refetch).
+  const toggleSuggestions = (on: boolean) => {
+    setSuggestionsOn(on)
+    setRecommendations(on ? (agentSelection?.recommendations ?? []) : [])
   }
 
   function buildEnrichedQuestion(original: string, questions: string[], answers: string[]): string {
@@ -231,7 +241,8 @@ export default function ConsolePage() {
       })
       const data = (await res.json()) as AgentSelectionResult
       setAgentSelection(data)
-      setRecommendations(data.recommendations ?? [])
+      // Recomendações só aparecem se a flag estiver ligada (padrão desligado).
+      setRecommendations(suggestionsOn ? (data.recommendations ?? []) : [])
       setSelectionPhase('ready')
     } catch {
       setAgentSelection({ selected: activeModels.map(m => m.id), excluded: [] })
@@ -437,8 +448,11 @@ export default function ConsolePage() {
         <AgentSelectionModal
           selected={agentSelection.selected}
           excluded={agentSelection.excluded}
+          recommendations={agentSelection.recommendations ?? []}
           allAgents={enabledAgents}
           lang={lang}
+          suggestionsOn={suggestionsOn}
+          onToggleSuggestions={toggleSuggestions}
           onConfirm={handleSelectionConfirm}
           onCancel={() => { setSelectionPhase('idle'); setDiscoveryPhase('idle') }}
         />

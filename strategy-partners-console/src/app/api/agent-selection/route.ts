@@ -1,4 +1,11 @@
 import { NextRequest } from 'next/server'
+import {
+  focusSelection,
+  capSelected,
+  MAX_SELECTED,
+  type AgentLite,
+  type Recommendation,
+} from '@/lib/server/agentFocus'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,7 +18,8 @@ Return a JSON object with exactly three keys:
 - "recommendations": array of objects { "agentId": string, "reason": string } — the subset of "selected" that most moves the needle for THIS challenge, each with a concise POSITIVE justification of why this specialist matters here (e.g. detected regulatory risk → "risco regulatório BACen/CVM no caminho crítico"; detected debt → "estrutura de capital e custo de dívida")
 
 Rules:
-- Be decisive — exclude agents clearly outside the question's domain
+- Assemble a FOCUSED team: 3 to 6 agents in "selected" — the smallest set that fully covers THIS challenge. A boutique deploys the right specialists, never the whole firm. NEVER select everyone.
+- Be decisive — exclude every agent clearly outside the question's domain
 - A question about sales should not involve security or programming agents, for example
 - "recommendations" must reference only agent IDs that are also in "selected", ordered by relevance, at most 6 entries
 - Each "reason" (excluded and recommendations) must be 12 words or fewer
@@ -33,9 +41,6 @@ Example (Portuguese question):
     { "agentId": "corsario", "reason": "qualificação de pipeline e ICP" }
   ]
 }`
-
-type AgentLite = { id: string; name: string; role: string; category: string }
-type Recommendation = { agentId: string; reason: string }
 
 // ── Model-name masking (safety net) ───────────────────────────────────────────
 // Reasons describe business domains, but never let a provider/model name reach the UI —
@@ -170,16 +175,22 @@ export async function POST(req: NextRequest) {
     lang?: 'pt' | 'en'
   }
 
-  const heuristic = heuristicRecommendations(question ?? '', agents ?? [], lang)
+  const q = question ?? ''
+  const roster = agents ?? []
+  const heuristic = heuristicRecommendations(q, roster, lang)
+  const heurIds = heuristic.map(r => r.agentId)
+
+  // Focused fallback — a small relevant team, never the whole roster. Everyone
+  // not on the team goes to the opt-in column (no negative "excluded" reason).
+  const focused = () => {
+    const { selected, recommendations } = focusSelection(roster, heuristic)
+    const selSet = new Set(selected)
+    const excluded = roster.filter(a => !selSet.has(a.id)).map(a => ({ id: a.id, reason: '' }))
+    return Response.json({ selected, excluded, recommendations })
+  }
 
   const apiKey = process.env.DEEPSEEK_API_KEY
-  if (!apiKey || !agents.length) {
-    return Response.json({
-      selected: agents.map(a => a.id),
-      excluded: [],
-      recommendations: heuristic,
-    })
-  }
+  if (!apiKey || !roster.length) return focused()
 
   const chatModel = process.env.DEEPSEEK_MODEL_CHAT ?? 'deepseek-chat'
   const langHint =
@@ -210,12 +221,10 @@ export async function POST(req: NextRequest) {
       }),
     })
   } catch {
-    return Response.json({ selected: agents.map(a => a.id), excluded: [], recommendations: heuristic })
+    return focused()
   }
 
-  if (!upstream.ok) {
-    return Response.json({ selected: agents.map(a => a.id), excluded: [], recommendations: heuristic })
-  }
+  if (!upstream.ok) return focused()
 
   const data = (await upstream.json()) as {
     choices?: { message?: { content?: string } }[]
@@ -230,30 +239,38 @@ export async function POST(req: NextRequest) {
       recommendations?: { agentId: string; reason: string }[]
     }
     if (Array.isArray(parsed.selected) && Array.isArray(parsed.excluded)) {
-      // Ensure selected has at least 1 agent (fallback to all if LLM is too aggressive)
-      const sel = parsed.selected.filter(id => agents.some(a => a.id === id))
-      const exc = parsed.excluded
-        .filter(e => agents.some(a => a.id === e.id))
-        .map(e => ({ id: e.id, reason: maskNames(e.reason ?? '') }))
-      if (sel.length >= 1) {
+      const rawSel = parsed.selected.filter(id => agents.some(a => a.id === id))
+      if (rawSel.length >= 1) {
+        // Recommendations first (they order the focus), then cap the team so the
+        // model can never hand back the whole firm.
+        const recIds = Array.isArray(parsed.recommendations)
+          ? parsed.recommendations.filter(r => r && typeof r.agentId === 'string').map(r => r.agentId)
+          : []
+        const sel = capSelected(rawSel, recIds, heurIds, roster)
         const selSet = new Set(sel)
-        // Recommendations must reference selected agents; mask names; drop empties.
+        // Everyone off the focused team becomes opt-in. Keep the model's negative
+        // reason only when it's still relevant (agent was in the model's excluded list).
+        const excReason = new Map(
+          parsed.excluded
+            .filter(e => agents.some(a => a.id === e.id))
+            .map(e => [e.id, maskNames(e.reason ?? '')] as const),
+        )
+        const exc = roster
+          .filter(a => !selSet.has(a.id))
+          .map(a => ({ id: a.id, reason: excReason.get(a.id) ?? '' }))
+        // Recommendations must reference the focused team; mask names; drop empties; cap.
         let recs = Array.isArray(parsed.recommendations)
           ? parsed.recommendations
               .filter(r => r && typeof r.agentId === 'string' && selSet.has(r.agentId))
               .map(r => ({ agentId: r.agentId, reason: maskNames(r.reason ?? '') }))
               .filter(r => r.reason.length > 0)
-              .slice(0, 6)
+              .slice(0, MAX_SELECTED)
           : []
-        // If the model gave no usable recommendations, fall back to the heuristic
-        // (restricted to agents the model kept in "selected").
-        if (recs.length === 0) {
-          recs = heuristic.filter(r => selSet.has(r.agentId))
-        }
+        if (recs.length === 0) recs = heuristic.filter(r => selSet.has(r.agentId))
         return Response.json({ selected: sel, excluded: exc, recommendations: recs })
       }
     }
   } catch { /* fall through */ }
 
-  return Response.json({ selected: agents.map(a => a.id), excluded: [], recommendations: heuristic })
+  return focused()
 }

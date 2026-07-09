@@ -19,6 +19,36 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.12',
+    date: '2026-07-09',
+    title: {
+      pt: 'Time enxuto por caso, leitura por passagem do mouse e log ao vivo',
+      en: 'Lean case team, hover-to-read and live activity log',
+    },
+    summary: {
+      pt: 'A seleção de agentes passou a montar um time focado no desafio (não a frota inteira), as conclusões de cada especialista ficaram legíveis com leitura ao passar o mouse, e a espera ganhou um registro de atividade em tempo real.',
+      en: 'Agent selection now assembles a team focused on the challenge (not the whole fleet), each specialist’s conclusion is now legible with hover-to-read, and the wait gained a real-time activity log.',
+    },
+    highlights: [
+      {
+        pt: 'Time enxuto por caso: o orquestrador monta um time focado (3 a 6 especialistas) para o desafio, em vez de acionar todos — os demais ficam disponíveis para incluir com um clique. Fim da seleção com a frota inteira marcada.',
+        en: 'Lean case team: the orchestrator assembles a focused team (3 to 6 specialists) for the challenge instead of activating everyone — the rest stay available to add with one click. No more selection with the whole fleet pre-checked.',
+      },
+      {
+        pt: 'Sugestões do orquestrador com liga/desliga (desligado por padrão): quando ativadas, o sistema aponta especialistas extras que reforçam o caso, cada um com a justificativa de por que está no time.',
+        en: 'Orchestrator suggestions with an on/off switch (off by default): when enabled, the system points out extra specialists that strengthen the case, each with a reason why it is on the team.',
+      },
+      {
+        pt: 'Conclusões legíveis: os cartões de cada especialista deixaram de sobrepor texto e passaram a mostrar um resumo limpo; ao passar o mouse abre-se um painel grande com a conclusão completa e o atalho para aprofundar — sem precisar abrir cada um.',
+        en: 'Legible conclusions: each specialist’s card no longer overlaps text and shows a clean summary; hovering opens a large panel with the full conclusion and a shortcut to go deeper — without opening each one.',
+      },
+      {
+        pt: 'Registro de atividade ao vivo: durante o processamento, uma linha em tempo real mostra qual especialista está trabalhando e no quê, para a espera ter movimento em vez de uma tela parada.',
+        en: 'Live activity log: while processing, a real-time line shows which specialist is working and on what, so the wait has motion instead of a frozen screen.',
+      },
+    ],
+  },
+  {
     version: '1.11',
     date: '2026-07-09',
     title: {

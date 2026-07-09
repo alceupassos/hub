@@ -7,6 +7,7 @@ import type { Model, VerifyState } from '@/lib/types'
 import type { Translations } from '@/lib/i18n'
 import { AGENTS } from '@/lib/agents'
 import { useAgentConfig } from '@/lib/agent-config'
+import { useLang } from '@/lib/lang'
 
 interface Props {
   activeModels: Model[]
@@ -77,6 +78,69 @@ function renderMd(raw: string): string {
   }).join('\n')
 
   return s
+}
+
+// ── Plain-text excerpt ─────────────────────────────────────────────────────────
+// The card body must never render block markdown (tables/headers/lists) inside a
+// line-clamp box — clamped blocks overlap and look broken ("texto sobreposto").
+// So we flatten markdown to a clean, readable excerpt for cards and hover peeks.
+function toExcerpt(raw: string, max = 320): string {
+  let s = (raw ?? '').replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  s = s.replace(/^\s*\|.*\|\s*$/gm, ' ')            // drop table rows
+  s = s.replace(/^\s*#{1,6}\s+/gm, '')              // header markers
+  s = s.replace(/^\s*[-•*]\s+/gm, '• ')             // bullets → middot
+  s = s.replace(/^\s*\d+\.\s+/gm, '• ')             // ordered → middot
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '$1').replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1')
+  s = s.replace(/`([^`]+)`/g, '$1')                 // inline code
+  s = s.replace(/^[\s>]*ℹ\s*/, '').replace(/^[\s>]*⏳\s*/, '')
+  s = s.replace(/\n{2,}/g, '  ·  ').replace(/\n/g, ' ').replace(/\s{2,}/g, ' ').trim()
+  if (s.length > max) s = s.slice(0, max).replace(/\s+\S*$/, '') + '…'
+  return s
+}
+
+// ── Live action ticker ─────────────────────────────────────────────────────────
+// Reassuring "viewlog" line shown WHILE agents run — cycles through the specialists
+// currently working so the wait reads as motion, not a frozen screen.
+function actionVerb(category: string, lang: 'pt' | 'en'): string {
+  const pt: Record<string, string> = {
+    financeiro: 'modelando estrutura de capital', vendas: 'mapeando pipeline e mercado',
+    segurança: 'varrendo riscos e compliance', programação: 'avaliando arquitetura técnica',
+    conhecimento: 'cruzando evidências e fontes', chat: 'consolidando a leitura',
+  }
+  const en: Record<string, string> = {
+    financeiro: 'modeling capital structure', vendas: 'mapping pipeline and market',
+    segurança: 'scanning risk and compliance', programação: 'assessing technical architecture',
+    conhecimento: 'cross-checking evidence and sources', chat: 'consolidating the read',
+  }
+  return (lang === 'en' ? en : pt)[category] ?? (lang === 'en' ? 'analyzing' : 'analisando')
+}
+
+function ActionTicker({ models, loadingMap, lang }: {
+  models: Model[]
+  loadingMap: Record<string, boolean>
+  lang: 'pt' | 'en'
+}) {
+  const running = models.filter(m => loadingMap[m.id])
+  const [idx, setIdx] = useState(0)
+  useEffect(() => {
+    if (running.length === 0) return
+    const id = setInterval(() => setIdx(i => i + 1), 1400)
+    return () => clearInterval(id)
+  }, [running.length])
+  if (running.length === 0) return null
+  const m = running[idx % running.length]
+  const agent = AGENTS.find(a => a.id === m.id)
+  const verb = actionVerb(agent?.category ?? 'conhecimento', lang)
+  return (
+    <div className="flex items-center gap-2 min-w-0" aria-live="polite">
+      <span className="font-mono text-[9px] text-ink-7 uppercase tracking-wider shrink-0">log</span>
+      <span className="w-[5px] h-[5px] rounded-full shrink-0 animate-pulse" style={{ backgroundColor: m.dot }} />
+      <span key={idx} className="text-[10.5px] text-ink-5 truncate ticker-line">
+        <span className="font-medium text-ink-3">{m.name}</span> {verb}
+        <span className="ticker-dots"><span>.</span><span>.</span><span>.</span></span>
+      </span>
+    </div>
+  )
 }
 
 // ── Verification Badge ─────────────────────────────────────────────────────────
@@ -434,9 +498,13 @@ function ModelCard({
     )
   }
 
+  const excerpt = toExcerpt(txt, 300)
+  const peekText = toExcerpt(txt, 900)
+  const canPeek = revealed && !noMetrics && peekText.length > excerpt.length - 1
+
   return (
     <div
-      className={`bg-surface border border-border-card rounded-[10px] p-[14px] flex flex-col gap-3 ${
+      className={`group relative bg-surface border border-border-card rounded-[10px] p-[14px] flex flex-col gap-3 ${
         revealed ? 'cursor-pointer hover:border-[var(--card-accent)] hover:shadow-sm transition-all duration-200' : ''
       }`}
       style={{
@@ -460,16 +528,39 @@ function ModelCard({
         )}
         {revealed && !noMetrics && verify && <VerifyBadge verify={verify} />}
         {revealed && !noMetrics && (
-          <span className="ml-auto font-mono text-[9px] text-ink-7 hover:text-accent transition-colors">
+          <span className="ml-auto font-mono text-[9px] text-ink-7 group-hover:text-accent transition-colors">
             aprofundar →
           </span>
         )}
       </div>
 
-      <div
-        className="text-[12px] text-ink-5 leading-[1.65] flex-1 line-clamp-6"
-        dangerouslySetInnerHTML={{ __html: model.text ? renderMd(model.text) : '' }}
-      />
+      {/* Clean plain-text excerpt — no block markdown inside the clamp (no overlap) */}
+      <p className="text-[12px] text-ink-5 leading-[1.65] flex-1 line-clamp-5 whitespace-pre-line">
+        {excerpt}
+      </p>
+
+      {/* Hover peek — read the full conclusion without opening the modal per card */}
+      {canPeek && (
+        <div className="agent-peek absolute left-0 right-0 top-full z-50 pt-2">
+          <div className="bg-surface border border-border-card rounded-[12px] shadow-2xl p-4"
+            style={{ borderColor: `${model.dot}55` }}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: model.dot }} />
+              <span className="text-[12px] font-semibold text-ink-0">{model.name}</span>
+              <span className="ml-auto font-mono text-[9px] text-ink-7">{agent?.role}</span>
+            </div>
+            <p className="text-[12px] text-ink-3 leading-[1.7] whitespace-pre-line max-h-[240px] overflow-y-auto">
+              {peekText}
+            </p>
+            <button
+              onClick={e => { e.stopPropagation(); onClick?.() }}
+              className="mt-3 w-full flex items-center justify-center gap-[6px] text-[11px] font-medium text-accent border border-accent/30 rounded-[8px] py-[7px] hover:bg-accent-soft transition-colors"
+            >
+              <Brain size={12} /> Aprofundar com Reasoner →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Barra de confiança — só quando há análise real (não em fora de escopo / timeout) */}
       {!noMetrics && (
@@ -816,6 +907,7 @@ export function ComparareView({
   synthesis, synthLoading, participatingIds,
 }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const { lang } = useLang()
 
   const isLive = Boolean(liveQuestion)
   const displayQuestion = liveQuestion || 'Devemos acelerar a expansão para o México no Q3, considerando o cenário cambial atual?'
@@ -845,15 +937,19 @@ export function ComparareView({
   return (
     <>
       <div className="space-y-4">
-        {/* Status banner */}
+        {/* Status banner + live action ticker (viewlog WOW) */}
         {loadingCount > 0 && (
           <div className="flex items-center gap-3 rounded-[10px] border border-accent/25 bg-accent-soft px-4 py-[10px] animate-fadeIn">
             <Loader2 size={14} className="animate-spin text-accent shrink-0" />
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-[12px] font-semibold text-accent leading-tight">
-                Time mobilizado — {loadingCount} {loadingCount === 1 ? 'agente' : 'agentes'} em análise paralela
+                {lang === 'en'
+                  ? `Team mobilized — ${loadingCount} ${loadingCount === 1 ? 'agent' : 'agents'} in parallel analysis`
+                  : `Time mobilizado — ${loadingCount} ${loadingCount === 1 ? 'agente' : 'agentes'} em análise paralela`}
               </p>
-              <p className="text-[11px] text-ink-6 truncate leading-tight mt-[1px]">{displayQuestion}</p>
+              <div className="mt-[3px]">
+                <ActionTicker models={activeModels} loadingMap={agentLoading ?? {}} lang={lang === 'en' ? 'en' : 'pt'} />
+              </div>
             </div>
           </div>
         )}

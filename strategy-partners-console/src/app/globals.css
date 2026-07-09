@@ -207,6 +207,38 @@ body {
 .dot-2 { animation: dotBounce 1.2s ease-in-out infinite 160ms; }
 .dot-3 { animation: dotBounce 1.2s ease-in-out infinite 320ms; }
 
+/* Agent card hover peek — read the full conclusion without opening a modal per card.
+   Hidden by default; revealed on card hover with a short intent delay. */
+.agent-peek {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0s linear 0.18s;
+}
+.group:hover > .agent-peek {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: opacity 0.2s ease 0.35s, transform 0.2s ease 0.35s, visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .agent-peek { transition: none; transform: none; }
+  .group:hover > .agent-peek { transition: none; }
+}
+
+/* Live action ticker line ("viewlog") — enters as if streaming in */
+@keyframes tickerIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+.ticker-line { display: inline-flex; align-items: center; }
+.ticker-dots span { opacity: 0.35; }
+@media (prefers-reduced-motion: no-preference) {
+  .ticker-line { animation: tickerIn 0.35s ease; }
+  .ticker-dots span { animation: dotBounce 1.2s ease-in-out infinite; }
+  .ticker-dots span:nth-child(2) { animation-delay: 0.16s; }
+  .ticker-dots span:nth-child(3) { animation-delay: 0.32s; }
+}
+
 /* ── A Frota — entrada escalonada + halo (guarda de reduced-motion) ── */
 @keyframes frotaRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes frotaHalo { 0%,100% { opacity: 0.18; r: 52px; } 50% { opacity: 0.34; r: 58px; } }

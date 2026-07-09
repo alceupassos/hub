@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { CheckCircle2, XCircle, Plus, Minus, Users } from 'lucide-react'
+import { CheckCircle2, XCircle, Users, Sparkles } from 'lucide-react'
 import type { Agent } from '@/lib/types'
 import { useAgentConfig } from '@/lib/agent-config'
 
@@ -9,11 +9,19 @@ interface ExcludedEntry {
   reason: string
 }
 
+interface Recommendation {
+  agentId: string
+  reason: string
+}
+
 interface Props {
   selected: string[]
   excluded: ExcludedEntry[]
+  recommendations?: Recommendation[]
   allAgents: Agent[]
   lang: 'pt' | 'en'
+  suggestionsOn?: boolean
+  onToggleSuggestions?: (on: boolean) => void
   onConfirm: (finalIds: string[]) => void
   onCancel: () => void
 }
@@ -21,37 +29,46 @@ interface Props {
 const L = {
   pt: {
     title: 'Painel de Controle — Seleção de Agentes',
-    subtitle: 'Analisamos a questão e selecionamos os agentes mais relevantes. Ajuste conforme necessário.',
-    colSelected: 'Serão chamados',
-    colExcluded: 'Não selecionados',
+    subtitle: 'Montamos um time enxuto e focado para este desafio. Ajuste como preferir.',
+    colSelected: 'Time do caso',
+    colExcluded: 'Disponíveis para incluir',
     btnInclude: '+ Incluir',
     btnRemove: '− Remover',
     actionAll: 'Todos',
-    actionRecommended: 'Recomendados',
+    actionRecommended: 'Time focado',
     cta: (n: number) => `Iniciar análise com ${n} agente${n !== 1 ? 's' : ''}`,
     cancel: 'Cancelar',
     reason: 'Motivo:',
+    suggestLabel: 'Sugestões do orquestrador',
+    suggestHint: 'O orquestrador aponta, com justificativa, especialistas extras que reforçam este caso.',
+    whyHere: 'Por que está no time',
   },
   en: {
     title: 'Control Panel — Agent Selection',
-    subtitle: 'We analyzed the question and selected the most relevant agents. Adjust as needed.',
-    colSelected: 'Will be called',
-    colExcluded: 'Not selected',
+    subtitle: 'We assembled a lean, focused team for this challenge. Adjust as you prefer.',
+    colSelected: 'Case team',
+    colExcluded: 'Available to add',
     btnInclude: '+ Include',
     btnRemove: '− Remove',
     actionAll: 'All',
-    actionRecommended: 'Recommended',
+    actionRecommended: 'Focused team',
     cta: (n: number) => `Run analysis with ${n} agent${n !== 1 ? 's' : ''}`,
     cancel: 'Cancel',
     reason: 'Reason:',
+    suggestLabel: 'Orchestrator suggestions',
+    suggestHint: 'The orchestrator points out extra specialists that strengthen this case, with a reason.',
+    whyHere: 'Why on the team',
   },
 }
 
 export function AgentSelectionModal({
   selected,
   excluded,
+  recommendations = [],
   allAgents,
   lang,
+  suggestionsOn = false,
+  onToggleSuggestions,
   onConfirm,
   onCancel,
 }: Props) {
@@ -60,6 +77,8 @@ export function AgentSelectionModal({
   const [included, setIncluded] = useState<Set<string>>(() => new Set(selected))
 
   const recommendedIds = new Set(selected)
+  // Map agentId → reason ("why on the team"), shown as a subtle rationale per pick.
+  const reasonById = new Map(recommendations.map(r => [r.agentId, r.reason] as const))
 
   function include(id: string) {
     setIncluded(prev => new Set([...prev, id]))
@@ -105,19 +124,42 @@ export function AgentSelectionModal({
           </div>
           <div className="flex items-center gap-[6px] shrink-0 mt-[2px]">
             <button
-              onClick={selectAll}
-              className="px-[10px] py-[5px] rounded-lg border border-border-input text-[11.5px] text-ink-4 hover:bg-hover-bg transition-colors"
-            >
-              {t.actionAll}
-            </button>
-            <button
               onClick={selectRecommended}
               className="px-[10px] py-[5px] rounded-lg border border-accent/40 text-[11.5px] text-accent hover:bg-accent-soft transition-colors"
             >
               {t.actionRecommended}
             </button>
+            <button
+              onClick={selectAll}
+              className="px-[10px] py-[5px] rounded-lg border border-border-input text-[11.5px] text-ink-4 hover:bg-hover-bg transition-colors"
+            >
+              {t.actionAll}
+            </button>
           </div>
         </div>
+
+        {/* Suggestions toggle — orchestrator proposes extra specialists (off by default) */}
+        {onToggleSuggestions && (
+          <div className="shrink-0 px-[22px] py-[10px] border-b border-border-base flex items-center justify-between gap-4 bg-track/40">
+            <div className="min-w-0">
+              <div className="flex items-center gap-[6px]">
+                <Sparkles size={13} className={suggestionsOn ? 'text-accent shrink-0' : 'text-ink-6 shrink-0'} />
+                <span className="text-[12px] font-medium text-ink-2">{t.suggestLabel}</span>
+              </div>
+              <p className="text-[10.5px] text-ink-6 mt-[2px] leading-snug pr-2">{t.suggestHint}</p>
+            </div>
+            <button
+              role="switch"
+              aria-checked={suggestionsOn}
+              onClick={() => onToggleSuggestions(!suggestionsOn)}
+              className={`relative shrink-0 w-[38px] h-[21px] rounded-full transition-colors ${suggestionsOn ? 'bg-accent' : 'bg-border-input'}`}
+            >
+              <span
+                className={`absolute top-[2px] w-[17px] h-[17px] rounded-full bg-white shadow-sm transition-all ${suggestionsOn ? 'left-[19px]' : 'left-[2px]'}`}
+              />
+            </button>
+          </div>
+        )}
 
         {/* Body — two columns */}
         <div className="flex-1 min-h-0 overflow-y-auto grid grid-cols-2 divide-x divide-border-base">
@@ -145,7 +187,13 @@ export function AgentSelectionModal({
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-[12.5px] font-medium text-ink-1 truncate">{getDisplayName(agent.id)}</p>
-                  <p className="text-[10.5px] text-ink-6 truncate">{agent.role}</p>
+                  {suggestionsOn && reasonById.get(agent.id) ? (
+                    <p className="text-[10.5px] text-accent/90 truncate" title={reasonById.get(agent.id)}>
+                      {reasonById.get(agent.id)}
+                    </p>
+                  ) : (
+                    <p className="text-[10.5px] text-ink-6 truncate">{agent.role}</p>
+                  )}
                 </div>
                 <button
                   onClick={() => remove(agent.id)}
