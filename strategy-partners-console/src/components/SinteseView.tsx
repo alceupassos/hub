@@ -6,6 +6,7 @@ import type { Translations } from '@/lib/i18n'
 import { isPrincipal } from '@/lib/agentTiers'
 import { DeliverableButtons } from '@/components/DeliverableButtons'
 import { SynthesisPulse } from '@/components/SynthesisPulse'
+import { PitchPlayer } from '@/components/PitchPlayer'
 
 interface Props {
   activeModels: Model[]
@@ -75,6 +76,9 @@ export function SinteseView({ activeModels, agentConf, question, synthesis, synt
       {!synthLoading && synthesis && (
         <div className="border-t border-border-foot pt-4">
           <DeliverableButtons data={{ dealName: question ? question.slice(0, 60) : 'Mandato', synthesis }} />
+          <div className="mt-4 pt-4 border-t border-border-soft">
+            <PitchPlayer source={synthesis} />
+          </div>
         </div>
       )}
 

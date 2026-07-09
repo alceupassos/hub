@@ -19,6 +19,32 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.11',
+    date: '2026-07-09',
+    title: {
+      pt: 'Torre de Comando, apresentação falada e cronograma do deal',
+      en: 'Command Tower, spoken briefing and deal timeline',
+    },
+    summary: {
+      pt: 'O portfólio ganhou uma visão única com alertas, a síntese passou a poder ser apresentada em voz natural, e o processo do deal ganhou um cronograma com caminho crítico.',
+      en: 'The portfolio gained a single command view with alerts, the synthesis can now be presented in a natural voice, and the deal process gained a timeline with a critical path.',
+    },
+    highlights: [
+      {
+        pt: 'Torre de Comando: painel único do portfólio — KPIs, divisão por recomendação, mapa score × valor e alertas automáticos (score baixo em estágio avançado, deal sem score, no-go ainda ativo).',
+        en: 'Command Tower: a single portfolio panel — KPIs, recommendation split, score × value map and automatic alerts (low score in advanced stage, unscored deal, no-go still active).',
+      },
+      {
+        pt: 'Apresentação falada: o orquestrador transforma a síntese num roteiro de pitch de ~3 minutos e o apresenta em voz natural, pronto para o comitê.',
+        en: 'Spoken briefing: the orchestrator turns the synthesis into a ~3-minute pitch script and reads it aloud in a natural voice, ready for the committee.',
+      },
+      {
+        pt: 'Cronograma do deal: calendário sourcing → fechamento com duração e responsável por fase e o caminho crítico destacado (a diligence como principal gargalo).',
+        en: 'Deal timeline: sourcing → closing calendar with each phase’s duration and owner and the critical path highlighted (diligence as the main bottleneck).',
+      },
+    ],
+  },
+  {
     version: '1.10',
     date: '2026-07-09',
     title: {

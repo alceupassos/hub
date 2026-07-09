@@ -16,13 +16,13 @@ interface Props {
 
 const STEPS: Record<'pt' | 'en', string[]> = {
   pt: [
-    'Reunindo respostas da frota',
+    'Reunindo respostas do time',
     'Cruzando riscos',
     'Triangulando valuation',
     'Redigindo o memorando',
   ],
   en: [
-    'Gathering the fleet responses',
+    'Gathering the team responses',
     'Cross-checking risks',
     'Triangulating valuation',
     'Drafting the memorandum',
@@ -30,8 +30,8 @@ const STEPS: Record<'pt' | 'en', string[]> = {
 }
 
 const COPY = {
-  pt: { synth: 'sintetizando', heading: 'A frota está trabalhando' },
-  en: { synth: 'synthesizing', heading: 'The fleet is at work' },
+  pt: { synth: 'sintetizando', heading: 'O time está trabalhando' },
+  en: { synth: 'synthesizing', heading: 'The team is at work' },
 } as const
 
 /**

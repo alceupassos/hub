@@ -95,7 +95,7 @@ export default function ComparativoPage() {
       }
     : {
         title: 'Comparativo de ROI do Processo de M&A',
-        subA: 'com a frota de IA Angra', subB: 'abordagem tradicional',
+        subA: 'com o time de IA Angra', subB: 'abordagem tradicional',
         subTail: '. Pré-deal e pós-deal.',
         baseTitle: 'Base do cálculo:',
         baseBody: (
@@ -104,7 +104,7 @@ export default function ComparativoPage() {
             esforço do <strong>processo completo de M&A</strong>, decomposto em workstreams (sourcing, triagem, valuation, diligence,
             memorando de IC, negociação no pré-deal; plano de 100 dias, sinergias, retenção e reporting no pós-deal). Cada workstream
             tem uma <strong>carga de horas e um prazo de referência</strong> de mesa de boutique, e um <strong>fator de compressão</strong>{' '}
-            que estima quanto do esforço a frota de IA acelera. Os quatro parâmetros abaixo (taxa horária, nº de alvos, custo do sistema,
+            que estima quanto do esforço o time de IA acelera. Os quatro parâmetros abaixo (taxa horária, nº de alvos, custo do sistema,
             duração e complexidade do dataroom) são <strong>editáveis</strong> — ajuste-os ao seu mandato e os gráficos e o balanço recalculam na hora.
           </>
         ),
@@ -122,11 +122,11 @@ export default function ComparativoPage() {
         thWorkstream: 'Workstream', thPhase: 'Fase', thTradHours: 'Horas trad.', thAiHours: 'Horas IA',
         thTradCost: 'Custo trad.', thAiCost: 'Custo IA', thDaysSaved: 'Dias poupados',
         execTitle: 'Leitura executiva — o balanço',
-        execSub: 'A soma dos ganhos e das contrapartidas de adotar a frota de IA neste mandato.',
+        execSub: 'A soma dos ganhos e das contrapartidas de adotar o time de IA neste mandato.',
         bottomLine: 'Linha de fundo:',
         bottomBody: (saved: string, p: string, days: number) => (
           <>
-            no cenário atual, a frota de IA Angra entrega o processo de M&A por{' '}
+            no cenário atual, o time de IA Angra entrega o processo de M&A por{' '}
             <strong className="text-success">{saved}</strong> a menos ({p}) e{' '}
             <strong className="text-accent">{days} dias</strong> mais rápido, preservando o julgamento do sócio nas etapas que exigem relação humana.
           </>

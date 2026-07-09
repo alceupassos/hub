@@ -4,7 +4,7 @@ export default function LandPage() {
       <iframe
         src="/land/land.html"
         style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-        title="Strategy Partners — Frota de Agentes Especializados de IA"
+        title="Strategy Partners — Time de Agentes Especializados de IA"
       />
     </div>
   )
