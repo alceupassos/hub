@@ -19,6 +19,32 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.07',
+    date: '2026-07-09',
+    title: {
+      pt: 'Profundidade analítica nas áreas de advisory',
+      en: 'Analytical depth across the advisory areas',
+    },
+    summary: {
+      pt: 'As três áreas de assessoria estratégica ganharam análises de nível institucional para sustentar decisões de crédito, alocação de capital e planejamento.',
+      en: 'The three strategic-advisory areas gained institutional-grade analytics to support credit, capital-allocation and planning decisions.',
+    },
+    highlights: [
+      {
+        pt: 'Reestruturação de Dívida: cascata de recuperação por senioridade (distressed), DSCR ano a ano ao longo de toda a amortização e taxa de equilíbrio suportável pelo ativo.',
+        en: 'Debt Restructuring: recovery waterfall by seniority (distressed), year-by-year DSCR across the full amortization, and the break-even rate the asset can bear.',
+      },
+      {
+        pt: 'Revisão Estratégica: valor do crescimento (reinvestir vs. devolver capital) e sensibilidade do EVA ao custo de capital.',
+        en: 'Strategic Review: value of growth (reinvest vs. return capital) and EVA sensitivity to the cost of capital.',
+      },
+      {
+        pt: 'Planejamento de Longo Prazo: valuation do plano (DCF sobre o fluxo projetado), necessidade de captação (pico e ano de menor liquidez) e ano de break-even do plano.',
+        en: 'Long-Range Planning: plan valuation (DCF over projected cash flow), funding need (peak and lowest-liquidity year), and the plan’s break-even year.',
+      },
+    ],
+  },
+  {
     version: '1.06',
     date: '2026-07-09',
     title: {
