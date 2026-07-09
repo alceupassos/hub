@@ -15,3 +15,4 @@ export {
 export { buildIcMemoDocx } from './icMemoDocx'
 export { buildPitchDeckPptx } from './pitchDeckPptx'
 export { buildModelXlsx } from './modelXlsx'
+export { buildTermSheetDocx, type TermSheetData } from './termSheetDocx'

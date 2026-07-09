@@ -19,6 +19,36 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.08',
+    date: '2026-07-09',
+    title: {
+      pt: 'Cockpit de negociação com preparação multidimensional',
+      en: 'Negotiation cockpit with multi-dimensional preparation',
+    },
+    summary: {
+      pt: 'A área de negociação deixou de tratar apenas preço e passou a preparar a mesa em várias dimensões, incluindo um simulador de contraparte com IA.',
+      en: 'The negotiation area moved beyond price alone to prepare the table across several dimensions, including an AI counterpart simulator.',
+    },
+    highlights: [
+      {
+        pt: 'Pacote multi-issue (negociação integrativa): aloca cada termo — preço, earn-out, escrow, não-compete — ao lado que mais o valoriza e quantifica o ganho de trocar concessões por prioridade.',
+        en: 'Multi-issue package (integrative negotiation): allocates each term — price, earn-out, escrow, non-compete — to the side that values it most and quantifies the gain from trading concessions by priority.',
+      },
+      {
+        pt: 'BATNA derivado do motor (walk-aways a partir de valuation), oferta de abertura ótima sob incerteza e plano tático de concessões decrescentes.',
+        en: 'Engine-derived BATNA (walk-aways from valuation), optimal opening offer under uncertainty, and a tactical plan of decreasing concessions.',
+      },
+      {
+        pt: 'Simulador de contraparte com IA: o especialista assume o outro lado com postura configurável, pontua cada movimento e faz um debrief ao final.',
+        en: 'AI counterpart simulator: the specialist plays the other side with a configurable posture, scores each move and delivers a debrief at the end.',
+      },
+      {
+        pt: 'Geração do pacote negociado como Carta de Intenções (term sheet, não vinculante) em Word.',
+        en: 'Generation of the negotiated package as a (non-binding) Letter of Intent / term sheet in Word.',
+      },
+    ],
+  },
+  {
     version: '1.07',
     date: '2026-07-09',
     title: {
