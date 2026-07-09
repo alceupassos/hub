@@ -7,7 +7,7 @@ import { Suspense, useEffect, useState } from 'react'
 import {
   MessageSquare, Folder, Grid3X3, BarChart2, Book, Settings, Plus, ChevronDown,
   ChevronRight, Circle, ShieldCheck, Sparkles, KanbanSquare, Users, LogOut,
-  Calculator, Scale, Activity, Handshake, Landmark, LineChart, CalendarRange,
+  Calculator, Scale, Activity, Handshake, Landmark, LineChart, CalendarRange, Gavel, Crosshair,
 } from 'lucide-react'
 import { AGENTS_BY_CATEGORY } from '@/lib/agents'
 import type { Agent } from '@/lib/types'
@@ -137,12 +137,14 @@ function NavContent() {
   const navItems = [
     { icon: MessageSquare, label: t.conversations, href: '/', matchPaths: ['/', '/chat'] },
     { icon: Users,         label: t.fleet,         href: '/frota',        matchPaths: ['/frota'] },
+    { icon: Gavel,         label: t.committee,     href: '/comite',       matchPaths: ['/comite'] },
     { icon: Sparkles,      label: t.dealflow,      href: '/dealflow',     matchPaths: ['/dealflow'] },
     { icon: KanbanSquare,  label: t.pipeline,      href: '/pipeline',     matchPaths: ['/pipeline'] },
     { icon: Folder,        label: t.projects,      href: '/projetos',     matchPaths: ['/projetos'] },
     { icon: Calculator,    label: t.modeling,      href: '/modelagem',    matchPaths: ['/modelagem'] },
     { icon: Scale,         label: t.roiCompare,    href: '/comparativo',  matchPaths: ['/comparativo'] },
     { icon: Handshake,     label: t.negotiation,   href: '/negociacao',   matchPaths: ['/negociacao'] },
+    { icon: Crosshair,     label: t.inflection,    href: '/inflexao',     matchPaths: ['/inflexao'] },
     { icon: Landmark,      label: t.advDebt,       href: '/advisory?tab=divida',       matchPaths: ['/advisory'], matchTab: 'divida' },
     { icon: LineChart,     label: t.advReview,     href: '/advisory?tab=revisao',      matchPaths: ['/advisory'], matchTab: 'revisao' },
     { icon: CalendarRange, label: t.advPlan,       href: '/advisory?tab=planejamento', matchPaths: ['/advisory'], matchTab: 'planejamento' },

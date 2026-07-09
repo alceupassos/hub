@@ -19,6 +19,32 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.10',
+    date: '2026-07-09',
+    title: {
+      pt: 'Sala de Comitê de Investimento e análise de inflexão',
+      en: 'Investment Committee room and inflection analysis',
+    },
+    summary: {
+      pt: 'Duas capacidades de decisão de alto nível: a deliberação de um comitê de investimento e a análise do que faria a recomendação virar.',
+      en: 'Two senior decision capabilities: an investment-committee deliberation and an analysis of what would flip the recommendation.',
+    },
+    highlights: [
+      {
+        pt: 'Sala de Comitê ao vivo: descreva um mandato e os quatro sócios (M&A, corporate finance, growth, transformação) tomam posição, debatem as divergências e votam go/no-go, com o presidente registrando decisão, dissidências e condições precedentes.',
+        en: 'Live Committee room: describe a mandate and the four partners (M&A, corporate finance, growth, transformation) take positions, debate divergences and vote go/no-go, with the chair recording the decision, dissents and conditions precedent.',
+      },
+      {
+        pt: 'Análise de inflexão: para cada premissa (WACC, crescimento, g), o sistema calcula o valor exato em que o valuation cruza o preço da oferta e ranqueia os drivers por fragilidade — "o que mudaria a decisão".',
+        en: 'Inflection analysis: for each assumption (WACC, growth, g), the system computes the exact value at which valuation crosses the offer price and ranks drivers by fragility — "what would flip the call".',
+      },
+      {
+        pt: 'Red-team (advogado do diabo): ataca a tese sem piedade — premissa mais frágil, risco negligenciado, cenário de destruição de valor e a pergunta-teste que o comitê deveria exigir.',
+        en: 'Red team (devil’s advocate): attacks the thesis without mercy — weakest assumption, overlooked risk, value-destruction scenario and the test question the committee should demand.',
+      },
+    ],
+  },
+  {
     version: '1.09',
     date: '2026-07-09',
     title: {
